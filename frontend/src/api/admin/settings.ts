@@ -1096,6 +1096,22 @@ export async function updateSettings(
   return data;
 }
 
+export interface SiteLogoUploadResult {
+  url: string;
+  content_type?: string;
+}
+
+export async function uploadSiteLogo(file: File): Promise<SiteLogoUploadResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await apiClient.post<SiteLogoUploadResult>(
+    "/admin/settings/logo",
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return data;
+}
+
 /**
  * Test SMTP connection request
  */
@@ -1589,6 +1605,7 @@ export async function resetWebSearchUsage(payload: {
 export const settingsAPI = {
   getSettings,
   updateSettings,
+  uploadSiteLogo,
   testSmtpConnection,
   sendTestEmail,
   getEmailTemplates,

@@ -6684,21 +6684,79 @@
                 </p>
               </div>
 
-              <!-- Site Logo Upload -->
+              <!-- Site Logo -->
               <div>
                 <label
                   class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   {{ t("admin.settings.site.siteLogo") }}
                 </label>
-                <ImageUpload
-                  v-model="form.site_logo"
-                  mode="image"
-                  :upload-label="t('admin.settings.site.uploadImage')"
-                  :remove-label="t('admin.settings.site.remove')"
-                  :hint="t('admin.settings.site.logoHint')"
-                  :max-size="300 * 1024"
-                />
+                <div class="flex flex-col items-start gap-4 sm:flex-row sm:gap-6">
+                  <div class="flex-shrink-0 text-center">
+                  <div data-testid="site-logo-preview" class="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 dark:border-dark-600 dark:bg-dark-800">
+                    <img v-if="form.site_logo" :src="form.site_logo" alt="" class="h-full w-full object-contain" />
+                    <Icon v-else name="document" size="lg" class="text-gray-400" />
+                  </div>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.settings.site.logoPreviewHint") }}</p>
+                  </div>
+                  <div class="min-w-0 flex-1 w-full">
+                <div class="mb-4 flex gap-5 border-b border-gray-200 dark:border-dark-600" role="tablist" :aria-label="t('admin.settings.site.logoMode')">
+                  <button
+                    type="button"
+                    data-testid="site-logo-upload-tab"
+                    role="tab"
+                    :aria-selected="siteLogoMode === 'upload'"
+                    :class="['border-b-2 px-1 pb-2 text-sm font-medium transition-colors', siteLogoMode === 'upload' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-dark-500 dark:hover:text-gray-200']"
+                    @click="siteLogoMode = 'upload'"
+                  >
+                    {{ t("admin.settings.site.uploadImage") }}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="site-logo-url-tab"
+                    role="tab"
+                    :aria-selected="siteLogoMode === 'url'"
+                    :class="['border-b-2 px-1 pb-2 text-sm font-medium transition-colors', siteLogoMode === 'url' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-dark-500 dark:hover:text-gray-200']"
+                    @click="siteLogoMode = 'url'"
+                  >
+                    {{ t("admin.settings.site.logoUrl") }}
+                  </button>
+                </div>
+
+                <div v-if="siteLogoMode === 'upload'" role="tabpanel">
+                  <div class="flex items-start gap-4">
+                    <div class="space-y-2">
+                      <div class="flex flex-wrap items-center gap-2">
+                      <label class="btn btn-secondary btn-sm cursor-pointer" :class="siteLogoUploading && 'pointer-events-none opacity-60'">
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/svg+xml" class="hidden" :disabled="siteLogoUploading" @change="handleSiteLogoUpload" />
+                        <Icon name="upload" size="sm" class="mr-1.5" :stroke-width="2" />
+                        {{ siteLogoUploading ? t("admin.settings.site.logoUploading") : t("admin.settings.site.uploadImage") }}
+                      </label>
+                      <button v-if="form.site_logo" type="button" class="btn btn-secondary btn-sm text-red-600" @click="form.site_logo = ''">
+                        <Icon name="trash" size="sm" class="mr-1.5" :stroke-width="2" />
+                        {{ t("admin.settings.site.remove") }}
+                      </button>
+                      </div>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">{{ t("admin.settings.site.logoHint") }}</p>
+                      <p v-if="siteLogoUploadError" class="text-xs text-red-500">{{ siteLogoUploadError }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div v-else role="tabpanel">
+                  <input
+                    id="site-logo-url"
+                    v-model="form.site_logo"
+                    type="url"
+                    class="input font-mono text-sm"
+                    :placeholder="t('admin.settings.site.logoUrlPlaceholder')"
+                    autocomplete="off"
+                  />
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t("admin.settings.site.logoUrlHint") }}
+                  </p>
+                </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Home Content -->
@@ -8905,7 +8963,7 @@
         <div v-show="activeTab !== 'backup'" class="flex justify-end">
           <button
             type="submit"
-            :disabled="saving || loadFailed"
+            :disabled="saving || loadFailed || siteLogoUploading"
             class="btn btn-primary"
           >
             <svg
@@ -9101,6 +9159,9 @@ type SettingsTab =
   | "email"
   | "backup";
 const activeTab = ref<SettingsTab>("general");
+const siteLogoMode = ref<"upload" | "url">("upload");
+const siteLogoUploading = ref(false);
+const siteLogoUploadError = ref("");
 const settingsTabs = [
   { key: "general" as SettingsTab, icon: "home" as const },
   { key: "agreement" as SettingsTab, icon: "document" as const },
@@ -11042,6 +11103,33 @@ const claudeSyncedVersionLabel = computed(() => {
   });
 });
 
+async function handleSiteLogoUpload(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  siteLogoUploadError.value = "";
+  if (!file) return;
+  if (file.size > 300 * 1024) {
+    siteLogoUploadError.value = t("admin.settings.site.logoSizeError", {
+      size: (file.size / 1024).toFixed(1),
+    });
+    return;
+  }
+  siteLogoUploading.value = true;
+  try {
+    const result = await adminAPI.settings.uploadSiteLogo(file);
+    form.site_logo = result.url;
+    siteLogoMode.value = "upload";
+  } catch (error) {
+    siteLogoUploadError.value = extractApiErrorMessage(
+      error,
+      t("admin.settings.site.logoUploadError"),
+    );
+  } finally {
+    siteLogoUploading.value = false;
+  }
+}
+
 async function loadSettings() {
   loading.value = true;
   loadFailed.value = false;
@@ -11055,6 +11143,9 @@ async function loadSettings() {
         (form as Record<string, unknown>)[key] = value;
       }
     }
+    siteLogoMode.value = !form.site_logo || /^\/api\/v1\/site-logo\//.test(form.site_logo) || /^data:image\//i.test(form.site_logo)
+      ? "upload"
+      : "url";
     // For this optional override, null explicitly selects per-account rates.
     if (settings.openai_oauth_scheduling_rate_multiplier === null) {
       form.openai_oauth_scheduling_rate_multiplier = null;
@@ -11317,6 +11408,7 @@ const siteBillingModeHint = computed(() =>
 );
 
 async function saveSettings() {
+  if (siteLogoUploading.value) return;
   saving.value = true;
   try {
     const normalizedTableDefaultPageSize = Math.floor(
@@ -11451,6 +11543,16 @@ async function saveSettings() {
     // Optional URL fields: auto-clear invalid values so they don't cause backend 400 errors
     if (!isValidHttpUrl(form.frontend_url)) form.frontend_url = "";
     if (!isValidHttpUrl(form.doc_url)) form.doc_url = "";
+    // A site logo may be an uploaded data URL, a relative path, or a remote HTTP(S) URL.
+    // Keep the URL form explicit so an invalid custom URL cannot be saved silently.
+    const siteLogo = form.site_logo.trim();
+    const isDataImage = /^data:image\/[a-z0-9.+-]+;base64,/i.test(siteLogo);
+    const isRelativeImage = siteLogo.startsWith("/");
+    if (siteLogo && !isDataImage && !isRelativeImage && !isValidHttpUrl(siteLogo)) {
+      appStore.showError(t("admin.settings.site.logoUrlInvalid"));
+      return;
+    }
+    form.site_logo = siteLogo;
     syncWeChatConnectMode();
     const wechatStoredMode = deriveWeChatConnectStoredMode(
       form.wechat_connect_open_enabled,
