@@ -708,6 +708,7 @@ func registerUsageRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	{
 		usage.GET("", h.Admin.Usage.List)
 		usage.GET("/stats", h.Admin.Usage.Stats)
+		usage.GET("/ip-location", h.Admin.Usage.IPLocation)
 		usage.GET("/search-users", h.Admin.Usage.SearchUsers)
 		usage.GET("/search-api-keys", h.Admin.Usage.SearchAPIKeys)
 		usage.GET("/cleanup-tasks", h.Admin.Usage.ListCleanupTasks)
@@ -805,6 +806,8 @@ func registerChannelMonitorRoutes(admin *gin.RouterGroup, h *handler.Handlers, s
 		monitors.DELETE("/:id", h.Admin.ChannelMonitor.Delete)
 		monitors.POST("/:id/run", h.Admin.ChannelMonitor.Run)
 		monitors.GET("/:id/history", h.Admin.ChannelMonitor.History)
+		monitors.POST("/reset-history", h.Admin.ChannelMonitor.ResetHistoryBatch)
+		monitors.POST("/:id/reset-history", h.Admin.ChannelMonitor.ResetHistory)
 	}
 
 	templates := admin.Group("/channel-monitor-templates")

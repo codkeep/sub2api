@@ -31,6 +31,7 @@ type ChannelMonitorRepository interface {
 	ListEnabled(ctx context.Context) ([]*ChannelMonitor, error)
 	MarkChecked(ctx context.Context, id int64, checkedAt time.Time) error
 	InsertHistoryBatch(ctx context.Context, rows []*ChannelMonitorHistoryRow) error
+	ResetHistory(ctx context.Context, ids []int64) error
 	DeleteHistoryBefore(ctx context.Context, before time.Time) (int64, error)
 
 	// 历史记录
@@ -570,6 +571,28 @@ func (s *ChannelMonitorService) Delete(ctx context.Context, id int64) error {
 	}
 	if s.scheduler != nil {
 		s.scheduler.Unschedule(id)
+	}
+	return nil
+}
+
+// ResetHistory removes all recorded checks and restarts summary calculation.
+func (s *ChannelMonitorService) ResetHistory(ctx context.Context, ids []int64) error {
+	unique := make([]int64, 0, len(ids))
+	seen := make(map[int64]struct{}, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			return ErrChannelMonitorNotFound
+		}
+		if _, ok := seen[id]; !ok {
+			seen[id] = struct{}{}
+			unique = append(unique, id)
+		}
+	}
+	if len(unique) == 0 {
+		return nil
+	}
+	if err := s.repo.ResetHistory(ctx, unique); err != nil {
+		return fmt.Errorf("reset channel monitor history: %w", err)
 	}
 	return nil
 }

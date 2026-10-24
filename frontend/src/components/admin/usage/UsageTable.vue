@@ -52,6 +52,10 @@
           <span class="text-sm text-gray-900 dark:text-white">{{ row.account?.name || '-' }}</span>
         </template>
 
+        <template #cell-proxy="{ row }">
+          <UsageProxyCell :proxy="row.proxy_snapshot" />
+        </template>
+
         <template #cell-model="{ row }">
           <div class="space-y-0.5 text-xs">
             <div v-if="row.model_mapping_chain && row.model_mapping_chain.includes('→')" class="space-y-0.5">
@@ -583,6 +587,7 @@ function accountBilled(row: { total_cost?: number | null; account_stats_cost?: n
 
 
 import DataTable from '@/components/common/DataTable.vue'
+import UsageProxyCell from './UsageProxyCell.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import IpGeoCell from '@/components/common/IpGeoCell.vue'
 import Icon from '@/components/icons/Icon.vue'

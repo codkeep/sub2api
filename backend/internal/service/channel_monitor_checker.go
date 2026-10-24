@@ -25,7 +25,7 @@ var monitorHTTPClient = newSSRFSafeHTTPClient(monitorRequestTimeout)
 var monitorPingHTTPClient = newSSRFSafeHTTPClient(monitorPingTimeout)
 
 // newSSRFSafeHTTPClient 返回一个使用 safeDialContext 的 http.Client。
-// 仅供监控模块对外发起请求使用——所有目标都应是公网 endpoint。
+// 仅供监控模块发起请求使用，支持公网 endpoint 和明确指定的本机地址。
 func newSSRFSafeHTTPClient(timeout time.Duration) *http.Client {
 	tr := &http.Transport{
 		DialContext:           safeDialContext,
