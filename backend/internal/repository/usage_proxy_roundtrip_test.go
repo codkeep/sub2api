@@ -30,7 +30,7 @@ func TestUsageProxyPostgresRoundTrip(t *testing.T) {
 	r := newUsageLogRepositoryWithSQL(nil, tx)
 	now := time.Now().UTC()
 	for _, mode := range []string{"single", "batch", "best effort", "no result"} {
-		log := &service.UsageLog{UserID: userID, APIKeyID: keyID, AccountID: accountID, RequestID: fmt.Sprintf("proxy-test-%d-%s", now.UnixNano(), mode), Model: "proxy-test", ProxySnapshot: &service.UsageProxySnapshot{ID: 42, Name: "snapshot-original", ExitIP: "203.0.113.7", ExitIPCheckedAt: &now}}
+		log := &service.UsageLog{UserID: userID, APIKeyID: keyID, AccountID: accountID, RequestID: fmt.Sprintf("proxy-test-%d-%s", now.UnixNano(), mode), Model: "proxy-test", ProxySnapshot: &service.UsageProxySnapshot{ID: 42, Name: "snapshot-original"}}
 		prepared := prepareUsageLogInsert(log)
 		switch mode {
 		case "single":
@@ -51,7 +51,6 @@ func TestUsageProxyPostgresRoundTrip(t *testing.T) {
 		loaded, err := r.GetByID(ctx, id)
 		require.NoError(t, err, mode)
 		require.Equal(t, "snapshot-original", loaded.ProxySnapshot.Name)
-		require.Equal(t, "203.0.113.7", loaded.ProxySnapshot.ExitIP)
-		require.WithinDuration(t, now, *loaded.ProxySnapshot.ExitIPCheckedAt, time.Microsecond)
+		require.EqualValues(t, 42, loaded.ProxySnapshot.ID)
 	}
 }

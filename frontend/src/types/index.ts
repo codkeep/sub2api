@@ -1843,8 +1843,6 @@ export interface AdminUsageLog extends UsageLog {
   proxy_snapshot?: {
     id?: number
     name?: string
-    exit_ip?: string
-    exit_ip_checked_at?: string
   } | null
   upstream_model?: string | null
   upstream_reasoning_effort?: string | null

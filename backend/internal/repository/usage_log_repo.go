@@ -10,7 +10,6 @@ import (
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 	gocache "github.com/patrickmn/go-cache"
-	"golang.org/x/sync/singleflight"
 )
 
 const rawUsageLogModelColumn = "model"
@@ -140,12 +139,9 @@ func appendUsageLogModelQueryFilter(query string, args []any, model string, sour
 }
 
 type usageLogRepository struct {
-	proxyExitProber service.ProxyExitInfoProber
-	proxyExitCache  *gocache.Cache
-	proxyExitGroup  singleflight.Group
-	client          *dbent.Client
-	sql             sqlExecutor
-	db              *sql.DB
+	client *dbent.Client
+	sql    sqlExecutor
+	db     *sql.DB
 
 	createBatchOnce     sync.Once
 	createBatchCh       chan usageLogCreateRequest

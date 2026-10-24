@@ -7,28 +7,6 @@ import { apiClient } from '../client'
 import type { AdminUsageLog, UsageQueryParams, PaginatedResponse, UsageRequestType } from '@/types'
 import type { EndpointStat } from '@/types'
 
-export interface UsageIPLocation {
-  ip: string
-  country: string
-  region: string
-  city: string
-  isp: string
-}
-
-const ipLocationCache = new Map<string, Promise<UsageIPLocation>>()
-
-export function getUsageIPLocation(ip: string): Promise<UsageIPLocation> {
-  const cached = ipLocationCache.get(ip)
-  if (cached) return cached
-  const request = apiClient.get<UsageIPLocation>('/admin/usage/ip-location', { params: { ip } })
-    .then(({ data }) => data)
-    .catch((error) => { ipLocationCache.delete(ip); throw error })
-  // Bound the cache to the current browser session and avoid duplicate row lookups.
-  if (ipLocationCache.size >= 200) ipLocationCache.clear()
-  ipLocationCache.set(ip, request)
-  return request
-}
-
 // ==================== Types ====================
 
 export interface AdminUsageStatsResponse {

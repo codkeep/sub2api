@@ -152,7 +152,6 @@ const (
 )
 
 func (r *usageLogRepository) Create(ctx context.Context, log *service.UsageLog) (bool, error) {
-	r.enrichProxySnapshot(ctx, log)
 	if log == nil {
 		return false, nil
 	}
@@ -169,7 +168,6 @@ func (r *usageLogRepository) Create(ctx context.Context, log *service.UsageLog) 
 }
 
 func (r *usageLogRepository) CreateBestEffort(ctx context.Context, log *service.UsageLog) error {
-	r.enrichProxySnapshot(ctx, log)
 	if log == nil {
 		return nil
 	}
