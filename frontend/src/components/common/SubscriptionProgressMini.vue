@@ -184,7 +184,7 @@ import Icon from '@/components/icons/Icon.vue'
 import { useSubscriptionStore } from '@/stores'
 import { FeatureFlags, isFeatureFlagEnabled } from '@/utils/featureFlags'
 import type { UserSubscription } from '@/types'
-import { getExpirationDateRelation } from '@/utils/subscriptionQuota'
+import { getExpirationDateRelation, formatSubscriptionPoints } from '@/utils/subscriptionQuota'
 
 const { t } = useI18n()
 
@@ -256,9 +256,9 @@ function getProgressWidth(used: number | undefined, limit: number | null | undef
 }
 
 function formatUsage(used: number | undefined, limit: number | null | undefined): string {
-  const usedValue = (used || 0).toFixed(2)
-  const limitValue = limit?.toFixed(2) || '∞'
-  return `$${usedValue}/$${limitValue}`
+  const usedValue = formatSubscriptionPoints(used)
+  const limitValue = limit == null ? '∞' : formatSubscriptionPoints(limit)
+  return `${usedValue} ${t('subscriptionProgress.points')}/${limitValue} ${t('subscriptionProgress.points')}`
 }
 
 function formatDaysRemaining(expiresAt: string): string {

@@ -107,9 +107,8 @@
                   {{ t('userSubscriptions.daily') }}
                 </span>
                 <span class="text-sm text-gray-500 dark:text-dark-400">
-                  ${{ (subscription.daily_usage_usd || 0).toFixed(2) }} / ${{
-                    subscription.group.daily_limit_usd.toFixed(2)
-                  }}
+                  {{ formatSubscriptionPoints(subscription.daily_usage_usd) }} {{ t('userSubscriptions.points') }} /
+                  {{ formatSubscriptionPoints(subscription.group.daily_limit_usd) }} {{ t('userSubscriptions.points') }}
                 </span>
               </div>
               <div class="relative h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-dark-600">
@@ -144,9 +143,8 @@
                   {{ t('userSubscriptions.weekly') }}
                 </span>
                 <span class="text-sm text-gray-500 dark:text-dark-400">
-                  ${{ (subscription.weekly_usage_usd || 0).toFixed(2) }} / ${{
-                    subscription.group.weekly_limit_usd.toFixed(2)
-                  }}
+                  {{ formatSubscriptionPoints(subscription.weekly_usage_usd) }} {{ t('userSubscriptions.points') }} /
+                  {{ formatSubscriptionPoints(subscription.group.weekly_limit_usd) }} {{ t('userSubscriptions.points') }}
                 </span>
               </div>
               <div class="relative h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-dark-600">
@@ -185,9 +183,8 @@
                   {{ t('userSubscriptions.monthly') }}
                 </span>
                 <span class="text-sm text-gray-500 dark:text-dark-400">
-                  ${{ (subscription.monthly_usage_usd || 0).toFixed(2) }} / ${{
-                    subscription.group.monthly_limit_usd.toFixed(2)
-                  }}
+                  {{ formatSubscriptionPoints(subscription.monthly_usage_usd) }} {{ t('userSubscriptions.points') }} /
+                  {{ formatSubscriptionPoints(subscription.group.monthly_limit_usd) }} {{ t('userSubscriptions.points') }}
                 </span>
               </div>
               <div class="relative h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-dark-600">
@@ -262,6 +259,7 @@ import { platformBorderClass, platformBadgeClass, platformButtonClass, platformL
 import {
   getExpirationDateRelation,
   getRemainingDurationParts,
+  formatSubscriptionPoints,
   isOneTimeDailyQuota,
   type RemainingDurationParts
 } from '@/utils/subscriptionQuota'
