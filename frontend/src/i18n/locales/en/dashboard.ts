@@ -106,6 +106,7 @@ export default {
     currentConcurrency: 'Current Concurrency',
     noGroup: 'No group',
     searchGroup: 'Search groups...',
+    multiGroupHint: 'Bind this key to multiple groups; select at least one.',
     noGroupFound: 'No groups found',
     created: 'Created',
     copyToClipboard: 'Copy to clipboard',

@@ -14,7 +14,7 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-const apiKeyAuthSnapshotVersion = 25 // v25: group quota unit and subscription usage display
+const apiKeyAuthSnapshotVersion = 26 // v26: API key multiple groups
 
 type apiKeyAuthCacheConfig struct {
 	l1Size        int
@@ -340,6 +340,7 @@ func (s *APIKeyService) snapshotFromAPIKey(ctx context.Context, apiKey *APIKey) 
 		APIKeyID:    apiKey.ID,
 		UserID:      apiKey.UserID,
 		GroupID:     apiKey.GroupID,
+		GroupIDs:    apiKey.GroupIDs,
 		Name:        apiKey.Name,
 		Status:      apiKey.Status,
 		IPWhitelist: apiKey.IPWhitelist,
@@ -450,6 +451,7 @@ func (s *APIKeyService) snapshotToAPIKey(key string, snapshot *APIKeyAuthSnapsho
 		ID:          snapshot.APIKeyID,
 		UserID:      snapshot.UserID,
 		GroupID:     snapshot.GroupID,
+		GroupIDs:    snapshot.GroupIDs,
 		Key:         key,
 		Name:        snapshot.Name,
 		Status:      snapshot.Status,
