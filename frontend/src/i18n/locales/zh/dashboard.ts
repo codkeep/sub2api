@@ -106,7 +106,6 @@ export default {
     currentConcurrency: '当前并发',
     noGroup: '无分组',
     searchGroup: '搜索分组...',
-    multiGroupHint: '可同时绑定多个分组，请至少选择一个。',
     noGroupFound: '未找到匹配的分组',
     created: '创建时间',
     copyToClipboard: '复制到剪贴板',

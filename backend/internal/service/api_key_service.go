@@ -68,7 +68,6 @@ type APIKeyUpdateFields struct {
 	Status    bool
 	Quota     bool
 	GroupID   bool
-	GroupIDs  bool
 	ExpiresAt bool
 	// QuotaUsed 仅供"重置配额用量"路径声明；常规计费走 IncrementQuotaUsed。
 	QuotaUsed bool
@@ -79,28 +78,6 @@ type APIKeyUpdateFields struct {
 	RateLimitUsage bool
 	// IPRules 覆盖 ip_whitelist 与 ip_blacklist。
 	IPRules bool
-}
-
-func normalizeAPIKeyGroupIDs(primary *int64, ids []int64) []int64 {
-	out := make([]int64, 0, len(ids)+1)
-	seen := map[int64]bool{}
-	if primary != nil {
-		ids = append([]int64{*primary}, ids...)
-	}
-	for _, id := range ids {
-		if id > 0 && !seen[id] {
-			seen[id] = true
-			out = append(out, id)
-		}
-	}
-	return out
-}
-
-func derefAPIKeyGroupIDs(ids *[]int64) []int64 {
-	if ids == nil {
-		return nil
-	}
-	return *ids
 }
 
 // IsEmpty 报告该次 Update 是否不写任何列。
@@ -239,7 +216,6 @@ type APIKeyAuthCacheInvalidator interface {
 type CreateAPIKeyRequest struct {
 	Name        string   `json:"name"`
 	GroupID     *int64   `json:"group_id"`
-	GroupIDs    []int64  `json:"group_ids"`
 	CustomKey   *string  `json:"custom_key"`   // 可选的自定义key
 	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
 	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
@@ -258,7 +234,6 @@ type CreateAPIKeyRequest struct {
 type UpdateAPIKeyRequest struct {
 	Name        *string   `json:"name"`
 	GroupID     *int64    `json:"group_id"`
-	GroupIDs    *[]int64  `json:"group_ids"`
 	Status      *string   `json:"status"`
 	IPWhitelist *[]string `json:"ip_whitelist"` // IP 白名单（nil 不修改，空数组清空）
 	IPBlacklist *[]string `json:"ip_blacklist"` // IP 黑名单（nil 不修改，空数组清空）
@@ -540,16 +515,14 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 		}
 	}
 
-	// 验证每个分组权限；第一个分组作为兼容旧逻辑的主分组。
-	groupIDs := normalizeAPIKeyGroupIDs(req.GroupID, req.GroupIDs)
-	if len(groupIDs) == 0 {
-		return nil, ErrGroupNotAllowed
-	}
-	for _, groupID := range groupIDs {
-		group, err := s.groupRepo.GetByID(ctx, groupID)
+	// 验证分组权限（如果指定了分组）
+	if req.GroupID != nil {
+		group, err := s.groupRepo.GetByID(ctx, *req.GroupID)
 		if err != nil {
 			return nil, fmt.Errorf("get group: %w", err)
 		}
+
+		// 检查用户是否可以绑定该分组
 		if !s.canUserBindGroup(ctx, user, group) {
 			return nil, ErrGroupNotAllowed
 		}
@@ -595,17 +568,11 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 	}
 
 	// 创建API Key记录
-	primaryGroupID := (*int64)(nil)
-	if len(groupIDs) > 0 {
-		primary := groupIDs[0]
-		primaryGroupID = &primary
-	}
 	apiKey := &APIKey{
 		UserID:      userID,
 		Key:         key,
 		Name:        html.EscapeString(req.Name),
-		GroupID:     primaryGroupID,
-		GroupIDs:    groupIDs,
+		GroupID:     req.GroupID,
 		Status:      StatusActive,
 		IPWhitelist: req.IPWhitelist,
 		IPBlacklist: req.IPBlacklist,
@@ -867,28 +834,24 @@ func (s *APIKeyService) Update(ctx context.Context, id int64, userID int64, req 
 		fields.Name = true
 	}
 
-	if req.GroupID != nil || req.GroupIDs != nil {
-		ids := normalizeAPIKeyGroupIDs(req.GroupID, derefAPIKeyGroupIDs(req.GroupIDs))
-		if len(ids) == 0 {
-			return nil, ErrGroupNotAllowed
-		}
+	if req.GroupID != nil {
+		// 验证分组权限
 		user, err := s.userRepo.GetByID(ctx, userID)
 		if err != nil {
 			return nil, fmt.Errorf("get user: %w", err)
 		}
-		for _, groupID := range ids {
-			group, err := s.groupRepo.GetByID(ctx, groupID)
-			if err != nil {
-				return nil, fmt.Errorf("get group: %w", err)
-			}
-			if !s.canUserBindGroup(ctx, user, group) {
-				return nil, ErrGroupNotAllowed
-			}
+
+		group, err := s.groupRepo.GetByID(ctx, *req.GroupID)
+		if err != nil {
+			return nil, fmt.Errorf("get group: %w", err)
 		}
-		apiKey.GroupIDs = ids
-		apiKey.GroupID = &ids[0]
+
+		if !s.canUserBindGroup(ctx, user, group) {
+			return nil, ErrGroupNotAllowed
+		}
+
+		apiKey.GroupID = req.GroupID
 		fields.GroupID = true
-		fields.GroupIDs = true
 	}
 
 	if req.Status != nil {

@@ -535,26 +535,49 @@
 
         <div>
           <label class="input-label" for="key-form-group">{{ t('keys.groupLabel') }}</label>
-          <div class="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-gray-200 p-2 dark:border-dark-700" data-tour="key-form-group">
-            <label v-for="option in formGroupOptions" :key="option.value" class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 hover:bg-gray-50 dark:hover:bg-dark-700">
-              <input type="checkbox" :value="option.value" :checked="formData.group_ids.includes(option.value)" class="checkbox" @change="toggleFormGroup(option.value)" />
-              <GroupOptionItem
-                :name="option.label"
-                :platform="option.platform"
-                :subscription-type="option.subscriptionType"
-                :rate-multiplier="option.rate"
-                :user-rate-multiplier="option.userRate"
-                :peak-rate-enabled="option.peakRateEnabled"
-                :peak-start="option.peakStart"
-                :peak-end="option.peakEnd"
-                :peak-rate-multiplier="option.peakRateMultiplier"
-                :description="option.description"
-                :selected="formData.group_ids.includes(option.value)"
+          <Select
+            :key="showEditModal ? 'edit' : createProvider"
+            id="key-form-group"
+            :aria-label="t('keys.groupLabel')"
+            v-model="formData.group_id"
+            :options="formGroupOptions"
+            :placeholder="t('keys.selectGroup')"
+            :empty-text="t('common.noGroupsAvailable')"
+            :searchable="true"
+            :search-placeholder="t('keys.searchGroup')"
+            data-tour="key-form-group"
+          >
+            <template #selected="{ option }">
+              <GroupBadge
+                v-if="option"
+                :name="(option as unknown as GroupOption).label"
+                :platform="(option as unknown as GroupOption).platform"
+                :subscription-type="(option as unknown as GroupOption).subscriptionType"
+                :rate-multiplier="(option as unknown as GroupOption).rate"
+                :user-rate-multiplier="(option as unknown as GroupOption).userRate"
+                :peak-rate-enabled="(option as unknown as GroupOption).peakRateEnabled"
+                :peak-start="(option as unknown as GroupOption).peakStart"
+                :peak-end="(option as unknown as GroupOption).peakEnd"
+                :peak-rate-multiplier="(option as unknown as GroupOption).peakRateMultiplier"
               />
-            </label>
-            <p v-if="formGroupOptions.length === 0" class="py-3 text-center text-sm text-gray-400">{{ t('common.noGroupsAvailable') }}</p>
-          </div>
-          <p class="mt-1 text-xs text-gray-500">{{ t('keys.multiGroupHint') }}</p>
+              <span v-else class="text-gray-400">{{ t('keys.selectGroup') }}</span>
+            </template>
+            <template #option="{ option, selected }">
+              <GroupOptionItem
+                :name="(option as unknown as GroupOption).label"
+                :platform="(option as unknown as GroupOption).platform"
+                :subscription-type="(option as unknown as GroupOption).subscriptionType"
+                :rate-multiplier="(option as unknown as GroupOption).rate"
+                :user-rate-multiplier="(option as unknown as GroupOption).userRate"
+                :peak-rate-enabled="(option as unknown as GroupOption).peakRateEnabled"
+                :peak-start="(option as unknown as GroupOption).peakStart"
+                :peak-end="(option as unknown as GroupOption).peakEnd"
+                :peak-rate-multiplier="(option as unknown as GroupOption).peakRateMultiplier"
+                :description="(option as unknown as GroupOption).description"
+                :selected="selected"
+              />
+            </template>
+          </Select>
         </div>
 
         <!-- Custom Key Section (only for create) -->
@@ -1409,7 +1432,6 @@ const setGroupButtonRef = (keyId: number, el: Element | ComponentPublicInstance 
 const formData = ref({
   name: '',
   group_id: null as number | null,
-  group_ids: [] as number[],
   status: 'active' as 'active' | 'inactive',
   use_custom_key: false,
   custom_key: '',
@@ -1517,17 +1539,10 @@ const formGroupOptions = computed(() => showEditModal.value
   : groupOptions.value.filter((group) => getKeyGroupProvider(group.platform) === createProvider.value)
 )
 
-function toggleFormGroup(id: number) {
-  const ids = formData.value.group_ids
-  formData.value.group_ids = ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id]
-  formData.value.group_id = formData.value.group_ids[0] ?? null
-}
-
 const selectCreateProvider = (provider: KeyGroupProvider) => {
   if (createProvider.value === provider) return
   createProvider.value = provider
   formData.value.group_id = null
-  formData.value.group_ids = []
 }
 
 // Also handles groups arriving after the create dialog has already opened.
@@ -1538,7 +1553,6 @@ watch([showCreateModal, createProviderOptions], ([isOpen, providers], [wasOpen])
   }
   if (!formGroupOptions.value.some((group) => group.value === formData.value.group_id)) {
     formData.value.group_id = null
-  formData.value.group_ids = []
   }
 })
 
@@ -1686,7 +1700,6 @@ const editKey = (key: ApiKey) => {
   formData.value = {
     name: key.name,
     group_id: key.group_id,
-    group_ids: key.group_ids?.length ? [...key.group_ids] : (key.group_id ? [key.group_id] : []),
     status: key.status === 'quota_exhausted' || key.status === 'expired' ? 'inactive' : key.status,
     use_custom_key: false,
     custom_key: '',
@@ -1785,8 +1798,8 @@ const confirmDelete = (key: ApiKey) => {
 }
 
 const handleSubmit = async () => {
-  // Validate at least one group is selected
-  if (formData.value.group_ids.length === 0) {
+  // Validate group_id is required
+  if (formData.value.group_id === null) {
     appStore.showError(t('keys.groupRequired'))
     return
   }
@@ -1843,8 +1856,7 @@ const handleSubmit = async () => {
     if (showEditModal.value && selectedKey.value) {
       const updates: UpdateApiKeyRequest = {
         name: formData.value.name,
-        group_id: formData.value.group_ids[0] ?? null,
-        group_ids: formData.value.group_ids,
+        group_id: formData.value.group_id,
         ip_whitelist: ipWhitelist,
         ip_blacklist: ipBlacklist,
         quota: quota,
@@ -1862,14 +1874,13 @@ const handleSubmit = async () => {
       const customKey = formData.value.use_custom_key ? formData.value.custom_key : undefined
       await keysAPI.create(
         formData.value.name,
-        formData.value.group_ids[0] ?? null,
+        formData.value.group_id,
         customKey,
         ipWhitelist,
         ipBlacklist,
         quota,
         expiresInDays,
-        rateLimitData,
-        formData.value.group_ids
+        rateLimitData
       )
       appStore.showSuccess(t('keys.keyCreatedSuccess'))
       // Only advance tour if active, on submit step, and creation succeeded
@@ -1915,7 +1926,6 @@ const closeModals = () => {
   formData.value = {
     name: '',
     group_id: null,
-    group_ids: [],
     status: 'active',
     use_custom_key: false,
     custom_key: '',
