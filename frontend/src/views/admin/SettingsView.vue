@@ -6353,6 +6353,14 @@
             </div>
           </div>
 
+        <!-- Upstream error messages are managed with the gateway settings. -->
+        <ErrorPassthroughRulesModal
+          v-if="activeTab === 'gateway'"
+          :show="true"
+          embedded
+          mapping-mode
+        />
+
         <!-- Usage Records Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -8963,7 +8971,7 @@
         </div>
 
         <!-- Save Button -->
-        <div v-show="activeTab !== 'backup' && activeTab !== 'errorMapping'" class="flex justify-end">
+        <div v-show="activeTab !== 'backup'" class="flex justify-end">
           <button
             type="submit"
             :disabled="saving || loadFailed || siteLogoUploading"
@@ -8997,13 +9005,6 @@
           </button>
         </div>
       </form>
-
-      <ErrorPassthroughRulesModal
-        v-if="!loading && activeTab === 'errorMapping'"
-        :show="true"
-        embedded
-        mapping-mode
-      />
 
       <!-- Provider dialogs placed outside the settings form to prevent form submission bubbling -->
       <PaymentProviderDialog
@@ -9167,7 +9168,6 @@ type SettingsTab =
   | "security"
   | "users"
   | "gateway"
-  | "errorMapping"
   | "payment"
   | "email"
   | "backup";
@@ -9182,7 +9182,6 @@ const settingsTabs = [
   { key: "security" as SettingsTab, icon: "shield" as const },
   { key: "users" as SettingsTab, icon: "user" as const },
   { key: "gateway" as SettingsTab, icon: "server" as const },
-  { key: "errorMapping" as SettingsTab, icon: "document" as const },
   { key: "payment" as SettingsTab, icon: "creditCard" as const },
   { key: "email" as SettingsTab, icon: "mail" as const },
   { key: "backup" as SettingsTab, icon: "database" as const },
