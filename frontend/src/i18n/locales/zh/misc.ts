@@ -667,6 +667,7 @@ export default {
       groupInfo: '分组信息',
       platform: '平台',
       rateMultiplierLabel: '倍率',
+      quota: '额度',
       dailyLimit: '日限额',
       weeklyLimit: '周限额',
       monthlyLimit: '月限额',

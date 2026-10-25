@@ -643,6 +643,7 @@ export default {
       groupInfo: 'Group Info',
       platform: 'Platform',
       rateMultiplierLabel: 'Rate',
+      quota: 'Quota',
       dailyLimit: 'Daily Limit',
       weeklyLimit: 'Weekly Limit',
       monthlyLimit: 'Monthly Limit',
