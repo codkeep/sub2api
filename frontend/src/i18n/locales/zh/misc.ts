@@ -436,6 +436,8 @@ export default {
       renewPlan: '管理与续订',
       renewPlanDescription: '已有订阅可点击「续费」选择对应套餐，也可在「我的订阅」查看有效期。',
       currentPlan: '已订阅',
+      discountSavings: '立省 {percent}%',
+      originalPrice: '原价',
     },
     groupFallback: '分组 #{id}',
     rechargeAccount: '充值账户',

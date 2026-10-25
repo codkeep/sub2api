@@ -1,13 +1,18 @@
 <template>
   <div class="subscription-plan" :class="{ 'subscription-plan--active': isRenewal }">
-    <span v-if="isRenewal" class="subscription-plan__ribbon">{{ t('payment.design.currentPlan') }}</span>
+    <span v-if="isRenewal" class="subscription-plan__ribbon">
+      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <path d="m5 12 4 4L19 6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      {{ t('payment.design.currentPlan') }}
+    </span>
 
     <div class="relative flex flex-1 flex-col p-5 sm:p-7">
       <!-- Header: name + badge + price -->
       <div class="mb-6 flex flex-wrap items-start justify-between gap-5">
         <div class="min-w-0 flex-1 basis-40">
           <div class="mb-2 flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-teal-400 shadow-[0_0_10px_#2dd4bf80]" />
+            <span class="subscription-plan__dot h-2 w-2 rounded-full" />
             <span class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-slate-400">{{ pLabel }}</span>
           </div>
           <h3
@@ -32,10 +37,17 @@
             </span>
             <span class="text-[11px] text-gray-400 dark:text-dark-500">/ {{ validitySuffix }}</span>
           </div>
-          <div v-if="plan.original_price" class="mt-2 flex flex-wrap items-center justify-end gap-1.5">
-            <span class="text-xs text-gray-400 line-through dark:text-dark-500">{{ planCurrencySymbol }}{{ plan.original_price }}<template v-if="plan.currency"> {{ plan.currency }}</template></span>
-            <span v-if="discountText" class="rounded-full bg-teal-500/10 px-2 py-0.5 text-xs font-semibold text-teal-700 dark:text-teal-300">{{ discountText }}</span>
-          </div>
+        </div>
+      </div>
+
+      <div v-if="discountPercent > 0" class="subscription-plan__discount mb-5">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span class="subscription-plan__discount-icon" aria-hidden="true">%</span>
+          <strong class="text-lg font-bold tabular-nums tracking-tight">{{ t('payment.design.discountSavings', { percent: discountPercent }) }}</strong>
+        </div>
+        <div class="subscription-plan__original-price">
+          <span>{{ t('payment.design.originalPrice') }}</span>
+          <span class="font-medium line-through">{{ planCurrencySymbol }}{{ plan.original_price }}<template v-if="plan.currency"> {{ plan.currency }}</template></span>
         </div>
       </div>
 
@@ -131,10 +143,10 @@ const badgeLightClass = computed(() => platformBadgeLightClass(platform.value))
 const iconClass = computed(() => platformIconClass(platform.value))
 const pLabel = computed(() => platformLabel(platform.value))
 
-const discountText = computed(() => {
-  if (!props.plan.original_price || props.plan.original_price <= 0) return ''
+const discountPercent = computed(() => {
+  if (!props.plan.original_price || props.plan.original_price <= 0) return 0
   const pct = Math.round((1 - props.plan.price / props.plan.original_price) * 100)
-  return pct > 0 ? `-${pct}%` : ''
+  return Math.max(0, pct)
 })
 
 const rateDisplay = computed(() => {
@@ -174,11 +186,11 @@ const validitySuffix = computed(() => planValiditySuffix(props.plan, t))
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #d5e4e1;
-  border-top: 3px solid #14cda9;
+  border: 1px solid #cad8e5;
+  border-top: 3px solid #87a4bf;
   border-radius: 18px;
-  background: linear-gradient(130deg, #fff, #f4faf8);
-  box-shadow: 0 8px 28px #062d2308, inset 0 1px 0 #fff;
+  background: linear-gradient(130deg, #fff, #f1f5fa);
+  box-shadow: 0 8px 28px #162d4508, inset 0 1px 0 #fff;
   transition: border-color .2s, box-shadow .2s;
 }
 .subscription-plan::before {
@@ -189,18 +201,42 @@ const validitySuffix = computed(() => planValiditySuffix(props.plan, t))
   height: 180px;
   top: 0;
   right: 0;
-  background: linear-gradient(135deg, #10cba609, transparent);
+  background: linear-gradient(135deg, #799ab20d, transparent);
   clip-path: polygon(30% 0, 100% 0, 55% 100%, 0 100%);
 }
-.subscription-plan:hover { border-color: #14cda980; box-shadow: 0 8px 28px #0ab58e14; }
-.subscription-plan--active { border-color: #10cda670; padding-top: 14px; }
-.subscription-plan__ribbon { position: absolute; top: 0; right: 0; z-index: 1; padding: 5px 18px; border-radius: 0 0 0 12px; background: #24e6c0; color: #043e34; font-size: 11px; font-weight: 700; }
-.subscription-plan__price { color: #0b997f; overflow-wrap: anywhere; }
-.subscription-plan__quota { border: 1px solid #dce6e5; border-radius: 13px; background: linear-gradient(115deg, #f0f5f6, #f8fbfb); }
-.subscription-plan__button { border: 1px solid #16cda4; background: linear-gradient(110deg, #10bf99, #09a77e); color: #fff; box-shadow: inset 0 1px 0 #ffffff25; }
-.subscription-plan__button:hover { background: linear-gradient(110deg, #11cba4, #0cb98b); }
-.dark .subscription-plan { background: radial-gradient(ellipse at 35% 0, #1e4c4933, transparent 60%), linear-gradient(120deg, #19232f, #0d1821 65%, #0a2023); border-color: #4f7b8038; border-top-color: #24e6c0; box-shadow: 0 8px 28px #00000015, inset 0 1px 0 #ffffff0a; }
-.dark .subscription-plan--active { border-color: #20d4b25c; border-top-color: #24e6c0; }
-.dark .subscription-plan__price { color: #35f0cf; }
-.dark .subscription-plan__quota { border-color: #8ca9b529; background: linear-gradient(115deg, #293543b3, #15212bb3); }
+.subscription-plan:hover { border-color: #88a8c8; box-shadow: 0 8px 28px #294d7414; }
+.subscription-plan--active {
+  padding-top: 14px;
+  border-color: #19b99a;
+  border-top-color: #0ecba5;
+  background: radial-gradient(ellipse at 15% 0, #99f6df50, transparent 65%), linear-gradient(130deg, #f5fffb, #e7f8f1);
+  box-shadow: 0 8px 28px #0b9a7814, inset 0 1px 0 #fff;
+}
+.subscription-plan--active::before { background: linear-gradient(135deg, #10cba610, transparent); }
+.subscription-plan--active:hover { border-color: #0a997c; box-shadow: 0 8px 28px #0b9a7824; }
+.subscription-plan__ribbon { position: absolute; top: 0; right: 0; z-index: 1; display: flex; align-items: center; gap: 6px; padding: 7px 18px; border-radius: 0 0 0 12px; background: linear-gradient(110deg, #58edcb, #24d5b0); color: #043e34; font-size: 12px; font-weight: 700; }
+.subscription-plan__dot { background: #87a4bf; box-shadow: 0 0 10px #87a4bf50; }
+.subscription-plan--active .subscription-plan__dot { background: #14cba6; box-shadow: 0 0 10px #14cba670; }
+.subscription-plan__price { color: #405e80; overflow-wrap: anywhere; }
+.subscription-plan__quota { border: 1px solid #d4dfeb; border-radius: 13px; background: linear-gradient(115deg, #eaf0f6, #f5f8fb); }
+.subscription-plan__button { border: 1px solid #7996b4; background: linear-gradient(110deg, #506f8f, #3e5c7a); color: #fff; box-shadow: inset 0 1px 0 #ffffff25; }
+.subscription-plan__button:hover { background: linear-gradient(110deg, #5b7f9f, #496c8d); }
+.subscription-plan--active .subscription-plan__price { color: #098d73; }
+.subscription-plan--active .subscription-plan__quota { border-color: #15b99340; background: linear-gradient(115deg, #d8f0e9, #effbf6); }
+.subscription-plan--active .subscription-plan__button { border-color: #16cda4; background: linear-gradient(110deg, #10bf99, #09a77e); color: #fff; }
+.subscription-plan--active .subscription-plan__button:hover { background: linear-gradient(110deg, #11cba4, #0cb98b); }
+.subscription-plan__discount { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px 16px; border: 1px solid #7dd7d2; border-radius: 12px; background: linear-gradient(110deg, #ccfbf1, #e0f7fa); color: #0c6c68; }
+.subscription-plan__discount-icon { display: flex; flex-shrink: 0; width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 9px; background: #15baa9; color: #fff; font-size: 18px; font-weight: 750; }
+.subscription-plan__original-price { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 12px; color: #4a7f80; }
+.dark .subscription-plan { background: linear-gradient(120deg, #1d2a3a, #121e2c 70%, #172637); border-color: #607d9e66; border-top-color: #87a4bf; box-shadow: 0 8px 28px #00000015, inset 0 1px 0 #ffffff0a; }
+.dark .subscription-plan:hover { border-color: #91b5d2; }
+.dark .subscription-plan--active { border-color: #20d4b299; border-top-color: #42f2d0; background: radial-gradient(ellipse at 15% 0, #21bba630, transparent 65%), linear-gradient(125deg, #153d38, #102a29 65%, #10352e); box-shadow: 0 8px 28px #00000020, inset 0 1px 0 #42f2d01a; }
+.dark .subscription-plan--active:hover { border-color: #4cf4d2; box-shadow: 0 8px 28px #14cba61a; }
+.dark .subscription-plan__price { color: #b8d2ee; }
+.dark .subscription-plan__quota { border-color: #8ca9b529; background: linear-gradient(115deg, #2c3e53b3, #1b2a3cb3); }
+.dark .subscription-plan--active .subscription-plan__price { color: #48f5d0; }
+.dark .subscription-plan--active .subscription-plan__quota { border-color: #42d9bb33; background: linear-gradient(115deg, #27524b80, #153b3480); }
+.dark .subscription-plan__discount { border-color: #38ded299; background: linear-gradient(110deg, #14625a99, #0f4d5c99); color: #8ffff0; box-shadow: inset 0 1px 0 #85fff51a; }
+.dark .subscription-plan__discount-icon { background: #5debd3; color: #043d36; }
+.dark .subscription-plan__original-price { color: #a0c7cd; }
 </style>

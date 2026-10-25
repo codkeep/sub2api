@@ -412,6 +412,8 @@ export default {
       renewPlan: 'Manage and renew',
       renewPlanDescription: 'Select Renew on an existing subscription to choose a plan, or check its expiry in My Subscriptions.',
       currentPlan: 'Subscribed',
+      discountSavings: 'Save {percent}%',
+      originalPrice: 'Was',
     },
     groupFallback: 'Group #{id}',
     rechargeAccount: 'Recharge Account',
