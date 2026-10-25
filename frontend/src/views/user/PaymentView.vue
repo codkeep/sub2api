@@ -85,13 +85,6 @@
                     />
                     <p v-if="amountError" class="mt-2 text-xs text-amber-600 dark:text-amber-300">{{ amountError }}</p>
                   </div>
-                  <div v-if="enabledMethods.length >= 1" class="billing-panel p-5 sm:p-7">
-                    <PaymentMethodSelector
-                      :methods="methodOptions"
-                      :selected="selectedMethod"
-                      @select="selectedMethod = $event"
-                    />
-                  </div>
                 </div>
                 <aside class="billing-panel overflow-hidden xl:sticky xl:top-24">
                   <div class="border-b border-gray-100 px-6 py-5 dark:border-dark-700">
@@ -132,6 +125,14 @@
                       </p>
                     </div>
                     <p v-else class="py-5 text-sm leading-6 text-gray-500 dark:text-gray-400">{{ t('payment.chooseAmountHint') }}</p>
+                    <div class="mt-6 border-t border-gray-200 pt-6 dark:border-dark-600">
+                      <PaymentMethodSelector
+                        compact
+                        :methods="methodOptions"
+                        :selected="selectedMethod"
+                        @select="selectedMethod = $event"
+                      />
+                    </div>
                     <button :class="['btn billing-primary-button mt-6 w-full py-3.5 text-sm font-semibold', paymentButtonClass]" :disabled="!canSubmit || submitting" @click="handleSubmitRecharge">
                       <span v-if="submitting" class="flex items-center justify-center gap-2">
                         <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
@@ -200,15 +201,14 @@
                   </div>
                 </div>
               </div>
-              <div v-if="enabledMethods.length >= 1" class="billing-panel p-6">
+              <div class="billing-panel space-y-6 p-6">
                 <PaymentMethodSelector
+                  v-if="enabledMethods.length >= 1"
                   :methods="subMethodOptions"
                   :selected="selectedMethod"
                   @select="selectedMethod = $event"
                 />
-              </div>
-              <div v-if="feeRate > 0 && selectedPlan.price > 0" class="billing-panel p-6">
-                <div class="space-y-2 text-sm">
+                <div v-if="feeRate > 0 && selectedPlan.price > 0" class="space-y-2 border-t border-gray-200 pt-6 text-sm dark:border-dark-600">
                   <div class="flex justify-between">
                     <span class="text-gray-500 dark:text-gray-400">{{ t('payment.amountLabel') }}</span>
                     <span class="text-gray-900 dark:text-white">{{ formatSelectedPaymentAmount(subPaymentAmount) }}</span>
@@ -222,15 +222,17 @@
                     <span class="text-lg font-bold text-primary-600 dark:text-primary-400">{{ formatSelectedPaymentAmount(subTotalAmount) }}</span>
                   </div>
                 </div>
+                <div class="space-y-3">
+                  <button :class="['btn billing-primary-button w-full py-3.5 text-base font-semibold', paymentButtonClass]" :disabled="!canSubmitSubscription || submitting" @click="confirmSubscribe">
+                    <span v-if="submitting" class="flex items-center justify-center gap-2">
+                      <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                      {{ t('common.processing') }}
+                    </span>
+                    <span v-else>{{ t('payment.createOrder') }} {{ formatSelectedPaymentAmount(subTotalAmount) }}</span>
+                  </button>
+                  <button class="btn btn-secondary w-full" @click="selectedPlan = null">{{ t('common.cancel') }}</button>
+                </div>
               </div>
-              <button :class="['btn billing-primary-button w-full py-3.5 text-base font-semibold', paymentButtonClass]" :disabled="!canSubmitSubscription || submitting" @click="confirmSubscribe">
-                <span v-if="submitting" class="flex items-center justify-center gap-2">
-                  <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                  {{ t('common.processing') }}
-                </span>
-                <span v-else>{{ t('payment.createOrder') }} {{ formatSelectedPaymentAmount(subTotalAmount) }}</span>
-              </button>
-              <button class="btn btn-secondary w-full" @click="selectedPlan = null">{{ t('common.cancel') }}</button>
             </template>
             <!-- Plan list -->
             <template v-else>
