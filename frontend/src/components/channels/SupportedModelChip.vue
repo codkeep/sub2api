@@ -65,6 +65,11 @@
               <span>{{ billingModeLabel }}</span>
             </div>
 
+            <div v-if="billingTypeLabel" class="flex justify-between">
+              <span class="text-gray-500 dark:text-gray-400">{{ t(prefixKey('billingType')) }}</span>
+              <span>{{ billingTypeLabel }}</span>
+            </div>
+
             <template v-if="model.pricing.billing_mode === BILLING_MODE_TOKEN">
               <PricingRow
                 :label="t(prefixKey('inputPrice'))"
@@ -216,6 +221,8 @@ const props = withDefaults(
     platformHint?: string
     pricingUnit?: ChannelPricingUnit
     pricingUnits?: string[]
+    /** 分组计费类型：standard=余额，subscription=订阅。 */
+    billingTypes?: string[]
   }>(),
   {
     pricingKeyPrefix: 'availableChannels.pricing',
@@ -223,6 +230,7 @@ const props = withDefaults(
     showPlatform: true,
     platformHint: '',
     pricingUnit: 'usd'
+  billingTypes: () => []
   }
 )
 
@@ -264,6 +272,20 @@ const billingModeLabel = computed(() => {
     default:
       return '-'
   }
+})
+
+const billingTypeLabel = computed(() => {
+  const labels = [...new Set(props.billingTypes.map((type) => {
+    switch (type) {
+      case 'subscription':
+        return t(prefixKey('billingTypeSubscription'))
+      case 'standard':
+        return t(prefixKey('billingTypeBalance'))
+      default:
+        return type
+    }
+  }).filter(Boolean))]
+  return labels.join(' / ')
 })
 
 function formatPrice(value: number | null, scale: number): string {

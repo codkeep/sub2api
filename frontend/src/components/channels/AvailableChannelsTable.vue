@@ -163,6 +163,7 @@
                 :no-pricing-label="noPricingLabel"
                 :show-platform="false"
                 :platform-hint="section.platform"
+                :billing-types="sectionBillingTypes(section)"
               />
               <span v-if="section.supported_models.length === 0" class="text-xs text-gray-400">
                 {{ noModelsLabel }}
@@ -307,6 +308,7 @@
                     :no-pricing-label="noPricingLabel"
                     :show-platform="false"
                     :platform-hint="section.platform"
+                    :billing-types="sectionBillingTypes(section)"
                   />
                   <span v-if="section.supported_models.length === 0" class="text-xs text-gray-400">
                     {{ noModelsLabel }}
@@ -360,6 +362,10 @@ const { t } = useI18n()
 
 function sectionPricingUnits(section: UserChannelPlatformSection): string[] {
   return [...new Set(section.groups.map(resolveQuotaUnit))]
+}
+
+function sectionBillingTypes(section: UserChannelPlatformSection): string[] {
+  return [...new Set(section.groups.map((group) => group.subscription_type || 'standard'))]
 }
 
 function exclusiveGroups(section: UserChannelPlatformSection): UserAvailableGroup[] {
