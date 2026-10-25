@@ -262,10 +262,52 @@ onBeforeUnmount(() => {
   @apply text-[11px] text-slate-500 dark:text-slate-400;
 }
 .subscription-list {
+  --subscription-scrollbar-thumb: #cbd5e1;
+  --subscription-scrollbar-thumb-hover: #94a3b8;
   max-height: min(480px, calc(100dvh - 12rem));
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  /* Chromium 需要 auto，才能使用下方的圆角滚动条样式。 */
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+.dark .subscription-list {
+  --subscription-scrollbar-thumb: #475569;
+  --subscription-scrollbar-thumb-hover: #64748b;
+}
+.subscription-list::-webkit-scrollbar {
+  width: 8px;
+}
+.subscription-list::-webkit-scrollbar-track {
+  margin-block: 8px;
+  background: transparent;
+}
+.subscription-list::-webkit-scrollbar-thumb,
+.subscription-list:hover::-webkit-scrollbar-thumb,
+.subscription-list:focus-within::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-color: var(--subscription-scrollbar-thumb);
+  background-clip: padding-box;
+}
+.subscription-list:hover::-webkit-scrollbar-thumb:hover {
+  background-color: var(--subscription-scrollbar-thumb-hover);
+}
+.subscription-list::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+@supports (-moz-appearance: none) {
+  .subscription-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--subscription-scrollbar-thumb) transparent;
+  }
+  .subscription-list:hover,
+  .subscription-list:focus-within {
+    scrollbar-color: var(--subscription-scrollbar-thumb-hover) transparent;
+  }
 }
 .subscription-item {
   @apply border-b border-slate-100 px-4 py-4 last:border-b-0 dark:border-slate-800;
