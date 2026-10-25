@@ -112,6 +112,7 @@
                       :bonus-mode="rechargeBonusMode"
                       :multiplier="balanceRechargeMultiplier"
                       :currency="selectedCurrency"
+                      credited-currency="USD"
                     />
                     <p v-if="amountError" class="mt-2 text-xs text-amber-600 dark:text-amber-300">{{ amountError }}</p>
                   </div>

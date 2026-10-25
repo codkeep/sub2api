@@ -4,6 +4,7 @@
     <div>
       <label class="mb-4 block text-base font-semibold text-gray-900 dark:text-white">
         {{ t('payment.quickAmounts') }}
+        <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">· {{ currencySymbol(creditedCurrency) }}</span>
       </label>
       <div class="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-3 sm:gap-4">
         <button
@@ -34,7 +35,7 @@
               <span>{{ badgeText(amt) }}</span>
             </span>
           </span>
-          <span class="block text-xl tracking-tight">{{ amt }}</span>
+          <span class="block text-xl tracking-tight">{{ creditedSymbol }}{{ amt }}</span>
           <!-- 配置了优惠阶梯时，所有按钮都显示第二行，保持高度一致：赠金显示到账 USD，折扣显示折后实付 -->
           <span
             v-if="showSecondLine"
@@ -91,6 +92,8 @@ const props = withDefaults(defineProps<{
   multiplier?: number
   /** 支付币种（折扣模式第二行实付金额的币种与精度） */
   currency?: string
+  /** 到账余额币种；余额固定以 USD 记账，但保留参数便于明确展示。 */
+  creditedCurrency?: string
 }>(), {
   amounts: () => [10, 20, 50, 100, 200, 500, 1000, 2000, 5000],
   min: 0,
@@ -99,6 +102,7 @@ const props = withDefaults(defineProps<{
   bonusMode: 'bonus',
   multiplier: 1,
   currency: undefined,
+  creditedCurrency: 'USD',
 })
 
 const emit = defineEmits<{
@@ -108,6 +112,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const customText = ref('')
+const creditedSymbol = computed(() => currencySymbol(props.creditedCurrency))
 
 // 0 = no limit
 const filteredAmounts = computed(() =>
@@ -144,7 +149,7 @@ function secondLine(amt: number): string {
   if (props.bonusMode === 'discount') {
     return t('payment.rechargeBonus.payShort', { amount: formatPaymentAmount(quote.payBase, props.currency) })
   }
-  return t('payment.rechargeBonus.creditedShort', { amount: '$' + quote.credited.toFixed(2) })
+  return t('payment.rechargeBonus.creditedShort', { amount: formatPaymentAmount(quote.credited, props.creditedCurrency) })
 }
 
 const placeholderText = computed(() => {
