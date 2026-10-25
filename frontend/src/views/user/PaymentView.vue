@@ -27,10 +27,34 @@
           </div>
         </BillingHero>
         <div v-if="tabs.length > 1 && paymentPhase === 'select' && !selectedPlan" class="billing-tabs">
-          <button v-for="tab in tabs" :key="tab.key" type="button"
-            :aria-pressed="activeTab === tab.key"
-            class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
-            @click="activeTab = tab.key">{{ tab.label }}</button>
+          <div v-for="tab in tabs" :key="tab.key" class="billing-tab-item" :class="{ 'is-active': activeTab === tab.key }">
+            <button type="button"
+              :aria-pressed="activeTab === tab.key"
+              class="billing-tab-button focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
+              @click="activeTab = tab.key; billingHelp = null">{{ tab.label }}</button>
+            <button type="button"
+              class="billing-tab-help focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
+              :aria-label="t('payment.billingHelp.label', { mode: tab.label })"
+              :aria-describedby="billingHelp === tab.key ? `billing-help-${tab.key}` : undefined"
+              @mouseenter="billingHelp = tab.key"
+              @mouseleave="billingHelp = null"
+              @focus="billingHelp = tab.key"
+              @blur="billingHelp = null"
+              @click.stop="billingHelp = tab.key"
+              @keydown.esc.stop="billingHelp = null">
+              <Icon name="questionCircle" size="sm" />
+            </button>
+            <div v-if="billingHelp === tab.key" :id="`billing-help-${tab.key}`" role="tooltip" class="billing-tab-tooltip">
+              <p class="text-sm font-semibold">{{ t(`payment.billingHelp.${tab.key}.title`) }}</p>
+              <p class="mt-1.5 text-xs leading-6 text-[var(--billing-muted)]">{{ t(`payment.billingHelp.${tab.key}.summary`) }}</p>
+              <dl class="mt-4 space-y-3 border-t border-[var(--billing-border)] pt-4 text-xs leading-6">
+                <div v-for="detail in ['billing', 'scope', 'limits']" :key="detail">
+                  <dt class="font-medium text-[var(--billing-accent)]">{{ t(`payment.billingHelp.${detail}`) }}</dt>
+                  <dd class="mt-0.5 text-[var(--billing-muted)]">{{ t(`payment.billingHelp.${tab.key}.${detail}`) }}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
         </div>
         <!-- Payment in progress (shared by recharge and subscription) -->
         <template v-if="paymentPhase === 'paying'">
@@ -389,6 +413,7 @@ const submitting = ref(false)
 const errorMessage = ref('')
 const errorHintMessage = ref('')
 const activeTab = ref<'recharge' | 'subscription'>('recharge')
+const billingHelp = ref<'recharge' | 'subscription' | null>(null)
 const amount = ref<number | null>(null)
 const selectedMethod = ref('')
 const selectedPlan = ref<SubscriptionPlan | null>(null)

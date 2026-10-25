@@ -63,11 +63,15 @@
 .billing-hero__spark { position: absolute; height: 4px; width: 4px; border-radius: 50%; background: #6bf8dd; box-shadow: 0 0 12px #34f8ce; }
 .billing-hero__spark--one { top: 95px; left: 130px; }
 .billing-hero__spark--two { top: 150px; right: 50px; opacity: .6; }
-.billing-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--billing-border); }
-.billing-tabs button { position: relative; min-width: 94px; padding: 15px 22px; color: var(--billing-muted); font-weight: 600; font-size: 15px; transition: color .2s; }
-.billing-tabs button:hover { color: var(--billing-accent); }
-.billing-tabs button[aria-pressed="true"] { color: var(--billing-accent); background: linear-gradient(to top, #12cbae0e, transparent); }
-.billing-tabs button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: var(--billing-accent); border-radius: 2px 2px 0 0; box-shadow: 0 -3px 14px #11ceaa30; }
+.billing-tabs { position: relative; display: flex; gap: 8px; border-bottom: 1px solid var(--billing-border); }
+.billing-tab-item { display: grid; align-items: center; min-width: 110px; color: var(--billing-muted); }
+.billing-tab-button { position: relative; grid-area: 1 / 1; padding: 15px 44px 15px 22px; font-weight: 600; font-size: 15px; transition: color .2s; }
+.billing-tab-button:hover { color: var(--billing-accent); }
+.billing-tab-item.is-active { color: var(--billing-accent); background: linear-gradient(to top, #12cbae0e, transparent); }
+.billing-tab-button[aria-pressed="true"]::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: var(--billing-accent); border-radius: 2px 2px 0 0; box-shadow: 0 -3px 14px #11ceaa30; }
+.billing-tab-help { display: inline-flex; grid-area: 1 / 1; z-index: 1; justify-self: end; align-items: center; justify-content: center; margin-right: 18px; padding: 2px; border-radius: 50%; color: var(--billing-muted); cursor: help; transition: color .2s, background-color .2s; }
+.billing-tab-help:hover, .billing-tab-help:focus-visible { color: var(--billing-accent); background: #12cbae12; }
+.billing-tab-tooltip { position: absolute; top: 100%; left: 0; z-index: 50; width: 390px; max-width: 100%; margin-top: 10px; padding: 20px; border: 1px solid var(--billing-border); border-radius: 14px; color: var(--billing-text); background: var(--billing-panel); box-shadow: 0 18px 48px -12px #00000040; pointer-events: none; }
 .billing-guide { padding: 24px; }
 .billing-guide__header { display: flex; align-items: center; gap: 12px; padding-bottom: 17px; border-bottom: 1px solid var(--billing-border); color: var(--billing-text); font-size: 16px; font-weight: 650; }
 .billing-guide__item { display: flex; gap: 14px; align-items: start; margin-top: 22px; }

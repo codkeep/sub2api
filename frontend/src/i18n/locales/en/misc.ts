@@ -421,6 +421,26 @@ export default {
     noActiveSubscription: 'No active subscription',
     tabTopUp: 'Top Up',
     tabSubscribe: 'Subscribe',
+    billingHelp: {
+      label: 'Learn about {mode}',
+      billing: 'Credit and charges',
+      scope: 'Where it applies',
+      limits: 'Limits and validity',
+      recharge: {
+        title: 'Top up · Pay as you go',
+        summary: 'Add funds to your account and pay for actual usage. Suitable for variable usage.',
+        billing: 'Top-ups credit your USD balance. Requests in balance-billed groups deduct funds using the group’s model prices, billing mode and multipliers.',
+        scope: 'Applies to balance-billed groups you can access. A top-up does not activate a subscription or increase a plan’s quota.',
+        limits: 'Your balance decreases with usage and must be topped up when depleted. It does not refill daily, weekly or monthly. Subscription groups still require an active subscription.'
+      },
+      subscription: {
+        title: 'Subscribe · Use a plan’s quota',
+        summary: 'Purchase a plan for a specific group and use its quota during the plan’s validity period. Suitable for regular usage.',
+        billing: 'A purchase activates the group’s subscription benefits without crediting your balance. Requests in that group consume subscription quota, displayed in the group’s configured unit.',
+        scope: 'Applies only to the plan’s subscription group and does not cover other balance-billed groups. Select the matching group for your API key.',
+        limits: 'Plans may have daily, weekly and monthly limits, which all apply together. Wait for the relevant reset when a limit is reached and renew when the plan expires. Requests do not automatically fall back to your balance.'
+      }
+    },
     noPlans: 'No subscription plans available',
     notAvailable: 'Top-up is currently unavailable',
     billingUnavailable: 'Neither top-up nor subscriptions are currently available. Please contact the administrator.',
