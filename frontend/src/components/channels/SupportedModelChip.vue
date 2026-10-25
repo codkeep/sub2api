@@ -60,14 +60,14 @@
           </div>
 
           <div v-else class="space-y-2 text-gray-700 dark:text-gray-300">
-            <div class="flex justify-between">
-              <span class="text-gray-500 dark:text-gray-400">{{ t(prefixKey('billingMode')) }}</span>
-              <span>{{ billingModeLabel }}</span>
-            </div>
-
             <div v-if="billingTypeLabel" class="flex justify-between">
               <span class="text-gray-500 dark:text-gray-400">{{ t(prefixKey('billingType')) }}</span>
               <span>{{ billingTypeLabel }}</span>
+            </div>
+
+            <div class="flex justify-between">
+              <span class="text-gray-500 dark:text-gray-400">{{ t(prefixKey('billingMode')) }}</span>
+              <span>{{ billingModeLabel }}</span>
             </div>
 
             <template v-if="model.pricing.billing_mode === BILLING_MODE_TOKEN">
