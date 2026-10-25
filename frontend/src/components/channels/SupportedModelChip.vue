@@ -229,7 +229,7 @@ const props = withDefaults(
     noPricingLabel: '',
     showPlatform: true,
     platformHint: '',
-    pricingUnit: 'usd'
+    pricingUnit: 'usd',
   billingTypes: () => []
   }
 )
