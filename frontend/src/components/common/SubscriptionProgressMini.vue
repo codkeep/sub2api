@@ -86,7 +86,7 @@
 
 <script setup lang="ts">
 import { useQuotaUsageDisplay, type QuotaGroup } from '@/composables/useSubscriptionUnit'
-const formatQuotaUsage = useQuotaUsageDisplay()
+const formatQuotaUsage = useQuotaUsageDisplay(2)
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
@@ -299,6 +299,8 @@ onBeforeUnmount(() => {
 }
 .subscription-value {
   @apply text-right text-xs font-medium leading-4 tabular-nums text-slate-700 dark:text-slate-200;
+  min-width: 0;
+  white-space: normal;
   overflow-wrap: anywhere;
 }
 .subscription-track {
