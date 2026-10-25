@@ -433,6 +433,26 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyAvailableChannelsEnabled] = strconv.FormatBool(settings.AvailableChannelsEnabled)
 
 	// Subscription feature switch
+	if settings.SubscriptionUsageDisplay != "" && settings.SubscriptionUsageDisplay != "amount" && settings.SubscriptionUsageDisplay != "percentage" {
+		return nil, infraerrors.BadRequest("INVALID_SUBSCRIPTION_USAGE_DISPLAY", "订阅用量展示方式无效")
+	}
+	updates[SettingKeySubscriptionUsageDisplay] = normalizeSubscriptionUsageDisplay(settings.SubscriptionUsageDisplay)
+	updates[SettingKeySubscriptionUnitName] = normalizeSubscriptionUnitName(settings.SubscriptionUnitName)
+	if settings.SubscriptionUnits != nil {
+		units, err := ValidateSubscriptionUnits(settings.SubscriptionUnits)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.validateUnitRemoval(ctx, units); err != nil {
+			return nil, err
+		}
+		raw, err := json.Marshal(units)
+		if err != nil {
+			return nil, err
+		}
+		updates[SettingKeySubscriptionUnits] = string(raw)
+		settings.SubscriptionUnits = units
+	}
 	updates[SettingKeySubscriptionEnabled] = strconv.FormatBool(settings.SubscriptionEnabled)
 
 	// Model plaza feature switches + description

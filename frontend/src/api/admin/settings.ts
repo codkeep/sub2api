@@ -3,6 +3,8 @@
  * Handles system settings management for administrators
  */
 
+import type { SubscriptionUnit } from '@/types'
+
 import { apiClient } from "../client";
 import { listPlatformIds } from "@/constants/platformCatalog";
 import type {
@@ -743,6 +745,9 @@ export interface SystemSettings {
   available_channels_enabled: boolean;
 
   // Subscription feature switch (user sidebar "My Subscriptions" entry)
+  subscription_usage_display?: 'amount' | 'percentage'
+  subscription_unit_name?: string;
+  subscription_units?: SubscriptionUnit[];
   subscription_enabled: boolean;
 
   // Model Plaza feature switches + description
@@ -1055,6 +1060,9 @@ export interface UpdateSettingsRequest {
   available_channels_enabled?: boolean;
 
   // Subscription feature switch
+  subscription_usage_display?: 'amount' | 'percentage'
+  subscription_unit_name?: string;
+  subscription_units?: SubscriptionUnit[];
   subscription_enabled?: boolean;
 
   // Model Plaza feature switches + description

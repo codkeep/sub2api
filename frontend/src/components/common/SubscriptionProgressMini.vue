@@ -95,7 +95,7 @@
                   </div>
                   <span class="w-24 flex-shrink-0 text-right text-[10px] text-gray-500">
                     {{
-                      formatUsage(subscription.daily_usage_usd, subscription.group?.daily_limit_usd)
+                      formatUsage(subscription.daily_usage_usd, subscription.group?.daily_limit_usd, subscription.group)
                     }}
                   </span>
                 </div>
@@ -123,7 +123,7 @@
                   </div>
                   <span class="w-24 flex-shrink-0 text-right text-[10px] text-gray-500">
                     {{
-                      formatUsage(subscription.weekly_usage_usd, subscription.group?.weekly_limit_usd)
+                      formatUsage(subscription.weekly_usage_usd, subscription.group?.weekly_limit_usd, subscription.group)
                     }}
                   </span>
                 </div>
@@ -153,7 +153,7 @@
                     {{
                       formatUsage(
                         subscription.monthly_usage_usd,
-                        subscription.group?.monthly_limit_usd
+                        subscription.group?.monthly_limit_usd, subscription.group
                       )
                     }}
                   </span>
@@ -178,13 +178,15 @@
 </template>
 
 <script setup lang="ts">
+import { useQuotaUsageDisplay, type QuotaGroup } from '@/composables/useSubscriptionUnit'
+const formatQuotaUsage = useQuotaUsageDisplay()
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import { useSubscriptionStore } from '@/stores'
 import { FeatureFlags, isFeatureFlagEnabled } from '@/utils/featureFlags'
 import type { UserSubscription } from '@/types'
-import { getExpirationDateRelation, formatSubscriptionPoints } from '@/utils/subscriptionQuota'
+import { getExpirationDateRelation } from '@/utils/subscriptionQuota'
 
 const { t } = useI18n()
 
@@ -255,10 +257,8 @@ function getProgressWidth(used: number | undefined, limit: number | null | undef
   return `${percentage}%`
 }
 
-function formatUsage(used: number | undefined, limit: number | null | undefined): string {
-  const usedValue = formatSubscriptionPoints(used)
-  const limitValue = limit == null ? '∞' : formatSubscriptionPoints(limit)
-  return `${usedValue} ${t('subscriptionProgress.points')}/${limitValue} ${t('subscriptionProgress.points')}`
+function formatUsage(used: number | undefined, limit: number | null | undefined, group?: QuotaGroup): string {
+  return formatQuotaUsage(used, limit, group)
 }
 
 function formatDaysRemaining(expiresAt: string): string {

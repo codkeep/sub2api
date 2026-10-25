@@ -103,6 +103,7 @@
                     :user-rate-multiplier="userGroupRates[g.id] ?? null"
                     always-show-rate
                   />
+                  <span class="text-[10px] text-gray-500">{{ groupUnitLabel(g) }}</span>
                   <span
                     v-if="hasPeakRate(g)"
                     class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
@@ -137,6 +138,7 @@
                     :user-rate-multiplier="userGroupRates[g.id] ?? null"
                     always-show-rate
                   />
+                  <span class="text-[10px] text-gray-500">{{ groupUnitLabel(g) }}</span>
                   <span
                     v-if="hasPeakRate(g)"
                     class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
@@ -159,6 +161,7 @@
                 :key="`${section.platform}-${m.name}`"
                 :model="m"
                 :pricing-key-prefix="pricingKeyPrefix"
+                :pricing-units="sectionPricingUnits(section)"
                 :no-pricing-label="noPricingLabel"
                 :show-platform="false"
                 :platform-hint="section.platform"
@@ -242,6 +245,7 @@
                         :user-rate-multiplier="userGroupRates[g.id] ?? null"
                         always-show-rate
                       />
+                      <span class="text-[10px] text-gray-500">{{ groupUnitLabel(g) }}</span>
                       <span
                         v-if="hasPeakRate(g)"
                         class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
@@ -277,6 +281,7 @@
                         :user-rate-multiplier="userGroupRates[g.id] ?? null"
                         always-show-rate
                       />
+                      <span class="text-[10px] text-gray-500">{{ groupUnitLabel(g) }}</span>
                       <span
                         v-if="hasPeakRate(g)"
                         class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
@@ -302,6 +307,7 @@
                     class="max-w-full [&>span]:max-w-full [&>span]:truncate"
                     :model="m"
                     :pricing-key-prefix="pricingKeyPrefix"
+                    :pricing-units="sectionPricingUnits(section)"
                     :no-pricing-label="noPricingLabel"
                     :show-platform="false"
                     :platform-hint="section.platform"
@@ -321,6 +327,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { useSubscriptionUnit, useSubscriptionUnits, resolveQuotaUnit } from '@/composables/useSubscriptionUnit'
+const subscriptionUnit = useSubscriptionUnit()
+const subscriptionUnits = useSubscriptionUnits()
 import Icon from '@/components/icons/Icon.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
@@ -354,6 +363,14 @@ const props = defineProps<{
 void props.userGroupRates
 
 const { t } = useI18n()
+
+function groupUnitLabel(group: UserAvailableGroup): string {
+  const id = resolveQuotaUnit(group); if (id === 'usd') return '$'; return subscriptionUnits.value.find(u => u.id === id)?.name || subscriptionUnit.value
+}
+
+function sectionPricingUnits(section: UserChannelPlatformSection): string[] {
+  return [...new Set(section.groups.map(resolveQuotaUnit))]
+}
 
 function exclusiveGroups(section: UserChannelPlatformSection): UserAvailableGroup[] {
   return section.groups.filter((g) => g.is_exclusive)

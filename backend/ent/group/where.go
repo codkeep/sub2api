@@ -120,6 +120,11 @@ func DuplicateOperationID(v string) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldDuplicateOperationID, v))
 }
 
+// PricingUnit applies equality check predicate on the "pricing_unit" field. It's identical to PricingUnitEQ.
+func PricingUnit(v string) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldPricingUnit, v))
+}
+
 // Platform applies equality check predicate on the "platform" field. It's identical to PlatformEQ.
 func Platform(v string) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldPlatform, v))
@@ -983,6 +988,71 @@ func DuplicateOperationIDEqualFold(v string) predicate.Group {
 // DuplicateOperationIDContainsFold applies the ContainsFold predicate on the "duplicate_operation_id" field.
 func DuplicateOperationIDContainsFold(v string) predicate.Group {
 	return predicate.Group(sql.FieldContainsFold(FieldDuplicateOperationID, v))
+}
+
+// PricingUnitEQ applies the EQ predicate on the "pricing_unit" field.
+func PricingUnitEQ(v string) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldPricingUnit, v))
+}
+
+// PricingUnitNEQ applies the NEQ predicate on the "pricing_unit" field.
+func PricingUnitNEQ(v string) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldPricingUnit, v))
+}
+
+// PricingUnitIn applies the In predicate on the "pricing_unit" field.
+func PricingUnitIn(vs ...string) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldPricingUnit, vs...))
+}
+
+// PricingUnitNotIn applies the NotIn predicate on the "pricing_unit" field.
+func PricingUnitNotIn(vs ...string) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldPricingUnit, vs...))
+}
+
+// PricingUnitGT applies the GT predicate on the "pricing_unit" field.
+func PricingUnitGT(v string) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldPricingUnit, v))
+}
+
+// PricingUnitGTE applies the GTE predicate on the "pricing_unit" field.
+func PricingUnitGTE(v string) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldPricingUnit, v))
+}
+
+// PricingUnitLT applies the LT predicate on the "pricing_unit" field.
+func PricingUnitLT(v string) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldPricingUnit, v))
+}
+
+// PricingUnitLTE applies the LTE predicate on the "pricing_unit" field.
+func PricingUnitLTE(v string) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldPricingUnit, v))
+}
+
+// PricingUnitContains applies the Contains predicate on the "pricing_unit" field.
+func PricingUnitContains(v string) predicate.Group {
+	return predicate.Group(sql.FieldContains(FieldPricingUnit, v))
+}
+
+// PricingUnitHasPrefix applies the HasPrefix predicate on the "pricing_unit" field.
+func PricingUnitHasPrefix(v string) predicate.Group {
+	return predicate.Group(sql.FieldHasPrefix(FieldPricingUnit, v))
+}
+
+// PricingUnitHasSuffix applies the HasSuffix predicate on the "pricing_unit" field.
+func PricingUnitHasSuffix(v string) predicate.Group {
+	return predicate.Group(sql.FieldHasSuffix(FieldPricingUnit, v))
+}
+
+// PricingUnitEqualFold applies the EqualFold predicate on the "pricing_unit" field.
+func PricingUnitEqualFold(v string) predicate.Group {
+	return predicate.Group(sql.FieldEqualFold(FieldPricingUnit, v))
+}
+
+// PricingUnitContainsFold applies the ContainsFold predicate on the "pricing_unit" field.
+func PricingUnitContainsFold(v string) predicate.Group {
+	return predicate.Group(sql.FieldContainsFold(FieldPricingUnit, v))
 }
 
 // PlatformEQ applies the EQ predicate on the "platform" field.

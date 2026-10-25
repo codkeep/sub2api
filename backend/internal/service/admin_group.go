@@ -429,6 +429,26 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		return nil, infraerrors.Newf(http.StatusBadRequest, "INVALID_REASONING_EFFORT_MAPPING", "%v", err)
 	}
 
+	if err := s.validateGroupPricingUnit(ctx, input.PricingUnit); err != nil {
+		return nil, err
+	}
+	pricingUnit := input.PricingUnit
+	if pricingUnit == "" {
+		pricingUnit = "usd"
+		if input.SubscriptionType == SubscriptionTypeSubscription {
+			if s.settingService == nil {
+				pricingUnit = "points"
+			} else {
+				units, err := s.settingService.GetSubscriptionUnits(ctx)
+				if err != nil {
+					return nil, err
+				}
+				if len(units) > 0 {
+					pricingUnit = units[0].ID
+				}
+			}
+		}
+	}
 	subscriptionType := input.SubscriptionType
 	if subscriptionType == "" {
 		subscriptionType = SubscriptionTypeStandard
@@ -582,6 +602,7 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		IsExclusive:                     input.IsExclusive,
 		Status:                          StatusActive,
 		SubscriptionType:                subscriptionType,
+		PricingUnit:                     pricingUnit,
 		DailyLimitUSD:                   dailyLimit,
 		WeeklyLimitUSD:                  weeklyLimit,
 		MonthlyLimitUSD:                 monthlyLimit,
@@ -821,6 +842,12 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 		group.ModelPricing = modelPricing
 	}
 
+	if input.PricingUnit != "" {
+		if err := s.validateGroupPricingUnit(ctx, input.PricingUnit); err != nil {
+			return nil, err
+		}
+		group.PricingUnit = input.PricingUnit
+	}
 	// 订阅相关字段
 	if input.SubscriptionType != "" {
 		group.SubscriptionType = input.SubscriptionType

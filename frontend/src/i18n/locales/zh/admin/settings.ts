@@ -9,6 +9,7 @@ export default {
         security: '安全与认证',
         users: '用户默认值',
         gateway: '网关服务',
+        errorMapping: '错误提示映射',
         email: '邮件设置',
         backup: '数据备份',
         payment: '支付设置',
@@ -46,8 +47,18 @@ export default {
           enabledHint: '关闭后用户端侧边栏入口隐藏，接口返回空数组。',
         },
         siteBillingMode: {
-          title: '站点类型',
-          description: '决定用户端提供哪些购买方式。默认「充值 & 订阅」。',
+          pricingUnit: '计费显示单位',
+          usdUnit: '美元（$）',
+          pricingUnitHint: '同组模型统一使用此显示单位，1 美元额度 = 1 自定义积分；不改变余额或订阅的扣费来源。',
+          unitsTitle: '订阅额度单位管理',
+          unitsHint: '美元余额固定保留；你可以添加积分、代币等单位，并设置每 1 美元额度对应多少个单位。之后在分组中选择使用的单位。',
+          oneUSD: '1 美元 =',
+          addUnit: '添加单位',
+          unitName: '订阅额度单位名称',
+          unitPlaceholder: '积分',
+          unitHint: '统一用于订阅额度和消耗展示，1 美元额度 = 1 单位；不影响购买价格。',
+          title: '站点计费模式',
+          description: '决定用户端提供余额充值、订阅套餐，及订阅额度的显示方式。默认「充值 & 订阅」。',
           label: '购买方式',
           options: {
             rechargeAndSubscription: '充值 & 订阅',
@@ -1313,6 +1324,16 @@ export default {
 
     // Error Passthrough Rules
     errorPassthrough: {
+      mappingTitle: '错误提示映射',
+      mappingDescription: '按 HTTP 状态码、错误码关键词和平台，将接口错误转换为自定义提示。',
+      mappingHint: '与账号管理的错误透传规则共用配置。按优先级匹配首条启用规则；状态码与关键词选择“且”可避免误匹配其他错误。保存后用于网关上游错误响应与渠道主动监控的新检测结果。监控状态仍按真实响应判断，历史记录不会改写。',
+      templates: '从模板创建：',
+      quotaTemplates: {
+        daily: { name: '日限额已满', message: '日限额已满，请等待下次重置后使用' },
+        weekly: { name: '周限额已满', message: '周限额已满，请等待下次重置后使用' },
+        monthly: { name: '月限额已满', message: '月限额已满，请等待下次重置后使用' },
+      },
+      messageRequired: '请输入自定义提示内容',
       title: '错误透传规则',
       description: '配置上游错误如何返回给客户端',
       createRule: '创建规则',

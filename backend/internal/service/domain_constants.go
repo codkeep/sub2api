@@ -540,7 +540,10 @@ const (
 	// subscriptions API, existing subscription billing and admin subscription
 	// management are unaffected. Together with BALANCE_PAYMENT_DISABLED it forms the
 	// admin "site billing mode" selector. Defaults to true (opt-out feature).
-	SettingKeySubscriptionEnabled = "subscription_enabled"
+	SettingKeySubscriptionEnabled      = "subscription_enabled"
+	SettingKeySubscriptionUnitName     = "subscription_unit_name"
+	SettingKeySubscriptionUsageDisplay = "subscription_usage_display"
+	SettingKeySubscriptionUnits        = "subscription_units"
 
 	// SettingKeyModelPlazaEnabled is a DB-backed soft switch for the Model Plaza page
 	// (public group/model pricing showcase). When false: the plaza endpoint returns 404

@@ -70,18 +70,21 @@
                 :label="t(prefixKey('inputPrice'))"
                 :value="model.pricing.input_price"
                 :unit="t(prefixKey('unitPerMillion'))"
+                :formatter="formatPrice"
                 :scale="perMillionScale"
               />
               <PricingRow
                 :label="t(prefixKey('outputPrice'))"
                 :value="model.pricing.output_price"
                 :unit="t(prefixKey('unitPerMillion'))"
+                :formatter="formatPrice"
                 :scale="perMillionScale"
               />
               <PricingRow
                 :label="t(prefixKey('cacheWrite5mPrice'))"
                 :value="model.pricing.cache_write_price"
                 :unit="t(prefixKey('unitPerMillion'))"
+                :formatter="formatPrice"
                 :scale="perMillionScale"
               />
               <PricingRow
@@ -89,12 +92,14 @@
                 :label="t(prefixKey('cacheWrite1hPrice'))"
                 :value="model.pricing.cache_write_1h_price"
                 :unit="t(prefixKey('unitPerMillion'))"
+                :formatter="formatPrice"
                 :scale="perMillionScale"
               />
               <PricingRow
                 :label="t(prefixKey('cacheReadPrice'))"
                 :value="model.pricing.cache_read_price"
                 :unit="t(prefixKey('unitPerMillion'))"
+                :formatter="formatPrice"
                 :scale="perMillionScale"
               />
               <PricingRow
@@ -102,6 +107,7 @@
                 :label="t(prefixKey('imageInputPrice'))"
                 :value="model.pricing.image_input_price"
                 :unit="t(prefixKey('unitPerMillion'))"
+                :formatter="formatPrice"
                 :scale="perMillionScale"
               />
               <PricingRow
@@ -109,6 +115,7 @@
                 :label="t(prefixKey('imageOutputPrice'))"
                 :value="model.pricing.image_output_price"
                 :unit="t(prefixKey('unitPerMillion'))"
+                :formatter="formatPrice"
                 :scale="perMillionScale"
               />
             </template>
@@ -121,6 +128,7 @@
               :label="t(prefixKey('perRequestPrice'))"
               :value="model.pricing.per_request_price"
               :unit="t(prefixKey('unitPerRequest'))"
+              :formatter="formatPrice"
               :scale="1"
             />
 
@@ -132,6 +140,7 @@
               :label="t(prefixKey('imageOutputPrice'))"
               :value="model.pricing.image_output_price"
               :unit="t(prefixKey('unitPerRequest'))"
+              :formatter="formatPrice"
               :scale="1"
             />
 
@@ -140,6 +149,7 @@
               :label="t(prefixKey('videoPrice'))"
               :value="model.pricing.per_request_price"
               :unit="t(prefixKey('unitPerSecond'))"
+              :formatter="formatPrice"
               :scale="1"
             />
 
@@ -173,10 +183,12 @@
 </template>
 
 <script setup lang="ts">
+import { useUnitPrice } from '@/composables/useSubscriptionUnit'
+const formatUnitPrice = useUnitPrice()
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PricingRow from './PricingRow.vue'
-import { formatScaled, resolveIntervalPrices } from '@/utils/pricing'
+import { resolveIntervalPrices, type ChannelPricingUnit } from '@/utils/pricing'
 import {
   BILLING_MODE_TOKEN,
   BILLING_MODE_PER_REQUEST,
@@ -202,12 +214,15 @@ const props = withDefaults(
      * 仅用于视觉，不影响业务逻辑。
      */
     platformHint?: string
+    pricingUnit?: ChannelPricingUnit
+    pricingUnits?: string[]
   }>(),
   {
     pricingKeyPrefix: 'availableChannels.pricing',
     noPricingLabel: '',
     showPlatform: true,
-    platformHint: ''
+    platformHint: '',
+    pricingUnit: 'usd'
   }
 )
 
@@ -251,6 +266,10 @@ const billingModeLabel = computed(() => {
   }
 })
 
+function formatPrice(value: number | null, scale: number): string {
+  return formatUnitPrice(value, scale, props.pricingUnits ?? (props.pricingUnit === 'both' ? ['usd', 'points'] : [props.pricingUnit]))
+}
+
 function formatRange(min: number, max: number | null): string {
   const maxLabel = max == null ? '∞' : String(max)
   return `(${min}, ${maxLabel}]`
@@ -258,14 +277,14 @@ function formatRange(min: number, max: number | null): string {
 
 function formatInterval(iv: UserPricingInterval, pricing: UserSupportedModelPricing): string {
   if (pricing.billing_mode === BILLING_MODE_VIDEO) {
-    return `${formatScaled(iv.per_request_price, 1)} ${t(prefixKey('unitPerSecond'))}`
+    return `${formatPrice(iv.per_request_price, 1)} ${t(prefixKey('unitPerSecond'))}`
   }
   if (pricing.billing_mode === BILLING_MODE_PER_REQUEST || pricing.billing_mode === BILLING_MODE_IMAGE) {
-    return formatScaled(iv.per_request_price, 1)
+    return formatPrice(iv.per_request_price, 1)
   }
   const resolved = resolveIntervalPrices(iv, pricing)
-  const input = formatScaled(resolved.input_price, perMillionScale)
-  const output = formatScaled(resolved.output_price, perMillionScale)
+  const input = formatPrice(resolved.input_price, perMillionScale)
+  const output = formatPrice(resolved.output_price, perMillionScale)
   return `${input} / ${output}`
 }
 

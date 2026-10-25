@@ -132,6 +132,7 @@ export interface SubscriptionPlan {
   peak_start?: string
   peak_end?: string
   peak_rate_multiplier?: number
+  pricing_unit?: string
   daily_limit_usd?: number | null
   weekly_limit_usd?: number | null
   monthly_limit_usd?: number | null

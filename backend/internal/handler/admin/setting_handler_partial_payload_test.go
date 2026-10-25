@@ -203,3 +203,33 @@ func TestUpdateSettingsSubscriptionEnabledIsWritableAndKeptWhenOmitted(t *testin
 	require.Equal(t, "false", repo.values[service.SettingKeySubscriptionEnabled],
 		"a payload without subscription_enabled must not flip the stored value back to true")
 }
+
+func TestUpdateSettingsSubscriptionUnitNameIsWritableAndKeptWhenOmitted(t *testing.T) {
+	h, repo := newStepUpSwitchTestHandler(t, map[string]string{service.SettingKeySubscriptionUnitName: "积分"})
+	rec := doUpdateSettings(t, h, map[string]any{"subscription_unit_name": "  能量  "}, nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "能量", repo.values[service.SettingKeySubscriptionUnitName])
+	rec = doUpdateSettings(t, h, map[string]any{"site_name": "Example Gateway"}, nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "能量", repo.values[service.SettingKeySubscriptionUnitName])
+	rec = doUpdateSettings(t, h, map[string]any{"subscription_unit_name": " "}, nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "积分", repo.values[service.SettingKeySubscriptionUnitName])
+}
+
+func TestUpdateSettingsSubscriptionUsageDisplay(t *testing.T) {
+	h, repo := newStepUpSwitchTestHandler(t, map[string]string{})
+	rec := doUpdateSettings(t, h, map[string]any{"subscription_usage_display": "percentage"}, nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "percentage", repo.values[service.SettingKeySubscriptionUsageDisplay])
+	require.Contains(t, rec.Body.String(), `"subscription_usage_display":"percentage"`)
+	rec = doUpdateSettings(t, h, map[string]any{"site_name": "Example"}, nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "percentage", repo.values[service.SettingKeySubscriptionUsageDisplay])
+	rec = doUpdateSettings(t, h, map[string]any{"subscription_usage_display": "invalid"}, nil)
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.Equal(t, "percentage", repo.values[service.SettingKeySubscriptionUsageDisplay])
+	rec = doUpdateSettings(t, h, map[string]any{"subscription_usage_display": "amount"}, nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "amount", repo.values[service.SettingKeySubscriptionUsageDisplay])
+}

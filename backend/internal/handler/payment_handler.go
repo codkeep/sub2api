@@ -51,6 +51,7 @@ func (h *PaymentHandler) GetPlans(c *gin.Context) {
 	}
 	// Enrich plans with group platform for frontend color coding
 	type planWithPlatform struct {
+		PricingUnit        string   `json:"pricing_unit"`
 		ID                 int64    `json:"id"`
 		GroupID            int64    `json:"group_id"`
 		GroupPlatform      string   `json:"group_platform"`
@@ -77,7 +78,7 @@ func (h *PaymentHandler) GetPlans(c *gin.Context) {
 	for _, p := range plans {
 		gi := groupInfo[p.GroupID]
 		result = append(result, planWithPlatform{
-			ID: int64(p.ID), GroupID: p.GroupID,
+			ID: int64(p.ID), GroupID: p.GroupID, PricingUnit: gi.PricingUnit,
 			GroupPlatform: gi.Platform, GroupName: gi.I18n.LocalizeName(c.GetHeader("Accept-Language"), gi.Name),
 			RateMultiplier: gi.RateMultiplier, PeakRateEnabled: gi.PeakRateEnabled,
 			PeakStart: gi.PeakStart, PeakEnd: gi.PeakEnd, PeakRateMultiplier: gi.PeakRateMultiplier,
@@ -130,6 +131,7 @@ func (h *PaymentHandler) GetCheckoutInfo(c *gin.Context) {
 			RateMultiplier:  gi.RateMultiplier,
 			PeakRateEnabled: gi.PeakRateEnabled, PeakStart: gi.PeakStart,
 			PeakEnd: gi.PeakEnd, PeakRateMultiplier: gi.PeakRateMultiplier,
+			PricingUnit:    gi.PricingUnit,
 			DailyLimitUSD:  gi.DailyLimitUSD,
 			WeeklyLimitUSD: gi.WeeklyLimitUSD, MonthlyLimitUSD: gi.MonthlyLimitUSD,
 			ModelScopes: gi.ModelScopes,
@@ -189,6 +191,7 @@ type checkoutPlan struct {
 	PeakStart          string   `json:"peak_start"`
 	PeakEnd            string   `json:"peak_end"`
 	PeakRateMultiplier float64  `json:"peak_rate_multiplier"`
+	PricingUnit        string   `json:"pricing_unit"`
 	DailyLimitUSD      *float64 `json:"daily_limit_usd"`
 	WeeklyLimitUSD     *float64 `json:"weekly_limit_usd"`
 	MonthlyLimitUSD    *float64 `json:"monthly_limit_usd"`

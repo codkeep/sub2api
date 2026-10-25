@@ -9,6 +9,7 @@ export default {
         security: 'Security',
         users: 'Users',
         gateway: 'Gateway',
+        errorMapping: 'Error Messages',
         email: 'Email',
         backup: 'Backup',
         payment: 'Payment',
@@ -46,6 +47,16 @@ export default {
           enabledHint: 'When off, the sidebar entry is hidden and the endpoint returns an empty list.',
         },
         siteBillingMode: {
+          pricingUnit: 'Pricing display unit',
+          usdUnit: 'US dollars ($)',
+          pricingUnitHint: 'Applies to all models in this group. One USD of quota equals one point; the billing source is unchanged.',
+          unitsTitle: 'Subscription quota units',
+          unitsHint: 'USD balance is always available. Add units such as points or tokens, define their conversion, and select them per group.',
+          oneUSD: '1 USD =',
+          addUnit: 'Add unit',
+          unitName: 'Subscription quota unit name',
+          unitPlaceholder: 'points',
+          unitHint: 'Used for subscription quotas and usage. One USD of quota equals one unit; purchase prices are unchanged.',
           title: 'Site Billing Mode',
           description: 'Controls which purchase options users see. Defaults to "Recharge & Subscription".',
           label: 'Purchase options',
@@ -1319,6 +1330,16 @@ export default {
 
     // Error Passthrough Rules
     errorPassthrough: {
+      mappingTitle: 'Error Message Mapping',
+      mappingDescription: 'Map API errors to custom messages by HTTP status, error code keywords and platform.',
+      mappingHint: 'Shares rules with account error passthrough settings. The first enabled rule by priority wins. Use status AND keywords to avoid matching unrelated errors. Saved rules apply to upstream gateway errors and new active monitor checks. Monitor health still reflects the actual response; history is preserved.',
+      templates: 'Create from template:',
+      quotaTemplates: {
+        daily: { name: 'Daily limit reached', message: 'Daily limit reached. Please wait until the next reset.' },
+        weekly: { name: 'Weekly limit reached', message: 'Weekly limit reached. Please wait until the next reset.' },
+        monthly: { name: 'Monthly limit reached', message: 'Monthly limit reached. Please wait until the next reset.' },
+      },
+      messageRequired: 'Enter a custom message',
       title: 'Error Passthrough Rules',
       description: 'Configure how upstream errors are returned to clients',
       createRule: 'Create Rule',

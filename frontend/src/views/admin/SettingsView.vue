@@ -7461,8 +7461,11 @@
                 />
               </div>
             </div>
+
           </div>
         </div>
+
+        <QuotaUnitsEditor v-model="form.subscription_units" v-model:display-mode="form.subscription_usage_display" />
 
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -8960,7 +8963,7 @@
         </div>
 
         <!-- Save Button -->
-        <div v-show="activeTab !== 'backup'" class="flex justify-end">
+        <div v-show="activeTab !== 'backup' && activeTab !== 'errorMapping'" class="flex justify-end">
           <button
             type="submit"
             :disabled="saving || loadFailed || siteLogoUploading"
@@ -8994,6 +8997,13 @@
           </button>
         </div>
       </form>
+
+      <ErrorPassthroughRulesModal
+        v-if="!loading && activeTab === 'errorMapping'"
+        :show="true"
+        embedded
+        mapping-mode
+      />
 
       <!-- Provider dialogs placed outside the settings form to prevent form submission bubbling -->
       <PaymentProviderDialog
@@ -9033,6 +9043,7 @@
 </template>
 
 <script setup lang="ts">
+import QuotaUnitsEditor from '@/components/admin/QuotaUnitsEditor.vue'
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { listPlatformIds } from "@/constants/platformCatalog";
 import { useI18n } from "vue-i18n";
@@ -9071,6 +9082,7 @@ import type {
 } from "@/types";
 import type { ProviderInstance } from "@/types/payment";
 import AppLayout from "@/components/layout/AppLayout.vue";
+import ErrorPassthroughRulesModal from "@/components/admin/ErrorPassthroughRulesModal.vue";
 import Icon from "@/components/icons/Icon.vue";
 import Select, { type SelectOption } from "@/components/common/Select.vue";
 import {
@@ -9155,6 +9167,7 @@ type SettingsTab =
   | "security"
   | "users"
   | "gateway"
+  | "errorMapping"
   | "payment"
   | "email"
   | "backup";
@@ -9169,6 +9182,7 @@ const settingsTabs = [
   { key: "security" as SettingsTab, icon: "shield" as const },
   { key: "users" as SettingsTab, icon: "user" as const },
   { key: "gateway" as SettingsTab, icon: "server" as const },
+  { key: "errorMapping" as SettingsTab, icon: "document" as const },
   { key: "payment" as SettingsTab, icon: "creditCard" as const },
   { key: "email" as SettingsTab, icon: "mail" as const },
   { key: "backup" as SettingsTab, icon: "database" as const },
@@ -9782,6 +9796,8 @@ type SettingsForm = Omit<
   channel_monitor_hide_throughput: boolean;
   channel_monitor_show_quota: boolean;
   channel_monitor_hide_user_ranking: boolean;
+  subscription_usage_display: 'amount' | 'percentage';
+  subscription_units: { id: string; name: string; units_per_usd: number }[];
   smtp_password: string;
   turnstile_secret_key: string;
   tencent_captcha_app_secret_key: string;
@@ -10119,6 +10135,9 @@ const form = reactive<SettingsForm>({
   // Available Channels feature switch
   available_channels_enabled: false,
   // Subscription feature switch (user sidebar "My Subscriptions" entry)
+  subscription_usage_display: 'amount',
+  subscription_unit_name: '积分',
+  subscription_units: [{ id: 'points', name: '积分', units_per_usd: 1 }],
   subscription_enabled: true,
   // Model Plaza feature switches + description
   model_plaza_enabled: false,
@@ -11895,6 +11914,9 @@ async function saveSettings() {
       // Available Channels feature switch
       available_channels_enabled: form.available_channels_enabled,
       // Subscription feature switch
+      subscription_unit_name: form.subscription_unit_name,
+      subscription_units: form.subscription_units,
+      subscription_usage_display: form.subscription_usage_display,
       subscription_enabled: form.subscription_enabled,
       // Model Plaza feature switches + description
       model_plaza_enabled: form.model_plaza_enabled,

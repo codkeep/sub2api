@@ -215,6 +215,20 @@ func (_u *GroupUpdate) SetNillableStatus(v *string) *GroupUpdate {
 	return _u
 }
 
+// SetPricingUnit sets the "pricing_unit" field.
+func (_u *GroupUpdate) SetPricingUnit(v string) *GroupUpdate {
+	_u.mutation.SetPricingUnit(v)
+	return _u
+}
+
+// SetNillablePricingUnit sets the "pricing_unit" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillablePricingUnit(v *string) *GroupUpdate {
+	if v != nil {
+		_u.SetPricingUnit(*v)
+	}
+	return _u
+}
+
 // SetPlatform sets the "platform" field.
 func (_u *GroupUpdate) SetPlatform(v string) *GroupUpdate {
 	_u.mutation.SetPlatform(v)
@@ -1509,6 +1523,11 @@ func (_u *GroupUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Group.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.PricingUnit(); ok {
+		if err := group.PricingUnitValidator(v); err != nil {
+			return &ValidationError{Name: "pricing_unit", err: fmt.Errorf(`ent: validator failed for field "Group.pricing_unit": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Platform(); ok {
 		if err := group.PlatformValidator(v); err != nil {
 			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Group.platform": %w`, err)}
@@ -1619,6 +1638,9 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.DuplicateOperationIDCleared() {
 		_spec.ClearField(group.FieldDuplicateOperationID, field.TypeString)
+	}
+	if value, ok := _u.mutation.PricingUnit(); ok {
+		_spec.SetField(group.FieldPricingUnit, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Platform(); ok {
 		_spec.SetField(group.FieldPlatform, field.TypeString, value)
@@ -2414,6 +2436,20 @@ func (_u *GroupUpdateOne) SetStatus(v string) *GroupUpdateOne {
 func (_u *GroupUpdateOne) SetNillableStatus(v *string) *GroupUpdateOne {
 	if v != nil {
 		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// SetPricingUnit sets the "pricing_unit" field.
+func (_u *GroupUpdateOne) SetPricingUnit(v string) *GroupUpdateOne {
+	_u.mutation.SetPricingUnit(v)
+	return _u
+}
+
+// SetNillablePricingUnit sets the "pricing_unit" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillablePricingUnit(v *string) *GroupUpdateOne {
+	if v != nil {
+		_u.SetPricingUnit(*v)
 	}
 	return _u
 }
@@ -3725,6 +3761,11 @@ func (_u *GroupUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Group.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.PricingUnit(); ok {
+		if err := group.PricingUnitValidator(v); err != nil {
+			return &ValidationError{Name: "pricing_unit", err: fmt.Errorf(`ent: validator failed for field "Group.pricing_unit": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Platform(); ok {
 		if err := group.PlatformValidator(v); err != nil {
 			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Group.platform": %w`, err)}
@@ -3852,6 +3893,9 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if _u.mutation.DuplicateOperationIDCleared() {
 		_spec.ClearField(group.FieldDuplicateOperationID, field.TypeString)
+	}
+	if value, ok := _u.mutation.PricingUnit(); ok {
+		_spec.SetField(group.FieldPricingUnit, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Platform(); ok {
 		_spec.SetField(group.FieldPlatform, field.TypeString, value)

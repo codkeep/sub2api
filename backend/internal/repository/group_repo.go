@@ -103,6 +103,7 @@ func createGroupRecord(ctx context.Context, client *dbent.Client, groupIn *servi
 		SetIsExclusive(groupIn.IsExclusive).
 		SetStatus(groupIn.Status).
 		SetSubscriptionType(groupIn.SubscriptionType).
+		SetPricingUnit(effectiveGroupPricingUnit(groupIn)).
 		SetNillableDailyLimitUsd(groupIn.DailyLimitUSD).
 		SetNillableWeeklyLimitUsd(groupIn.WeeklyLimitUSD).
 		SetNillableMonthlyLimitUsd(groupIn.MonthlyLimitUSD).
@@ -294,6 +295,7 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		SetIsExclusive(groupIn.IsExclusive).
 		SetStatus(groupIn.Status).
 		SetSubscriptionType(groupIn.SubscriptionType).
+		SetPricingUnit(effectiveGroupPricingUnit(groupIn)).
 		SetNillableDailyLimitUsd(groupIn.DailyLimitUSD).
 		SetNillableWeeklyLimitUsd(groupIn.WeeklyLimitUSD).
 		SetNillableMonthlyLimitUsd(groupIn.MonthlyLimitUSD).
@@ -1224,4 +1226,19 @@ func (r *groupRepository) UpdateSortOrders(ctx context.Context, updates []servic
 		}
 	}
 	return nil
+}
+
+func effectiveGroupPricingUnit(g *service.Group) string {
+	if g.PricingUnit != "" {
+		return g.PricingUnit
+	}
+	if g.SubscriptionType == service.SubscriptionTypeSubscription {
+		return "points"
+	}
+	return "usd"
+}
+
+// Includes inactive groups; deleted groups no longer refer to live units.
+func (r *groupRepository) CountGroupsUsingPricingUnits(ctx context.Context, ids []string) (int, error) {
+	return r.client.Group.Query().Where(group.PricingUnitIn(ids...)).Count(ctx)
 }

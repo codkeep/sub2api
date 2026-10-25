@@ -210,6 +210,20 @@ func (_c *GroupCreate) SetNillableDuplicateOperationID(v *string) *GroupCreate {
 	return _c
 }
 
+// SetPricingUnit sets the "pricing_unit" field.
+func (_c *GroupCreate) SetPricingUnit(v string) *GroupCreate {
+	_c.mutation.SetPricingUnit(v)
+	return _c
+}
+
+// SetNillablePricingUnit sets the "pricing_unit" field if the given value is not nil.
+func (_c *GroupCreate) SetNillablePricingUnit(v *string) *GroupCreate {
+	if v != nil {
+		_c.SetPricingUnit(*v)
+	}
+	return _c
+}
+
 // SetPlatform sets the "platform" field.
 func (_c *GroupCreate) SetPlatform(v string) *GroupCreate {
 	_c.mutation.SetPlatform(v)
@@ -1085,6 +1099,10 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.PricingUnit(); !ok {
+		v := group.DefaultPricingUnit
+		_c.mutation.SetPricingUnit(v)
+	}
 	if _, ok := _c.mutation.Platform(); !ok {
 		v := group.DefaultPlatform
 		_c.mutation.SetPlatform(v)
@@ -1282,6 +1300,14 @@ func (_c *GroupCreate) check() error {
 	if v, ok := _c.mutation.DuplicateOperationID(); ok {
 		if err := group.DuplicateOperationIDValidator(v); err != nil {
 			return &ValidationError{Name: "duplicate_operation_id", err: fmt.Errorf(`ent: validator failed for field "Group.duplicate_operation_id": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.PricingUnit(); !ok {
+		return &ValidationError{Name: "pricing_unit", err: errors.New(`ent: missing required field "Group.pricing_unit"`)}
+	}
+	if v, ok := _c.mutation.PricingUnit(); ok {
+		if err := group.PricingUnitValidator(v); err != nil {
+			return &ValidationError{Name: "pricing_unit", err: fmt.Errorf(`ent: validator failed for field "Group.pricing_unit": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Platform(); !ok {
@@ -1513,6 +1539,10 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.DuplicateOperationID(); ok {
 		_spec.SetField(group.FieldDuplicateOperationID, field.TypeString, value)
 		_node.DuplicateOperationID = &value
+	}
+	if value, ok := _c.mutation.PricingUnit(); ok {
+		_spec.SetField(group.FieldPricingUnit, field.TypeString, value)
+		_node.PricingUnit = value
 	}
 	if value, ok := _c.mutation.Platform(); ok {
 		_spec.SetField(group.FieldPlatform, field.TypeString, value)
@@ -2047,6 +2077,18 @@ func (u *GroupUpsert) SetStatus(v string) *GroupUpsert {
 // UpdateStatus sets the "status" field to the value that was provided on create.
 func (u *GroupUpsert) UpdateStatus() *GroupUpsert {
 	u.SetExcluded(group.FieldStatus)
+	return u
+}
+
+// SetPricingUnit sets the "pricing_unit" field.
+func (u *GroupUpsert) SetPricingUnit(v string) *GroupUpsert {
+	u.Set(group.FieldPricingUnit, v)
+	return u
+}
+
+// UpdatePricingUnit sets the "pricing_unit" field to the value that was provided on create.
+func (u *GroupUpsert) UpdatePricingUnit() *GroupUpsert {
+	u.SetExcluded(group.FieldPricingUnit)
 	return u
 }
 
@@ -3191,6 +3233,20 @@ func (u *GroupUpsertOne) SetStatus(v string) *GroupUpsertOne {
 func (u *GroupUpsertOne) UpdateStatus() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetPricingUnit sets the "pricing_unit" field.
+func (u *GroupUpsertOne) SetPricingUnit(v string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetPricingUnit(v)
+	})
+}
+
+// UpdatePricingUnit sets the "pricing_unit" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdatePricingUnit() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdatePricingUnit()
 	})
 }
 
@@ -4651,6 +4707,20 @@ func (u *GroupUpsertBulk) SetStatus(v string) *GroupUpsertBulk {
 func (u *GroupUpsertBulk) UpdateStatus() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetPricingUnit sets the "pricing_unit" field.
+func (u *GroupUpsertBulk) SetPricingUnit(v string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetPricingUnit(v)
+	})
+}
+
+// UpdatePricingUnit sets the "pricing_unit" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdatePricingUnit() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdatePricingUnit()
 	})
 }
 
