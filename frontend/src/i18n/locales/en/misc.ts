@@ -5,7 +5,6 @@ export default {
     title: 'My Subscriptions',
     viewDetails: 'View subscription details',
     activeCount: '{count} active subscription(s)',
-    highestUsage: 'Up to {percent}% used',
     daily: 'Daily',
     weekly: 'Weekly',
     monthly: 'Monthly',

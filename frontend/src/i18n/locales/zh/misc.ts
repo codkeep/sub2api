@@ -5,7 +5,6 @@ export default {
     title: '我的订阅',
     viewDetails: '查看订阅详情',
     activeCount: '{count} 个有效订阅',
-    highestUsage: '最高已用 {percent}%',
     daily: '每日',
     weekly: '每周',
     monthly: '每月',
