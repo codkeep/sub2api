@@ -445,6 +445,11 @@ export default {
     noActiveSubscription: '暂无有效订阅',
     tabTopUp: '充值',
     tabSubscribe: '订阅',
+    billingModeSelector: {
+      eyebrow: 'Billing mode',
+      title: '选择结算方式',
+      hint: '根据你的使用习惯选择余额充值或周期订阅。'
+    },
     billingHelp: {
       label: '查看{mode}说明',
       billing: '入账与扣费',
@@ -452,6 +457,7 @@ export default {
       limits: '额度与有效期',
       recharge: {
         title: '充值 · 按需使用余额',
+        mode: '余额模式',
         tabHint: '充值余额，按实际用量扣费',
         summary: '先将费用充入账户余额，再根据实际调用量付费，适合使用量不固定的用户。',
         billing: '充值到账为美元余额。调用余额计费分组时，按该分组的模型价格、计费方式和倍率扣减余额。',
@@ -460,6 +466,7 @@ export default {
       },
       subscription: {
         title: '订阅 · 按套餐使用额度',
+        mode: '订阅模式',
         tabHint: '购买套餐，按周期使用额度',
         summary: '购买指定分组的套餐，在套餐有效期内使用该分组的订阅额度，适合持续使用的用户。',
         billing: '购买后获得对应分组的订阅权益，不计入账户余额。调用该订阅分组时，消耗订阅额度，展示单位以分组设置为准。',

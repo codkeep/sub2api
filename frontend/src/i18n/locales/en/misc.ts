@@ -421,6 +421,11 @@ export default {
     noActiveSubscription: 'No active subscription',
     tabTopUp: 'Top Up',
     tabSubscribe: 'Subscribe',
+    billingModeSelector: {
+      eyebrow: 'Billing mode',
+      title: 'Choose how to pay',
+      hint: 'Choose pay-as-you-go balance or a recurring quota plan.'
+    },
     billingHelp: {
       label: 'Learn about {mode}',
       billing: 'Credit and charges',
@@ -428,6 +433,7 @@ export default {
       limits: 'Limits and validity',
       recharge: {
         title: 'Top up · Pay as you go',
+        mode: 'Balance mode',
         tabHint: 'Add balance and pay for usage',
         summary: 'Add funds to your account and pay for actual usage. Suitable for variable usage.',
         billing: 'Top-ups credit your USD balance. Requests in balance-billed groups deduct funds using the group’s model prices, billing mode and multipliers.',
@@ -436,6 +442,7 @@ export default {
       },
       subscription: {
         title: 'Subscribe · Use a plan’s quota',
+        mode: 'Subscription mode',
         tabHint: 'Buy a plan and use its quota',
         summary: 'Purchase a plan for a specific group and use its quota during the plan’s validity period. Suitable for regular usage.',
         billing: 'A purchase activates the group’s subscription benefits without crediting your balance. Requests in that group consume subscription quota, displayed in the group’s configured unit.',
