@@ -1,4 +1,26 @@
 export default {
+  modelPricing: {
+    title: 'Model Pricing',
+    description: 'Browse configured model prices and billing rules by channel',
+    hint: 'Base prices for active channels are shown in USD. Actual charges depend on your group’s pricing, multipliers and display unit. Viewing prices does not grant model access.',
+    search: 'Search models or channels…',
+    allPlatforms: 'All platforms',
+    allModes: 'All billing modes',
+    empty: 'No model pricing configured',
+    noResults: 'No matching models',
+    model: 'Model',
+    basePrice: 'Base price (USD)',
+    defaultPrice: 'Default price',
+    details: 'Billing details',
+    pattern: 'Model pattern',
+    tierHint: 'Token tiers show context ranges and apply when enabled for the group. Image, video and per-request tiers match by label. Unspecified prices may use base or system defaults.',
+    multipliers: 'Additional multipliers',
+    reasoning: 'Reasoning effort',
+    timePricing: 'Scheduled multipliers',
+    weekdays: 'Weekdays only',
+    everyday: 'Every day',
+    units: { token: '/ 1M tokens', per_request: '/ request', image: '/ image', video: '/ second' }
+  },
   dashboard: {
     title: 'Dashboard',
     welcomeMessage: "Welcome back! Here's an overview of your account.",

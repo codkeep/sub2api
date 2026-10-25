@@ -59,6 +59,29 @@ export interface UserSupportedModel {
   pricing: UserSupportedModelPricing | null
 }
 
+export interface UserModelPricing extends UserSupportedModelPricing {
+  platform: string
+  models: string[]
+  fast_multiplier: number | null
+  flex_multiplier: number | null
+  time_pricing: {
+    timezone: string
+    weekdays_only?: boolean
+    periods: { start_time: string; end_time: string; multiplier: number }[]
+  } | null
+}
+
+export interface UserChannelPricing {
+  name: string
+  model_pricing: UserModelPricing[]
+}
+
+/** 所有登录用户可查看的渠道基础价目。 */
+export async function getModelPricing(): Promise<UserChannelPricing[]> {
+  const { data } = await apiClient.get<UserChannelPricing[]>('/channels/pricing')
+  return data
+}
+
 /**
  * 渠道下单个平台的子视图：用户可访问的分组 + 该平台支持的模型。
  * 后端把一个渠道按平台聚合成 sections，前端可以把渠道名作为 row-group

@@ -1,4 +1,26 @@
 export default {
+  modelPricing: {
+    title: '模型计费',
+    description: '查看各渠道配置的模型价格与计费规则',
+    hint: '以下为已启用渠道的基础定价，金额单位为美元（USD）。实际扣费以所用分组的定价、倍率和单位设置为准，查看价格不代表已获得模型使用权限。',
+    search: '搜索模型或渠道名称…',
+    allPlatforms: '全部平台',
+    allModes: '全部计费模式',
+    empty: '暂无已配置的模型定价',
+    noResults: '没有符合条件的模型',
+    model: '模型',
+    basePrice: '基础价格（USD）',
+    defaultPrice: '默认价格',
+    details: '计费详情',
+    pattern: '模型匹配规则',
+    tierHint: 'Token 阶梯按上下文区间展示，是否启用以分组设置为准；图片、视频及按次层级按名称匹配。未单独配置的价格项可能使用基础价或系统默认价。',
+    multipliers: '附加倍率',
+    reasoning: '推理强度',
+    timePricing: '分时倍率',
+    weekdays: '仅工作日',
+    everyday: '每天',
+    units: { token: '/ 1M tokens', per_request: '/ 次', image: '/ 张', video: '/ 秒' }
+  },
   dashboard: {
     title: '仪表盘',
     welcomeMessage: '欢迎回来！这是您账户的概览。',
