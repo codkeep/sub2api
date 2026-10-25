@@ -714,7 +714,7 @@
               {{ t("admin.groups.subscription.typeHint") }}
             </p>
           </div>
-          <div class="mt-4">
+          <div v-if="createForm.subscription_type === 'subscription'" class="mt-4">
             <label class="input-label">{{ t('admin.settings.features.siteBillingMode.pricingUnit') }}</label>
             <Select v-model="createForm.pricing_unit" :options="pricingUnitOptions" />
             <p class="input-hint">{{ t('admin.settings.features.siteBillingMode.pricingUnitHint') }}</p>
@@ -2367,7 +2367,7 @@
               {{ t("admin.groups.subscription.typeNotEditable") }}
             </p>
           </div>
-          <div class="mt-4">
+          <div v-if="editForm.subscription_type === 'subscription'" class="mt-4">
             <label class="input-label">{{ t('admin.settings.features.siteBillingMode.pricingUnit') }}</label>
             <Select v-model="editForm.pricing_unit" :options="pricingUnitOptions" />
             <p class="input-hint">{{ t('admin.settings.features.siteBillingMode.pricingUnitHint') }}</p>
@@ -6704,6 +6704,7 @@ watch(
       createForm.is_exclusive = true;
       createForm.fallback_group_id_on_invalid_request = null;
     } else {
+      createForm.pricing_unit = "usd";
       createForm.peak_rate_enabled = false;
       createForm.peak_start = "";
       createForm.peak_end = "";
@@ -6717,6 +6718,7 @@ watch(
   () => editForm.subscription_type,
   (newVal) => {
     if (newVal !== "subscription") {
+      editForm.pricing_unit = "usd";
       editForm.peak_rate_enabled = false;
       editForm.peak_start = "";
       editForm.peak_end = "";
