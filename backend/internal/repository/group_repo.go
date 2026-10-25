@@ -104,6 +104,7 @@ func createGroupRecord(ctx context.Context, client *dbent.Client, groupIn *servi
 		SetStatus(groupIn.Status).
 		SetSubscriptionType(groupIn.SubscriptionType).
 		SetPricingUnit(effectiveGroupPricingUnit(groupIn)).
+		SetSubscriptionUsageDisplay(effectiveGroupSubscriptionUsageDisplay(groupIn)).
 		SetNillableDailyLimitUsd(groupIn.DailyLimitUSD).
 		SetNillableWeeklyLimitUsd(groupIn.WeeklyLimitUSD).
 		SetNillableMonthlyLimitUsd(groupIn.MonthlyLimitUSD).
@@ -296,6 +297,7 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		SetStatus(groupIn.Status).
 		SetSubscriptionType(groupIn.SubscriptionType).
 		SetPricingUnit(effectiveGroupPricingUnit(groupIn)).
+		SetSubscriptionUsageDisplay(effectiveGroupSubscriptionUsageDisplay(groupIn)).
 		SetNillableDailyLimitUsd(groupIn.DailyLimitUSD).
 		SetNillableWeeklyLimitUsd(groupIn.WeeklyLimitUSD).
 		SetNillableMonthlyLimitUsd(groupIn.MonthlyLimitUSD).
@@ -1241,4 +1243,11 @@ func effectiveGroupPricingUnit(g *service.Group) string {
 // Includes inactive groups; deleted groups no longer refer to live units.
 func (r *groupRepository) CountGroupsUsingPricingUnits(ctx context.Context, ids []string) (int, error) {
 	return r.client.Group.Query().Where(group.PricingUnitIn(ids...)).Count(ctx)
+}
+
+func effectiveGroupSubscriptionUsageDisplay(g *service.Group) string {
+	if g.SubscriptionUsageDisplay == "percentage" {
+		return "percentage"
+	}
+	return "amount"
 }

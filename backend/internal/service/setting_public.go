@@ -236,7 +236,6 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyChannelMonitorHideUserRanking,
 		SettingKeyAvailableChannelsEnabled,
 		SettingKeySubscriptionEnabled,
-		SettingKeySubscriptionUsageDisplay,
 		SettingKeySubscriptionUnitName,
 		SettingKeySubscriptionUnits,
 		SettingKeyModelPlazaEnabled,
@@ -369,10 +368,9 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 
 		AvailableChannelsEnabled: settings[SettingKeyAvailableChannelsEnabled] == "true",
 
-		SubscriptionEnabled:      !isFalseSettingValue(settings[SettingKeySubscriptionEnabled]),
-		SubscriptionUsageDisplay: normalizeSubscriptionUsageDisplay(settings[SettingKeySubscriptionUsageDisplay]),
-		SubscriptionUnitName:     normalizeSubscriptionUnitName(settings[SettingKeySubscriptionUnitName]),
-		SubscriptionUnits:        parseSubscriptionUnits(settings[SettingKeySubscriptionUnits], settings[SettingKeySubscriptionUnitName]),
+		SubscriptionEnabled:  !isFalseSettingValue(settings[SettingKeySubscriptionEnabled]),
+		SubscriptionUnitName: normalizeSubscriptionUnitName(settings[SettingKeySubscriptionUnitName]),
+		SubscriptionUnits:    parseSubscriptionUnits(settings[SettingKeySubscriptionUnits], settings[SettingKeySubscriptionUnitName]),
 
 		ModelPlazaEnabled:       settings[SettingKeyModelPlazaEnabled] == "true",
 		ModelPlazaRequireAuth:   settings[SettingKeyModelPlazaRequireAuth] == "true",
@@ -643,7 +641,6 @@ type PublicSettingsInjectionPayload struct {
 	ChannelMonitorShowQuota       bool                     `json:"channel_monitor_show_quota"`
 	AvailableChannelsEnabled      bool                     `json:"available_channels_enabled"`
 	SubscriptionEnabled           bool                     `json:"subscription_enabled"`
-	SubscriptionUsageDisplay      string                   `json:"subscription_usage_display"`
 	SubscriptionUnitName          string                   `json:"subscription_unit_name"`
 	SubscriptionUnits             []SubscriptionUnitConfig `json:"subscription_units"`
 	ModelPlazaEnabled             bool                     `json:"model_plaza_enabled"`
@@ -730,7 +727,6 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ChannelMonitorHideUserRanking:        settings.ChannelMonitorHideUserRanking,
 		AvailableChannelsEnabled:             settings.AvailableChannelsEnabled,
 		SubscriptionEnabled:                  settings.SubscriptionEnabled,
-		SubscriptionUsageDisplay:             settings.SubscriptionUsageDisplay,
 		SubscriptionUnitName:                 settings.SubscriptionUnitName,
 		SubscriptionUnits:                    settings.SubscriptionUnits,
 		ModelPlazaEnabled:                    settings.ModelPlazaEnabled,

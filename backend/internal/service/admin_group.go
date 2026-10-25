@@ -432,6 +432,10 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	if err := s.validateGroupPricingUnit(ctx, input.PricingUnit); err != nil {
 		return nil, err
 	}
+	if err := validateSubscriptionUsageDisplay(input.SubscriptionUsageDisplay); err != nil {
+		return nil, err
+	}
+	usageDisplay := normalizeSubscriptionUsageDisplay(input.SubscriptionUsageDisplay)
 	pricingUnit := input.PricingUnit
 	if pricingUnit == "" {
 		pricingUnit = "usd"
@@ -603,6 +607,7 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		Status:                          StatusActive,
 		SubscriptionType:                subscriptionType,
 		PricingUnit:                     pricingUnit,
+		SubscriptionUsageDisplay:        usageDisplay,
 		DailyLimitUSD:                   dailyLimit,
 		WeeklyLimitUSD:                  weeklyLimit,
 		MonthlyLimitUSD:                 monthlyLimit,
@@ -847,6 +852,12 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 			return nil, err
 		}
 		group.PricingUnit = input.PricingUnit
+	}
+	if input.SubscriptionUsageDisplay != "" {
+		if err := validateSubscriptionUsageDisplay(input.SubscriptionUsageDisplay); err != nil {
+			return nil, err
+		}
+		group.SubscriptionUsageDisplay = input.SubscriptionUsageDisplay
 	}
 	// 订阅相关字段
 	if input.SubscriptionType != "" {

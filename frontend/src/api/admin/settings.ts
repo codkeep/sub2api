@@ -745,7 +745,6 @@ export interface SystemSettings {
   available_channels_enabled: boolean;
 
   // Subscription feature switch (user sidebar "My Subscriptions" entry)
-  subscription_usage_display?: 'amount' | 'percentage'
   subscription_unit_name?: string;
   subscription_units?: SubscriptionUnit[];
   subscription_enabled: boolean;
@@ -1060,7 +1059,6 @@ export interface UpdateSettingsRequest {
   available_channels_enabled?: boolean;
 
   // Subscription feature switch
-  subscription_usage_display?: 'amount' | 'percentage'
   subscription_unit_name?: string;
   subscription_units?: SubscriptionUnit[];
   subscription_enabled?: boolean;

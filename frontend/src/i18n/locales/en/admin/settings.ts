@@ -9,7 +9,6 @@ export default {
         security: 'Security',
         users: 'Users',
         gateway: 'Gateway',
-        errorMapping: 'Error Messages',
         email: 'Email',
         backup: 'Backup',
         payment: 'Payment',

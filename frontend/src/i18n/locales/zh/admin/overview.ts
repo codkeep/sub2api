@@ -1057,6 +1057,11 @@ export default {
       revertChanges: '撤销修改',
       userInfo: '用户信息',
       subscription: {
+        usageDisplay: '订阅用量展示',
+        usageDisplayHint: '仅影响本分组订阅列表和用量进度的显示；额度与扣费不变。',
+        percentageOnly: '仅显示百分比（例如 35%）',
+        amountWithUnit: '显示额度与单位（随分组单位）',
+
         title: '订阅设置',
         type: '计费类型',
         typeHint: '标准计费从用户余额扣除。订阅模式使用配额限制。',

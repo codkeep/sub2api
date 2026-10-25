@@ -719,6 +719,11 @@
             <Select v-model="createForm.pricing_unit" :options="pricingUnitOptions" />
             <p class="input-hint">{{ t('admin.settings.features.siteBillingMode.pricingUnitHint') }}</p>
           </div>
+          <div v-if="createForm.subscription_type === 'subscription'" class="mt-4">
+            <label class="input-label">{{ t('admin.groups.subscription.usageDisplay') }}</label>
+            <Select v-model="createForm.subscription_usage_display" :options="subscriptionUsageDisplayOptions" />
+            <p class="input-hint">{{ t('admin.groups.subscription.usageDisplayHint') }}</p>
+          </div>
 
           <!-- Subscription limits (only show when subscription type is selected) -->
           <div
@@ -2366,6 +2371,11 @@
             <label class="input-label">{{ t('admin.settings.features.siteBillingMode.pricingUnit') }}</label>
             <Select v-model="editForm.pricing_unit" :options="pricingUnitOptions" />
             <p class="input-hint">{{ t('admin.settings.features.siteBillingMode.pricingUnitHint') }}</p>
+          </div>
+          <div v-if="editForm.subscription_type === 'subscription'" class="mt-4">
+            <label class="input-label">{{ t('admin.groups.subscription.usageDisplay') }}</label>
+            <Select v-model="editForm.subscription_usage_display" :options="subscriptionUsageDisplayOptions" />
+            <p class="input-hint">{{ t('admin.groups.subscription.usageDisplayHint') }}</p>
           </div>
 
           <!-- Subscription limits (only show when subscription type is selected) -->
@@ -4688,6 +4698,10 @@ const editStatusOptions = computed(() => [
   { value: "inactive", label: t("admin.accounts.status.inactive") },
 ]);
 
+const subscriptionUsageDisplayOptions = computed(() => [
+  { value: 'percentage', label: t('admin.groups.subscription.percentageOnly') },
+  { value: 'amount', label: t('admin.groups.subscription.amountWithUnit') },
+]);
 const subscriptionTypeOptions = computed(() => [
   { value: "standard", label: t("admin.groups.subscription.standard") },
   { value: "subscription", label: t("admin.groups.subscription.subscription") },
@@ -4972,6 +4986,7 @@ const createForm = reactive({
   is_exclusive: false,
   subscription_type: "standard" as SubscriptionType,
   pricing_unit: "usd" as string,
+  subscription_usage_display: "amount" as "amount" | "percentage",
   daily_limit_usd: null as number | null,
   weekly_limit_usd: null as number | null,
   monthly_limit_usd: null as number | null,
@@ -5339,6 +5354,7 @@ const editForm = reactive({
   status: "active" as "active" | "inactive",
   subscription_type: "standard" as SubscriptionType,
   pricing_unit: "usd" as string,
+  subscription_usage_display: "amount" as "amount" | "percentage",
   daily_limit_usd: null as number | null,
   weekly_limit_usd: null as number | null,
   monthly_limit_usd: null as number | null,
@@ -5794,6 +5810,7 @@ const closeCreateModal = () => {
   createForm.is_exclusive = false;
   createForm.subscription_type = "standard";
   createForm.pricing_unit = "usd";
+  createForm.subscription_usage_display = "amount";
   createForm.daily_limit_usd = null;
   createForm.weekly_limit_usd = null;
   createForm.monthly_limit_usd = null;
@@ -6083,6 +6100,7 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.is_exclusive = group.is_exclusive;
   editForm.status = group.status;
   editForm.subscription_type = group.subscription_type || "standard";
+  editForm.subscription_usage_display = group.subscription_usage_display || "amount";
   editForm.pricing_unit = group.pricing_unit || (group.subscription_type === "subscription" ? "points" : "usd");
   editForm.daily_limit_usd = group.daily_limit_usd;
   editForm.weekly_limit_usd = group.weekly_limit_usd;

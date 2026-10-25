@@ -133,3 +133,10 @@ func normalizeSubscriptionUsageDisplay(value string) string {
 	}
 	return "amount"
 }
+
+func validateSubscriptionUsageDisplay(value string) error {
+	if value != "" && value != "amount" && value != "percentage" {
+		return infraerrors.BadRequest("INVALID_SUBSCRIPTION_USAGE_DISPLAY", "订阅用量展示方式无效")
+	}
+	return nil
+}

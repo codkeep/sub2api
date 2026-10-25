@@ -589,9 +589,6 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if !reflect.DeepEqual(before.SubscriptionUnits, after.SubscriptionUnits) {
 		changed = append(changed, "subscription_units")
 	}
-	if before.SubscriptionUsageDisplay != after.SubscriptionUsageDisplay {
-		changed = append(changed, "subscription_usage_display")
-	}
 	if before.SubscriptionUnitName != after.SubscriptionUnitName {
 		changed = append(changed, "subscription_unit_name")
 	}

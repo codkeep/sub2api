@@ -433,10 +433,6 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyAvailableChannelsEnabled] = strconv.FormatBool(settings.AvailableChannelsEnabled)
 
 	// Subscription feature switch
-	if settings.SubscriptionUsageDisplay != "" && settings.SubscriptionUsageDisplay != "amount" && settings.SubscriptionUsageDisplay != "percentage" {
-		return nil, infraerrors.BadRequest("INVALID_SUBSCRIPTION_USAGE_DISPLAY", "订阅用量展示方式无效")
-	}
-	updates[SettingKeySubscriptionUsageDisplay] = normalizeSubscriptionUsageDisplay(settings.SubscriptionUsageDisplay)
 	updates[SettingKeySubscriptionUnitName] = normalizeSubscriptionUnitName(settings.SubscriptionUnitName)
 	if settings.SubscriptionUnits != nil {
 		units, err := ValidateSubscriptionUnits(settings.SubscriptionUnits)

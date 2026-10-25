@@ -1059,6 +1059,11 @@ export default {
       deleteConfirmSubscription:
         "Are you sure you want to delete subscription group '{name}'? This will invalidate all API keys bound to this subscription and delete all related subscription records. This action cannot be undone.",
       subscription: {
+        usageDisplay: 'Subscription usage display',
+        usageDisplayHint: 'Controls usage display for subscriptions in this group without changing quotas or charges.',
+        percentageOnly: 'Percentage only (e.g. 35%)',
+        amountWithUnit: 'Amount and group unit',
+
         title: 'Subscription Settings',
         type: 'Billing Type',
         typeHint:

@@ -5,16 +5,15 @@ import { formatQuotaPercentage, useQuotaUsageDisplay, useUnitPrice } from '../us
 
 describe('subscription quota display', () => {
  beforeEach(() => setActivePinia(createPinia()))
- it('switches reactively between configured unit and percentage without changing values', () => {
+ it('uses independent display modes for groups on the same page', () => {
   const store = useAppStore()
-  store.cachedPublicSettings = { subscription_units: [{ id: 'credits', name: 'Credits', units_per_usd: 100 }], subscription_usage_display: 'amount' } as typeof store.cachedPublicSettings
+  store.cachedPublicSettings = { subscription_units: [{ id: 'credits', name: 'Credits', units_per_usd: 100 }] } as typeof store.cachedPublicSettings
   const format = useQuotaUsageDisplay()
-  expect(format(0.35, 1, { pricing_unit: 'credits' })).toBe('35 Credits / 100 Credits')
-  store.cachedPublicSettings!.subscription_usage_display = 'percentage'
-  expect(format(0.35, 1, { pricing_unit: 'credits' })).toBe('35%')
-  expect(format(0.35, 1, { pricing_unit: 'usd' })).toBe('35%')
-  expect(format(0.35, null)).toBe('—')
-  store.cachedPublicSettings!.subscription_usage_display = 'amount'
+  const percentageGroup = { pricing_unit: 'credits', subscription_usage_display: 'percentage' as const }
+  const amountGroup = { pricing_unit: 'credits', subscription_usage_display: 'amount' as const }
+  expect(format(0.35, 1, percentageGroup)).toBe('35%')
+  expect(format(0.35, 1, amountGroup)).toBe('35 Credits / 100 Credits')
+  expect(format(0.35, null, percentageGroup)).toBe('—')
   expect(format(0.35, 1, { pricing_unit: 'usd' })).toBe('$0.35 / $1')
  })
  it('handles unused, over-limit and unbounded quotas', () => {

@@ -8,16 +8,6 @@
       <button type="button" class="btn btn-primary" @click="openNew">{{ tr('添加单位', 'Add unit') }}</button>
     </div>
     <div class="p-6">
-      <fieldset class="mb-6">
-        <legend class="mb-2 text-sm font-medium">{{ tr('订阅用量展示', 'Subscription usage display') }}</legend>
-        <div class="flex flex-wrap gap-3">
-          <label v-for="option in displayOptions" :key="option.value" class="flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3" :class="displayMode === option.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-dark-700'">
-            <input type="radio" name="subscription-usage-display" :value="option.value" :checked="displayMode === option.value" @change="emit('update:displayMode', option.value)" />
-            <span><span class="block text-sm font-medium">{{ option.label }}</span><span class="mt-1 block text-xs text-gray-500">{{ option.example }}</span></span>
-          </label>
-        </div>
-        <p class="mt-2 text-xs text-gray-500">{{ tr('用于订阅列表和用量进度。选择百分比时隐藏已用和总额度数值；购买价格不受影响。', 'Applies to subscription lists and usage progress. Percentage hides used and total amounts. Purchase prices are unchanged.') }}</p>
-      </fieldset>
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-dark-700">
         <table class="w-full text-left text-sm">
           <thead class="bg-gray-50 text-xs text-gray-500 dark:bg-dark-800"><tr>
@@ -67,11 +57,10 @@ import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import type { SubscriptionUnit } from '@/types'
-const props = defineProps<{ modelValue: SubscriptionUnit[]; displayMode: 'amount' | 'percentage' }>()
-const emit = defineEmits<{ 'update:modelValue': [units: SubscriptionUnit[]]; 'update:displayMode': [mode: 'amount' | 'percentage'] }>()
+const props = defineProps<{ modelValue: SubscriptionUnit[] }>()
+const emit = defineEmits<{ 'update:modelValue': [units: SubscriptionUnit[]] }>()
 const { locale } = useI18n()
 const tr = (zh: string, en: string) => locale.value.startsWith('zh') ? zh : en
-const displayOptions = computed(() => [{ value: 'percentage' as const, label: tr('仅显示百分比', 'Percentage only'), example: '35%' }, { value: 'amount' as const, label: tr('显示额度与单位', 'Amount and unit'), example: tr('35 / 100 积分（单位随分组）', '35 / 100 points (group unit)') }])
 const editing = ref(false)
 const error = ref('')
 const draft = reactive<SubscriptionUnit>({ id: '', name: '', units_per_usd: 100 })

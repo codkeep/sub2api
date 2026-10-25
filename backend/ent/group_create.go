@@ -224,6 +224,20 @@ func (_c *GroupCreate) SetNillablePricingUnit(v *string) *GroupCreate {
 	return _c
 }
 
+// SetSubscriptionUsageDisplay sets the "subscription_usage_display" field.
+func (_c *GroupCreate) SetSubscriptionUsageDisplay(v string) *GroupCreate {
+	_c.mutation.SetSubscriptionUsageDisplay(v)
+	return _c
+}
+
+// SetNillableSubscriptionUsageDisplay sets the "subscription_usage_display" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableSubscriptionUsageDisplay(v *string) *GroupCreate {
+	if v != nil {
+		_c.SetSubscriptionUsageDisplay(*v)
+	}
+	return _c
+}
+
 // SetPlatform sets the "platform" field.
 func (_c *GroupCreate) SetPlatform(v string) *GroupCreate {
 	_c.mutation.SetPlatform(v)
@@ -1103,6 +1117,10 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultPricingUnit
 		_c.mutation.SetPricingUnit(v)
 	}
+	if _, ok := _c.mutation.SubscriptionUsageDisplay(); !ok {
+		v := group.DefaultSubscriptionUsageDisplay
+		_c.mutation.SetSubscriptionUsageDisplay(v)
+	}
 	if _, ok := _c.mutation.Platform(); !ok {
 		v := group.DefaultPlatform
 		_c.mutation.SetPlatform(v)
@@ -1308,6 +1326,14 @@ func (_c *GroupCreate) check() error {
 	if v, ok := _c.mutation.PricingUnit(); ok {
 		if err := group.PricingUnitValidator(v); err != nil {
 			return &ValidationError{Name: "pricing_unit", err: fmt.Errorf(`ent: validator failed for field "Group.pricing_unit": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.SubscriptionUsageDisplay(); !ok {
+		return &ValidationError{Name: "subscription_usage_display", err: errors.New(`ent: missing required field "Group.subscription_usage_display"`)}
+	}
+	if v, ok := _c.mutation.SubscriptionUsageDisplay(); ok {
+		if err := group.SubscriptionUsageDisplayValidator(v); err != nil {
+			return &ValidationError{Name: "subscription_usage_display", err: fmt.Errorf(`ent: validator failed for field "Group.subscription_usage_display": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Platform(); !ok {
@@ -1543,6 +1569,10 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.PricingUnit(); ok {
 		_spec.SetField(group.FieldPricingUnit, field.TypeString, value)
 		_node.PricingUnit = value
+	}
+	if value, ok := _c.mutation.SubscriptionUsageDisplay(); ok {
+		_spec.SetField(group.FieldSubscriptionUsageDisplay, field.TypeString, value)
+		_node.SubscriptionUsageDisplay = value
 	}
 	if value, ok := _c.mutation.Platform(); ok {
 		_spec.SetField(group.FieldPlatform, field.TypeString, value)
@@ -2089,6 +2119,18 @@ func (u *GroupUpsert) SetPricingUnit(v string) *GroupUpsert {
 // UpdatePricingUnit sets the "pricing_unit" field to the value that was provided on create.
 func (u *GroupUpsert) UpdatePricingUnit() *GroupUpsert {
 	u.SetExcluded(group.FieldPricingUnit)
+	return u
+}
+
+// SetSubscriptionUsageDisplay sets the "subscription_usage_display" field.
+func (u *GroupUpsert) SetSubscriptionUsageDisplay(v string) *GroupUpsert {
+	u.Set(group.FieldSubscriptionUsageDisplay, v)
+	return u
+}
+
+// UpdateSubscriptionUsageDisplay sets the "subscription_usage_display" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateSubscriptionUsageDisplay() *GroupUpsert {
+	u.SetExcluded(group.FieldSubscriptionUsageDisplay)
 	return u
 }
 
@@ -3247,6 +3289,20 @@ func (u *GroupUpsertOne) SetPricingUnit(v string) *GroupUpsertOne {
 func (u *GroupUpsertOne) UpdatePricingUnit() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdatePricingUnit()
+	})
+}
+
+// SetSubscriptionUsageDisplay sets the "subscription_usage_display" field.
+func (u *GroupUpsertOne) SetSubscriptionUsageDisplay(v string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionUsageDisplay(v)
+	})
+}
+
+// UpdateSubscriptionUsageDisplay sets the "subscription_usage_display" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateSubscriptionUsageDisplay() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionUsageDisplay()
 	})
 }
 
@@ -4721,6 +4777,20 @@ func (u *GroupUpsertBulk) SetPricingUnit(v string) *GroupUpsertBulk {
 func (u *GroupUpsertBulk) UpdatePricingUnit() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdatePricingUnit()
+	})
+}
+
+// SetSubscriptionUsageDisplay sets the "subscription_usage_display" field.
+func (u *GroupUpsertBulk) SetSubscriptionUsageDisplay(v string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionUsageDisplay(v)
+	})
+}
+
+// UpdateSubscriptionUsageDisplay sets the "subscription_usage_display" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateSubscriptionUsageDisplay() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionUsageDisplay()
 	})
 }
 

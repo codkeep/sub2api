@@ -104,6 +104,7 @@ type Group struct {
 	I18n domain.GroupI18n `json:"i18n,omitempty"`
 
 	PricingUnit               string   `json:"pricing_unit"`
+	SubscriptionUsageDisplay  string   `json:"subscription_usage_display"`
 	SubscriptionType          string   `json:"subscription_type"`
 	DailyLimitUSD             *float64 `json:"daily_limit_usd"`
 	WeeklyLimitUSD            *float64 `json:"weekly_limit_usd"`

@@ -188,6 +188,7 @@ func groupFromServiceBase(g *service.Group) Group {
 		IsExclusive:                     g.IsExclusive,
 		Status:                          g.Status,
 		PricingUnit:                     g.PricingUnit,
+		SubscriptionUsageDisplay:        g.SubscriptionUsageDisplay,
 		SubscriptionType:                g.SubscriptionType,
 		DailyLimitUSD:                   g.DailyLimitUSD,
 		WeeklyLimitUSD:                  g.WeeklyLimitUSD,

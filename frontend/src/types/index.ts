@@ -284,7 +284,6 @@ export interface PublicSettings {
   channel_monitor_hide_user_ranking?: boolean
   available_channels_enabled: boolean
   /** When false, the whole user-facing subscription surface is hidden. Default true. */
-  subscription_usage_display?: 'amount' | 'percentage'
   subscription_unit_name?: string
   subscription_units?: SubscriptionUnit[]
   subscription_enabled: boolean
@@ -595,6 +594,7 @@ export interface Group {
   reasoning_effort_mappings?: ReasoningEffortMapping[]
   is_exclusive: boolean
   status: 'active' | 'inactive'
+  subscription_usage_display?: 'amount' | 'percentage'
   pricing_unit?: string
   subscription_type: SubscriptionType
   daily_limit_usd: number | null
@@ -819,6 +819,7 @@ export interface CreateGroupRequest {
   platform?: GroupPlatform
   rate_multiplier?: number
   is_exclusive?: boolean
+  subscription_usage_display?: 'amount' | 'percentage'
   pricing_unit?: string
   subscription_type?: SubscriptionType
   daily_limit_usd?: number | null
@@ -887,6 +888,7 @@ export interface UpdateGroupRequest {
   rate_multiplier?: number
   is_exclusive?: boolean
   status?: 'active' | 'inactive'
+  subscription_usage_display?: 'amount' | 'percentage'
   pricing_unit?: string
   subscription_type?: SubscriptionType
   daily_limit_usd?: number | null

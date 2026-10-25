@@ -371,7 +371,6 @@ export const useAppStore = defineStore('app', () => {
         channel_monitor_enabled: true,
         channel_monitor_default_interval_seconds: 60,
         available_channels_enabled: false,
-        subscription_usage_display: 'amount',
   subscription_unit_name: '积分',
         subscription_units: [{ id: 'points', name: '积分', units_per_usd: 1 }],
         subscription_enabled: true,

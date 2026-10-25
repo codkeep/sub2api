@@ -351,10 +351,9 @@ type UpdateSettingsRequest struct {
 	AvailableChannelsEnabled *bool `json:"available_channels_enabled"`
 
 	// Subscription feature switch (user-facing subscription surface; see SettingKeySubscriptionEnabled)
-	SubscriptionEnabled      *bool                             `json:"subscription_enabled"`
-	SubscriptionUsageDisplay *string                           `json:"subscription_usage_display"`
-	SubscriptionUnitName     *string                           `json:"subscription_unit_name"`
-	SubscriptionUnits        *[]service.SubscriptionUnitConfig `json:"subscription_units"`
+	SubscriptionEnabled  *bool                             `json:"subscription_enabled"`
+	SubscriptionUnitName *string                           `json:"subscription_unit_name"`
+	SubscriptionUnits    *[]service.SubscriptionUnitConfig `json:"subscription_units"`
 
 	// Model Plaza feature switches + description
 	ModelPlazaEnabled     *bool   `json:"model_plaza_enabled"`
@@ -1981,12 +1980,6 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 			return previousSettings.AvailableChannelsEnabled
 		}(),
-		SubscriptionUsageDisplay: func() string {
-			if req.SubscriptionUsageDisplay != nil {
-				return *req.SubscriptionUsageDisplay
-			}
-			return previousSettings.SubscriptionUsageDisplay
-		}(),
 		SubscriptionUnits: func() []service.SubscriptionUnitConfig {
 			if req.SubscriptionUnits != nil {
 				return *req.SubscriptionUnits
@@ -2464,7 +2457,6 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 
 		AvailableChannelsEnabled: updatedSettings.AvailableChannelsEnabled,
 		SubscriptionEnabled:      updatedSettings.SubscriptionEnabled,
-		SubscriptionUsageDisplay: updatedSettings.SubscriptionUsageDisplay,
 		SubscriptionUnitName:     updatedSettings.SubscriptionUnitName,
 		SubscriptionUnits:        updatedSettings.SubscriptionUnits,
 

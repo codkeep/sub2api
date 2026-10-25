@@ -217,10 +217,9 @@ type SystemSettings struct {
 	// (sidebar entries, purchase-page subscription tab, header progress badge,
 	// usage billing-type filter, /subscriptions route). Pairs with PaymentBalanceDisabled
 	// to form the admin-facing "site billing mode" selector.
-	SubscriptionEnabled      bool                     `json:"subscription_enabled"`
-	SubscriptionUsageDisplay string                   `json:"subscription_usage_display"`
-	SubscriptionUnitName     string                   `json:"subscription_unit_name"`
-	SubscriptionUnits        []SubscriptionUnitConfig `json:"subscription_units"`
+	SubscriptionEnabled  bool                     `json:"subscription_enabled"`
+	SubscriptionUnitName string                   `json:"subscription_unit_name"`
+	SubscriptionUnits    []SubscriptionUnitConfig `json:"subscription_units"`
 
 	// Model Plaza feature (public group/model pricing showcase)
 	ModelPlazaEnabled       bool   `json:"model_plaza_enabled"`
@@ -408,10 +407,9 @@ type PublicSettings struct {
 	AvailableChannelsEnabled bool `json:"available_channels_enabled"`
 
 	// Subscription feature switch (see SystemSettings.SubscriptionEnabled)
-	SubscriptionEnabled      bool                     `json:"subscription_enabled"`
-	SubscriptionUsageDisplay string                   `json:"subscription_usage_display"`
-	SubscriptionUnitName     string                   `json:"subscription_unit_name"`
-	SubscriptionUnits        []SubscriptionUnitConfig `json:"subscription_units"`
+	SubscriptionEnabled  bool                     `json:"subscription_enabled"`
+	SubscriptionUnitName string                   `json:"subscription_unit_name"`
+	SubscriptionUnits    []SubscriptionUnitConfig `json:"subscription_units"`
 
 	// Model Plaza feature (public group/model pricing showcase)
 	ModelPlazaEnabled       bool `json:"model_plaza_enabled"`

@@ -203,10 +203,9 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyAvailableChannelsEnabled: "false",
 
 		// Subscription feature (default enabled; opt-out)
-		SettingKeySubscriptionEnabled:      "true",
-		SettingKeySubscriptionUnitName:     "积分",
-		SettingKeySubscriptionUsageDisplay: "amount",
-		SettingKeySubscriptionUnits:        `[{"id":"points","name":"积分","units_per_usd":1}]`,
+		SettingKeySubscriptionEnabled:  "true",
+		SettingKeySubscriptionUnitName: "积分",
+		SettingKeySubscriptionUnits:    `[{"id":"points","name":"积分","units_per_usd":1}]`,
 
 		// Model plaza feature (default disabled; opt-in, public unless require_auth)
 		SettingKeyModelPlazaEnabled:       "false",
@@ -831,7 +830,6 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	result.AvailableChannelsEnabled = settings[SettingKeyAvailableChannelsEnabled] == "true"
 
 	// Subscription feature (default: enabled; only an explicit false disables)
-	result.SubscriptionUsageDisplay = normalizeSubscriptionUsageDisplay(settings[SettingKeySubscriptionUsageDisplay])
 	result.SubscriptionUnitName = normalizeSubscriptionUnitName(settings[SettingKeySubscriptionUnitName])
 	result.SubscriptionUnits = parseSubscriptionUnits(settings[SettingKeySubscriptionUnits], result.SubscriptionUnitName)
 	result.SubscriptionEnabled = !isFalseSettingValue(settings[SettingKeySubscriptionEnabled])

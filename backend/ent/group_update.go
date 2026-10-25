@@ -229,6 +229,20 @@ func (_u *GroupUpdate) SetNillablePricingUnit(v *string) *GroupUpdate {
 	return _u
 }
 
+// SetSubscriptionUsageDisplay sets the "subscription_usage_display" field.
+func (_u *GroupUpdate) SetSubscriptionUsageDisplay(v string) *GroupUpdate {
+	_u.mutation.SetSubscriptionUsageDisplay(v)
+	return _u
+}
+
+// SetNillableSubscriptionUsageDisplay sets the "subscription_usage_display" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableSubscriptionUsageDisplay(v *string) *GroupUpdate {
+	if v != nil {
+		_u.SetSubscriptionUsageDisplay(*v)
+	}
+	return _u
+}
+
 // SetPlatform sets the "platform" field.
 func (_u *GroupUpdate) SetPlatform(v string) *GroupUpdate {
 	_u.mutation.SetPlatform(v)
@@ -1528,6 +1542,11 @@ func (_u *GroupUpdate) check() error {
 			return &ValidationError{Name: "pricing_unit", err: fmt.Errorf(`ent: validator failed for field "Group.pricing_unit": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SubscriptionUsageDisplay(); ok {
+		if err := group.SubscriptionUsageDisplayValidator(v); err != nil {
+			return &ValidationError{Name: "subscription_usage_display", err: fmt.Errorf(`ent: validator failed for field "Group.subscription_usage_display": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Platform(); ok {
 		if err := group.PlatformValidator(v); err != nil {
 			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Group.platform": %w`, err)}
@@ -1641,6 +1660,9 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.PricingUnit(); ok {
 		_spec.SetField(group.FieldPricingUnit, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SubscriptionUsageDisplay(); ok {
+		_spec.SetField(group.FieldSubscriptionUsageDisplay, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Platform(); ok {
 		_spec.SetField(group.FieldPlatform, field.TypeString, value)
@@ -2450,6 +2472,20 @@ func (_u *GroupUpdateOne) SetPricingUnit(v string) *GroupUpdateOne {
 func (_u *GroupUpdateOne) SetNillablePricingUnit(v *string) *GroupUpdateOne {
 	if v != nil {
 		_u.SetPricingUnit(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionUsageDisplay sets the "subscription_usage_display" field.
+func (_u *GroupUpdateOne) SetSubscriptionUsageDisplay(v string) *GroupUpdateOne {
+	_u.mutation.SetSubscriptionUsageDisplay(v)
+	return _u
+}
+
+// SetNillableSubscriptionUsageDisplay sets the "subscription_usage_display" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableSubscriptionUsageDisplay(v *string) *GroupUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionUsageDisplay(*v)
 	}
 	return _u
 }
@@ -3766,6 +3802,11 @@ func (_u *GroupUpdateOne) check() error {
 			return &ValidationError{Name: "pricing_unit", err: fmt.Errorf(`ent: validator failed for field "Group.pricing_unit": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SubscriptionUsageDisplay(); ok {
+		if err := group.SubscriptionUsageDisplayValidator(v); err != nil {
+			return &ValidationError{Name: "subscription_usage_display", err: fmt.Errorf(`ent: validator failed for field "Group.subscription_usage_display": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Platform(); ok {
 		if err := group.PlatformValidator(v); err != nil {
 			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Group.platform": %w`, err)}
@@ -3896,6 +3937,9 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if value, ok := _u.mutation.PricingUnit(); ok {
 		_spec.SetField(group.FieldPricingUnit, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SubscriptionUsageDisplay(); ok {
+		_spec.SetField(group.FieldSubscriptionUsageDisplay, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Platform(); ok {
 		_spec.SetField(group.FieldPlatform, field.TypeString, value)

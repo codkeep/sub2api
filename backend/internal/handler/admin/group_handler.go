@@ -192,6 +192,7 @@ type CreateGroupRequest struct {
 	RateMultiplier            float64                       `json:"rate_multiplier"`
 	IsExclusive               bool                          `json:"is_exclusive"`
 	PricingUnit               string                        `json:"pricing_unit" binding:"omitempty,max=20"`
+	SubscriptionUsageDisplay  string                        `json:"subscription_usage_display" binding:"omitempty,oneof=amount percentage"`
 	SubscriptionType          string                        `json:"subscription_type" binding:"omitempty,oneof=standard subscription"`
 	DailyLimitUSD             optionalLimitField            `json:"daily_limit_usd"`
 	WeeklyLimitUSD            optionalLimitField            `json:"weekly_limit_usd"`
@@ -269,6 +270,7 @@ type UpdateGroupRequest struct {
 	IsExclusive               *bool                          `json:"is_exclusive"`
 	Status                    string                         `json:"status" binding:"omitempty,oneof=active inactive"`
 	PricingUnit               string                         `json:"pricing_unit" binding:"omitempty,max=20"`
+	SubscriptionUsageDisplay  string                         `json:"subscription_usage_display" binding:"omitempty,oneof=amount percentage"`
 	SubscriptionType          string                         `json:"subscription_type" binding:"omitempty,oneof=standard subscription"`
 	DailyLimitUSD             optionalLimitField             `json:"daily_limit_usd"`
 	WeeklyLimitUSD            optionalLimitField             `json:"weekly_limit_usd"`
@@ -669,13 +671,15 @@ func (h *GroupHandler) Create(c *gin.Context) {
 	}
 
 	group, err := h.adminService.CreateGroup(c.Request.Context(), &service.CreateGroupInput{
-		Name:                            req.Name,
-		Description:                     req.Description,
-		I18n:                            req.I18n,
-		Platform:                        req.Platform,
-		RateMultiplier:                  req.RateMultiplier,
-		IsExclusive:                     req.IsExclusive,
-		PricingUnit:                     req.PricingUnit,
+		Name:                     req.Name,
+		Description:              req.Description,
+		I18n:                     req.I18n,
+		Platform:                 req.Platform,
+		RateMultiplier:           req.RateMultiplier,
+		IsExclusive:              req.IsExclusive,
+		PricingUnit:              req.PricingUnit,
+		SubscriptionUsageDisplay: req.SubscriptionUsageDisplay,
+
 		SubscriptionType:                req.SubscriptionType,
 		DailyLimitUSD:                   req.DailyLimitUSD.ToServiceInput(),
 		WeeklyLimitUSD:                  req.WeeklyLimitUSD.ToServiceInput(),
@@ -816,14 +820,16 @@ func (h *GroupHandler) Update(c *gin.Context) {
 	}
 
 	group, err := h.adminService.UpdateGroup(c.Request.Context(), groupID, &service.UpdateGroupInput{
-		Name:                            req.Name,
-		Description:                     req.Description,
-		I18n:                            req.I18n,
-		Platform:                        req.Platform,
-		RateMultiplier:                  req.RateMultiplier,
-		IsExclusive:                     req.IsExclusive,
-		Status:                          req.Status,
-		PricingUnit:                     req.PricingUnit,
+		Name:                     req.Name,
+		Description:              req.Description,
+		I18n:                     req.I18n,
+		Platform:                 req.Platform,
+		RateMultiplier:           req.RateMultiplier,
+		IsExclusive:              req.IsExclusive,
+		Status:                   req.Status,
+		PricingUnit:              req.PricingUnit,
+		SubscriptionUsageDisplay: req.SubscriptionUsageDisplay,
+
 		SubscriptionType:                req.SubscriptionType,
 		DailyLimitUSD:                   req.DailyLimitUSD.ToServiceInput(),
 		WeeklyLimitUSD:                  req.WeeklyLimitUSD.ToServiceInput(),

@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { formatChannelPrice } from '@/utils/pricing'
 
-export interface QuotaGroup { pricing_unit?: string; subscription_type?: string }
+export interface QuotaGroup { pricing_unit?: string; subscription_type?: string; subscription_usage_display?: 'amount' | 'percentage' }
 export function useSubscriptionUnits() {
   const appStore = useAppStore()
   return computed(() => Array.isArray(appStore.cachedPublicSettings?.subscription_units)
@@ -43,10 +43,9 @@ export function formatQuotaPercentage(used: number | null | undefined, limit: nu
   return `${Math.max(0, (used || 0) / limit * 100).toFixed(1).replace(/\.0$/, '')}%`
 }
 export function useQuotaUsageDisplay() {
-  const appStore = useAppStore()
   const format = useQuotaDisplay()
   return (used: number | null | undefined, limit: number | null | undefined, group?: QuotaGroup | null) =>
-    appStore.cachedPublicSettings?.subscription_usage_display === 'percentage'
+    group?.subscription_usage_display === 'percentage'
       ? formatQuotaPercentage(used, limit)
       : `${format(used, group)} / ${limit == null ? '∞' : format(limit, group)}`
 }
