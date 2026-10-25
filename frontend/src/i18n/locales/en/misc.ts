@@ -428,6 +428,7 @@ export default {
       limits: 'Limits and validity',
       recharge: {
         title: 'Top up · Pay as you go',
+        tabHint: 'Add balance and pay for usage',
         summary: 'Add funds to your account and pay for actual usage. Suitable for variable usage.',
         billing: 'Top-ups credit your USD balance. Requests in balance-billed groups deduct funds using the group’s model prices, billing mode and multipliers.',
         scope: 'Applies to balance-billed groups you can access. A top-up does not activate a subscription or increase a plan’s quota.',
@@ -435,6 +436,7 @@ export default {
       },
       subscription: {
         title: 'Subscribe · Use a plan’s quota',
+        tabHint: 'Buy a plan and use its quota',
         summary: 'Purchase a plan for a specific group and use its quota during the plan’s validity period. Suitable for regular usage.',
         billing: 'A purchase activates the group’s subscription benefits without crediting your balance. Requests in that group consume subscription quota, displayed in the group’s configured unit.',
         scope: 'Applies only to the plan’s subscription group and does not cover other balance-billed groups. Select the matching group for your API key.',

@@ -31,7 +31,13 @@
             <button type="button"
               :aria-pressed="activeTab === tab.key"
               class="billing-tab-button focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
-              @click="activeTab = tab.key; billingHelp = null">{{ tab.label }}</button>
+              @click="activeTab = tab.key; billingHelp = null">
+              <span class="billing-tab-icon"><Icon :name="billingTabIcon(tab.key)" size="md" /></span>
+              <span class="billing-tab-copy">
+                <strong>{{ tab.label }}</strong>
+                <small>{{ billingTabHint(tab.key) }}</small>
+              </span>
+            </button>
             <button type="button"
               class="billing-tab-help focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
               :aria-label="t('payment.billingHelp.label', { mode: tab.label })"
@@ -44,7 +50,7 @@
               @keydown.esc.stop="billingHelp = null">
               <Icon name="questionCircle" size="sm" />
             </button>
-            <div v-if="billingHelp === tab.key" :id="`billing-help-${tab.key}`" role="tooltip" class="billing-tab-tooltip">
+            <div v-if="billingHelp === tab.key" :id="`billing-help-${tab.key}`" role="tooltip" class="billing-tab-tooltip" :class="{ 'billing-tab-tooltip--end': tab.key === 'subscription' }">
               <p class="text-sm font-semibold">{{ t(`payment.billingHelp.${tab.key}.title`) }}</p>
               <p class="mt-1.5 text-xs leading-6 text-[var(--billing-muted)]">{{ t(`payment.billingHelp.${tab.key}.summary`) }}</p>
               <dl class="mt-4 space-y-3 border-t border-[var(--billing-border)] pt-4 text-xs leading-6">
@@ -414,6 +420,14 @@ const errorMessage = ref('')
 const errorHintMessage = ref('')
 const activeTab = ref<'recharge' | 'subscription'>('recharge')
 const billingHelp = ref<'recharge' | 'subscription' | null>(null)
+
+function billingTabIcon(key: 'recharge' | 'subscription'): 'dollar' | 'sparkles' {
+  return key === 'recharge' ? 'dollar' : 'sparkles'
+}
+
+function billingTabHint(key: 'recharge' | 'subscription'): string {
+  return t(`payment.billingHelp.${key}.tabHint`)
+}
 const amount = ref<number | null>(null)
 const selectedMethod = ref('')
 const selectedPlan = ref<SubscriptionPlan | null>(null)
