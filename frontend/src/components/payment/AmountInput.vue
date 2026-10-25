@@ -4,7 +4,7 @@
     <div>
       <label class="mb-4 block text-base font-semibold text-gray-900 dark:text-white">
         {{ t('payment.quickAmounts') }}
-        <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">· {{ currencySymbol(creditedCurrency) }}</span>
+        <span class="ml-1 text-xs font-normal text-gray-400 dark:text-gray-500">· {{ t('payment.paymentAmount') }}</span>
       </label>
       <div class="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-3 sm:gap-4">
         <button
@@ -35,10 +35,9 @@
               <span>{{ badgeText(amt) }}</span>
             </span>
           </span>
-          <span class="block text-xl tracking-tight">{{ creditedSymbol }}{{ amt }}</span>
-          <!-- 配置了优惠阶梯时，所有按钮都显示第二行，保持高度一致：赠金显示到账 USD，折扣显示折后实付 -->
+          <span class="block text-xl tracking-tight">{{ formatPaymentAmount(quoteFor(amt).payBase, currency) }}</span>
+          <!-- 下方固定显示最终到账金额，避免把支付金额和到账余额混淆。 -->
           <span
-            v-if="showSecondLine"
             :class="[
               'mt-0.5 block text-[11px] font-normal leading-tight',
               quoteFor(amt).percent > 0 ? 'text-teal-700 dark:text-teal-300' : 'text-gray-500 dark:text-gray-400',
@@ -90,7 +89,7 @@ const props = withDefaults(defineProps<{
   bonusMode?: RechargeBonusMode
   /** 充值倍率（1 支付币种 = multiplier USD），用于计算到账金额 */
   multiplier?: number
-  /** 支付币种（折扣模式第二行实付金额的币种与精度） */
+  /** 支付币种（顶部实付金额与自定义金额输入使用） */
   currency?: string
   /** 到账余额币种；余额固定以 USD 记账，但保留参数便于明确展示。 */
   creditedCurrency?: string
@@ -112,14 +111,11 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const customText = ref('')
-const creditedSymbol = computed(() => currencySymbol(props.creditedCurrency))
 
 // 0 = no limit
 const filteredAmounts = computed(() =>
   props.amounts.filter((a) => (props.min <= 0 || a >= props.min) && (props.max <= 0 || a <= props.max))
 )
-
-const showSecondLine = computed(() => props.bonusTiers.length > 0)
 
 function currencyDigits(): number {
   if (!props.currency) return 2
@@ -146,9 +142,6 @@ function badgeText(amt: number): string {
 
 function secondLine(amt: number): string {
   const quote = quoteFor(amt)
-  if (props.bonusMode === 'discount') {
-    return t('payment.rechargeBonus.payShort', { amount: formatPaymentAmount(quote.payBase, props.currency) })
-  }
   return t('payment.rechargeBonus.creditedShort', { amount: formatPaymentAmount(quote.credited, props.creditedCurrency) })
 }
 
