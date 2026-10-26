@@ -6821,46 +6821,102 @@
 
           <!-- Model Skills -->
           <div class="card">
-            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t("admin.settings.modelSkills.title") }}</h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t("admin.settings.modelSkills.description") }}</p>
+            <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t("admin.settings.modelSkills.title") }}</h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t("admin.settings.modelSkills.description") }}</p>
+              </div>
+              <div class="flex shrink-0 items-center gap-2">
+                <button type="button" class="btn btn-secondary btn-sm" @click="openModelSkillUploadModal">
+                  <Icon name="upload" size="sm" class="mr-1.5" />{{ t('admin.settings.modelSkills.upload') }}
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" @click="openModelSkillCreateModal">
+                  <Icon name="plus" size="sm" class="mr-1.5" />{{ t('admin.settings.modelSkills.create') }}
+                </button>
+              </div>
             </div>
-            <div class="space-y-5 p-6">
-              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div class="space-y-3">
-                  <input v-model="modelSkillDraft.name" class="input" :placeholder="t('admin.settings.modelSkills.namePlaceholder')" />
-                  <textarea v-model="modelSkillDraft.content" rows="9" class="input font-mono text-sm" :placeholder="t('admin.settings.modelSkills.contentPlaceholder')"></textarea>
-                  <div class="flex flex-wrap items-center gap-2">
-                    <button type="button" class="btn btn-primary btn-sm" :disabled="modelSkillSaving" @click="saveModelSkill">{{ modelSkillEditing ? t('admin.settings.modelSkills.update') : t('admin.settings.modelSkills.create') }}</button>
-                    <button v-if="modelSkillEditing" type="button" class="btn btn-secondary btn-sm" @click="resetModelSkillDraft">{{ t('common.cancel') }}</button>
-                    <label class="btn btn-secondary btn-sm cursor-pointer" :class="modelSkillSaving && 'pointer-events-none opacity-60'">
-                      <input type="file" accept=".md,.txt,text/markdown,text/plain" class="hidden" :disabled="modelSkillSaving" @change="handleModelSkillUpload" />
-                      <Icon name="upload" size="sm" class="mr-1.5" />{{ t('admin.settings.modelSkills.upload') }}
-                    </label>
-                  </div>
+            <div class="p-6">
+              <div v-if="modelSkillsLoading" class="flex min-h-32 items-center justify-center text-sm text-gray-500">{{ t('admin.settings.modelSkills.loading') }}</div>
+              <div v-else-if="modelSkills.length === 0" class="flex min-h-32 flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-dark-600">
+                <Icon name="document" size="lg" class="mb-2 text-gray-400" />
+                {{ t('admin.settings.modelSkills.empty') }}
+              </div>
+              <div v-else class="overflow-hidden rounded-xl border border-gray-200 dark:border-dark-600">
+                <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] gap-4 border-b border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:border-dark-600 dark:bg-dark-800/70 dark:text-gray-400">
+                  <span>{{ t('admin.settings.modelSkills.listName') }}</span>
+                  <span>{{ t('admin.settings.modelSkills.listContent') }}</span>
+                  <span>{{ t('admin.settings.modelSkills.listActions') }}</span>
                 </div>
-                <div class="space-y-2">
-                  <div v-if="modelSkillsLoading" class="text-sm text-gray-500">{{ t('admin.settings.modelSkills.loading') }}</div>
-                  <div v-else-if="modelSkills.length === 0" class="rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500 dark:border-dark-600">{{ t('admin.settings.modelSkills.empty') }}</div>
-                  <div v-else class="max-h-80 space-y-2 overflow-y-auto">
-                    <div v-for="skill in modelSkills" :key="skill.id" class="rounded-lg border border-gray-200 p-3 dark:border-dark-600">
-                      <div class="flex items-start justify-between gap-3">
+                <div class="divide-y divide-gray-200 dark:divide-dark-600">
+                  <div v-for="skill in modelSkills" :key="skill.id" class="grid grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-gray-50/80 dark:hover:bg-dark-800/50 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] md:items-center md:gap-4">
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300"><Icon name="document" size="sm" /></span>
                         <div class="min-w-0">
                           <div class="truncate font-medium text-gray-900 dark:text-white">{{ skill.name }}</div>
-                          <div class="truncate text-xs text-gray-500">{{ skill.filename || t('admin.settings.modelSkills.manual') }}</div>
-                        </div>
-                        <div class="flex shrink-0 gap-1">
-                          <button type="button" class="btn btn-secondary btn-xs" @click="editModelSkill(skill)">{{ t('common.edit') }}</button>
-                          <button type="button" class="btn btn-secondary btn-xs text-red-600" @click="removeModelSkill(skill)">{{ t('common.delete') }}</button>
+                          <div class="truncate text-xs text-gray-500 dark:text-gray-400">{{ skill.filename || t('admin.settings.modelSkills.manual') }}</div>
                         </div>
                       </div>
-                      <p class="mt-2 line-clamp-2 whitespace-pre-wrap text-xs text-gray-500 dark:text-gray-400">{{ skill.content }}</p>
+                    </div>
+                    <p class="line-clamp-2 whitespace-pre-wrap text-sm leading-6 text-gray-600 dark:text-gray-300">{{ skill.content }}</p>
+                    <div class="flex items-center gap-2 md:justify-end">
+                      <button type="button" class="btn btn-secondary btn-xs" @click="editModelSkill(skill)"><Icon name="edit" size="xs" class="mr-1" />{{ t('common.edit') }}</button>
+                      <button type="button" class="btn btn-secondary btn-xs text-red-600 hover:text-red-700" @click="removeModelSkill(skill)"><Icon name="trash" size="xs" class="mr-1" />{{ t('common.delete') }}</button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <BaseDialog :show="modelSkillModalOpen" :title="modelSkillEditing ? t('admin.settings.modelSkills.editTitle') : t('admin.settings.modelSkills.createTitle')" width="wide" @close="closeModelSkillModal">
+            <div class="space-y-4">
+              <div>
+                <label class="input-label">{{ t('admin.settings.modelSkills.nameLabel') }}</label>
+                <input v-model="modelSkillDraft.name" class="input" :placeholder="t('admin.settings.modelSkills.namePlaceholder')" />
+              </div>
+              <div>
+                <label class="input-label">{{ t('admin.settings.modelSkills.contentLabel') }}</label>
+                <textarea v-model="modelSkillDraft.content" rows="16" class="input min-h-72 resize-y font-mono text-sm" :placeholder="t('admin.settings.modelSkills.contentPlaceholder')"></textarea>
+                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.settings.modelSkills.contentHint') }}</p>
+              </div>
+            </div>
+            <template #footer>
+              <div class="flex justify-end gap-3">
+                <button type="button" class="btn btn-secondary" @click="closeModelSkillModal">{{ t('common.cancel') }}</button>
+                <button type="button" class="btn btn-primary" :disabled="modelSkillSaving" @click="saveModelSkill">{{ modelSkillEditing ? t('admin.settings.modelSkills.update') : t('admin.settings.modelSkills.create') }}</button>
+              </div>
+            </template>
+          </BaseDialog>
+
+          <BaseDialog :show="modelSkillUploadModalOpen" :title="t('admin.settings.modelSkills.uploadTitle')" width="normal" @close="closeModelSkillUploadModal">
+            <div
+              class="rounded-xl border-2 border-dashed p-8 text-center transition-colors"
+              :class="modelSkillDragActive ? 'border-primary-500 bg-primary-50/70 dark:bg-primary-900/20' : 'border-gray-300 bg-gray-50/70 dark:border-dark-600 dark:bg-dark-800/50'"
+              @dragenter.prevent="modelSkillDragActive = true"
+              @dragover.prevent="modelSkillDragActive = true"
+              @dragleave.prevent="modelSkillDragActive = false"
+              @drop.prevent="handleModelSkillDrop"
+            >
+              <Icon name="upload" size="xl" class="mx-auto mb-3 text-primary-500" />
+              <p class="font-medium text-gray-900 dark:text-white">{{ t('admin.settings.modelSkills.uploadHint') }}</p>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t('admin.settings.modelSkills.uploadFormats') }}</p>
+              <label class="btn btn-secondary mt-4 inline-flex cursor-pointer items-center gap-2">
+                <Icon name="document" size="sm" />{{ t('admin.settings.modelSkills.chooseFile') }}
+                <input type="file" accept=".md,.txt,text/markdown,text/plain" class="sr-only" :disabled="modelSkillSaving" @change="handleModelSkillUpload" />
+              </label>
+              <div v-if="modelSkillUploadFile" class="mx-auto mt-4 flex max-w-sm items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-left shadow-sm ring-1 ring-gray-200 dark:bg-dark-800 dark:ring-dark-600">
+                <div class="min-w-0"><p class="truncate text-sm font-medium text-gray-800 dark:text-gray-100">{{ modelSkillUploadFile.name }}</p><p class="text-xs text-gray-500">{{ (modelSkillUploadFile.size / 1024).toFixed(1) }} KB</p></div>
+                <button type="button" class="rounded p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" @click="modelSkillUploadFile = null"><Icon name="x" size="sm" /></button>
+              </div>
+            </div>
+            <template #footer>
+              <div class="flex justify-end gap-3">
+                <button type="button" class="btn btn-secondary" @click="closeModelSkillUploadModal">{{ t('common.cancel') }}</button>
+                <button type="button" class="btn btn-primary" :disabled="!modelSkillUploadFile || modelSkillSaving" @click="submitModelSkillUpload">{{ t('admin.settings.modelSkills.uploadAction') }}</button>
+              </div>
+            </template>
+          </BaseDialog>
 
           <!-- Custom Menu Items -->
           <div class="card">
@@ -9143,6 +9199,7 @@ import {
   type SiteBillingMode,
 } from "@/utils/siteBillingMode";
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+import BaseDialog from "@/components/common/BaseDialog.vue";
 import PaymentProviderList from "@/components/payment/PaymentProviderList.vue";
 import PaymentProviderDialog from "@/components/payment/PaymentProviderDialog.vue";
 import GroupBadge from "@/components/common/GroupBadge.vue";
@@ -9229,6 +9286,10 @@ const modelSkillsLoading = ref(false);
 const modelSkillSaving = ref(false);
 const modelSkillDraft = reactive({ id: "", name: "", content: "", filename: "" });
 const modelSkillEditing = ref(false);
+const modelSkillModalOpen = ref(false);
+const modelSkillUploadModalOpen = ref(false);
+const modelSkillUploadFile = ref<File | null>(null);
+const modelSkillDragActive = ref(false);
 const settingsTabs = [
   { key: "general" as SettingsTab, icon: "home" as const },
   { key: "agreement" as SettingsTab, icon: "document" as const },
@@ -11219,12 +11280,37 @@ function resetModelSkillDraft(): void {
   modelSkillEditing.value = false;
 }
 
+function openModelSkillCreateModal(): void {
+  resetModelSkillDraft();
+  modelSkillModalOpen.value = true;
+}
+
+function closeModelSkillModal(): void {
+  if (modelSkillSaving.value) return;
+  modelSkillModalOpen.value = false;
+  resetModelSkillDraft();
+}
+
+function openModelSkillUploadModal(): void {
+  modelSkillUploadFile.value = null;
+  modelSkillDragActive.value = false;
+  modelSkillUploadModalOpen.value = true;
+}
+
+function closeModelSkillUploadModal(): void {
+  if (modelSkillSaving.value) return;
+  modelSkillUploadModalOpen.value = false;
+  modelSkillUploadFile.value = null;
+  modelSkillDragActive.value = false;
+}
+
 function editModelSkill(skill: ModelSkill): void {
   modelSkillDraft.id = skill.id;
   modelSkillDraft.name = skill.name;
   modelSkillDraft.content = skill.content;
   modelSkillDraft.filename = skill.filename || "";
   modelSkillEditing.value = true;
+  modelSkillModalOpen.value = true;
 }
 
 async function saveModelSkill(): Promise<void> {
@@ -11244,6 +11330,7 @@ async function saveModelSkill(): Promise<void> {
     } else {
       await createModelSkill(input);
     }
+    modelSkillModalOpen.value = false;
     resetModelSkillDraft();
     await loadModelSkills();
     appStore.showSuccess(t("admin.settings.modelSkills.saved"));
@@ -11254,18 +11341,39 @@ async function saveModelSkill(): Promise<void> {
   }
 }
 
-async function handleModelSkillUpload(event: Event): Promise<void> {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  input.value = "";
+function setModelSkillUploadFile(file: File | undefined): void {
   if (!file) return;
+  const fileName = file.name.toLowerCase();
+  if (!fileName.endsWith(".md") && !fileName.endsWith(".txt")) {
+    appStore.showError(t("admin.settings.modelSkills.formatError"));
+    return;
+  }
   if (file.size > 512 * 1024) {
     appStore.showError(t("admin.settings.modelSkills.sizeError"));
     return;
   }
+  modelSkillUploadFile.value = file;
+  modelSkillDragActive.value = false;
+}
+
+function handleModelSkillUpload(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  setModelSkillUploadFile(input.files?.[0]);
+  input.value = "";
+}
+
+function handleModelSkillDrop(event: DragEvent): void {
+  setModelSkillUploadFile(event.dataTransfer?.files?.[0]);
+}
+
+async function submitModelSkillUpload(): Promise<void> {
+  const file = modelSkillUploadFile.value;
+  if (!file) return;
   modelSkillSaving.value = true;
   try {
     await uploadModelSkill(file);
+    modelSkillUploadModalOpen.value = false;
+    modelSkillUploadFile.value = null;
     await loadModelSkills();
     appStore.showSuccess(t("admin.settings.modelSkills.uploaded"));
   } catch (error) {
