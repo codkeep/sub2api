@@ -1168,6 +1168,12 @@ export default {
           duplicate: '该条目已存在'
         }
       },
+      modelSkills: {
+        title: '默认模型 Skills',
+        hint: '选择后，该分组的模型请求会使用这些 Skills 配置。Skills 请先在系统设置中创建或上传。',
+        loading: '正在加载 Skills...',
+        empty: '暂无可用 Skills，请先到系统设置创建或上传。'
+      },
       codexModelsManifest: {
         title: '固定账号获取模型列表',
         hint: '开启后，普通模型列表与 Codex Model Manifest 均优先从选定账号获取并合并，再应用账号映射和分组列表过滤；限流/过载中的选定账号仍会被使用。',

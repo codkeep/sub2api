@@ -1118,6 +1118,44 @@ export async function uploadSiteLogo(file: File): Promise<SiteLogoUploadResult> 
   return data;
 }
 
+export interface ModelSkill {
+  id: string
+  name: string
+  filename?: string
+  content: string
+  created_at: string
+  updated_at: string
+}
+
+export async function listModelSkills(): Promise<ModelSkill[]> {
+  const { data } = await apiClient.get<ModelSkill[]>('/admin/settings/model-skills')
+  return data
+}
+
+export async function createModelSkill(input: { name: string; filename?: string; content: string }): Promise<ModelSkill> {
+  const { data } = await apiClient.post<ModelSkill>('/admin/settings/model-skills', input)
+  return data
+}
+
+export async function uploadModelSkill(file: File, name?: string): Promise<ModelSkill> {
+  const form = new FormData()
+  form.append('file', file)
+  if (name?.trim()) form.append('name', name.trim())
+  const { data } = await apiClient.post<ModelSkill>('/admin/settings/model-skills/upload', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data
+}
+
+export async function updateModelSkill(id: string, input: { name: string; filename?: string; content: string }): Promise<ModelSkill> {
+  const { data } = await apiClient.put<ModelSkill>(`/admin/settings/model-skills/${id}`, input)
+  return data
+}
+
+export async function deleteModelSkill(id: string): Promise<void> {
+  await apiClient.delete(`/admin/settings/model-skills/${id}`)
+}
+
 /**
  * Test SMTP connection request
  */
@@ -1612,6 +1650,11 @@ export const settingsAPI = {
   getSettings,
   updateSettings,
   uploadSiteLogo,
+  listModelSkills,
+  createModelSkill,
+  uploadModelSkill,
+  updateModelSkill,
+  deleteModelSkill,
   testSmtpConnection,
   sendTestEmail,
   getEmailTemplates,

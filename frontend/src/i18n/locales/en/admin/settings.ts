@@ -708,6 +708,26 @@ export default {
         hideCcsImportButton: 'Hide CCS Import Button',
         hideCcsImportButtonHint: 'When enabled, the "Import to CCS" button will be hidden on the API Keys page'
       },
+      modelSkills: {
+        title: 'Model Skills',
+        description: 'Create or upload reusable SKILL.md content, then select default Skills for each group.',
+        namePlaceholder: 'Skill name',
+        contentPlaceholder: 'Enter Skill content (Markdown supported)',
+        create: 'Create Skill',
+        update: 'Save changes',
+        upload: 'Upload file',
+        loading: 'Loading Skills...',
+        empty: 'No Skills yet. Create one or upload a file.',
+        manual: 'Created manually',
+        required: 'Enter both a Skill name and its content',
+        sizeError: 'Skill files cannot exceed 512KB',
+        saved: 'Skill saved',
+        uploaded: 'Skill file uploaded',
+        deleted: 'Skill deleted',
+        deleteConfirm: 'Delete Skill "{name}"? Groups that selected it will no longer resolve it.',
+        loadError: 'Failed to load Skills',
+        saveError: 'Failed to save Skill'
+      },
       purchase: {
         title: 'Recharge / Subscription Page',
         description: 'Show a "Recharge / Subscription" entry in the sidebar and open the configured URL in an iframe',

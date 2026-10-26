@@ -6819,6 +6819,49 @@
             </div>
           </div>
 
+          <!-- Model Skills -->
+          <div class="card">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t("admin.settings.modelSkills.title") }}</h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t("admin.settings.modelSkills.description") }}</p>
+            </div>
+            <div class="space-y-5 p-6">
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div class="space-y-3">
+                  <input v-model="modelSkillDraft.name" class="input" :placeholder="t('admin.settings.modelSkills.namePlaceholder')" />
+                  <textarea v-model="modelSkillDraft.content" rows="9" class="input font-mono text-sm" :placeholder="t('admin.settings.modelSkills.contentPlaceholder')"></textarea>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" :disabled="modelSkillSaving" @click="saveModelSkill">{{ modelSkillEditing ? t('admin.settings.modelSkills.update') : t('admin.settings.modelSkills.create') }}</button>
+                    <button v-if="modelSkillEditing" type="button" class="btn btn-secondary btn-sm" @click="resetModelSkillDraft">{{ t('common.cancel') }}</button>
+                    <label class="btn btn-secondary btn-sm cursor-pointer" :class="modelSkillSaving && 'pointer-events-none opacity-60'">
+                      <input type="file" accept=".md,.txt,text/markdown,text/plain" class="hidden" :disabled="modelSkillSaving" @change="handleModelSkillUpload" />
+                      <Icon name="upload" size="sm" class="mr-1.5" />{{ t('admin.settings.modelSkills.upload') }}
+                    </label>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <div v-if="modelSkillsLoading" class="text-sm text-gray-500">{{ t('admin.settings.modelSkills.loading') }}</div>
+                  <div v-else-if="modelSkills.length === 0" class="rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500 dark:border-dark-600">{{ t('admin.settings.modelSkills.empty') }}</div>
+                  <div v-else class="max-h-80 space-y-2 overflow-y-auto">
+                    <div v-for="skill in modelSkills" :key="skill.id" class="rounded-lg border border-gray-200 p-3 dark:border-dark-600">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <div class="truncate font-medium text-gray-900 dark:text-white">{{ skill.name }}</div>
+                          <div class="truncate text-xs text-gray-500">{{ skill.filename || t('admin.settings.modelSkills.manual') }}</div>
+                        </div>
+                        <div class="flex shrink-0 gap-1">
+                          <button type="button" class="btn btn-secondary btn-xs" @click="editModelSkill(skill)">{{ t('common.edit') }}</button>
+                          <button type="button" class="btn btn-secondary btn-xs text-red-600" @click="removeModelSkill(skill)">{{ t('common.delete') }}</button>
+                        </div>
+                      </div>
+                      <p class="mt-2 line-clamp-2 whitespace-pre-wrap text-xs text-gray-500 dark:text-gray-400">{{ skill.content }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Custom Menu Items -->
           <div class="card">
             <div
@@ -9061,6 +9104,11 @@ import {
   deriveWeChatConnectStoredMode,
   normalizeDefaultSubscriptionSettings,
   resolveWeChatConnectModeCapabilities,
+  listModelSkills,
+  createModelSkill,
+  uploadModelSkill,
+  updateModelSkill,
+  deleteModelSkill,
 } from "@/api/admin/settings";
 import type {
   AuthSourceDefaultsState,
@@ -9074,6 +9122,7 @@ import type {
   WebSearchEmulationConfig,
   WebSearchProviderConfig,
   WebSearchTestResult,
+  ModelSkill,
 } from "@/api/admin/settings";
 import type {
   AdminGroup,
@@ -9175,6 +9224,11 @@ const activeTab = ref<SettingsTab>("general");
 const siteLogoMode = ref<"upload" | "url">("upload");
 const siteLogoUploading = ref(false);
 const siteLogoUploadError = ref("");
+const modelSkills = ref<ModelSkill[]>([]);
+const modelSkillsLoading = ref(false);
+const modelSkillSaving = ref(false);
+const modelSkillDraft = reactive({ id: "", name: "", content: "", filename: "" });
+const modelSkillEditing = ref(false);
 const settingsTabs = [
   { key: "general" as SettingsTab, icon: "home" as const },
   { key: "agreement" as SettingsTab, icon: "document" as const },
@@ -11146,6 +11200,92 @@ async function handleSiteLogoUpload(event: Event): Promise<void> {
   }
 }
 
+async function loadModelSkills(): Promise<void> {
+  modelSkillsLoading.value = true;
+  try {
+    modelSkills.value = await listModelSkills();
+  } catch (error) {
+    appStore.showError(extractApiErrorMessage(error, t("admin.settings.modelSkills.loadError")));
+  } finally {
+    modelSkillsLoading.value = false;
+  }
+}
+
+function resetModelSkillDraft(): void {
+  modelSkillDraft.id = "";
+  modelSkillDraft.name = "";
+  modelSkillDraft.content = "";
+  modelSkillDraft.filename = "";
+  modelSkillEditing.value = false;
+}
+
+function editModelSkill(skill: ModelSkill): void {
+  modelSkillDraft.id = skill.id;
+  modelSkillDraft.name = skill.name;
+  modelSkillDraft.content = skill.content;
+  modelSkillDraft.filename = skill.filename || "";
+  modelSkillEditing.value = true;
+}
+
+async function saveModelSkill(): Promise<void> {
+  if (!modelSkillDraft.name.trim() || !modelSkillDraft.content.trim()) {
+    appStore.showError(t("admin.settings.modelSkills.required"));
+    return;
+  }
+  modelSkillSaving.value = true;
+  try {
+    const input = {
+      name: modelSkillDraft.name,
+      content: modelSkillDraft.content,
+      filename: modelSkillDraft.filename,
+    };
+    if (modelSkillEditing.value) {
+      await updateModelSkill(modelSkillDraft.id, input);
+    } else {
+      await createModelSkill(input);
+    }
+    resetModelSkillDraft();
+    await loadModelSkills();
+    appStore.showSuccess(t("admin.settings.modelSkills.saved"));
+  } catch (error) {
+    appStore.showError(extractApiErrorMessage(error, t("admin.settings.modelSkills.saveError")));
+  } finally {
+    modelSkillSaving.value = false;
+  }
+}
+
+async function handleModelSkillUpload(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (!file) return;
+  if (file.size > 512 * 1024) {
+    appStore.showError(t("admin.settings.modelSkills.sizeError"));
+    return;
+  }
+  modelSkillSaving.value = true;
+  try {
+    await uploadModelSkill(file);
+    await loadModelSkills();
+    appStore.showSuccess(t("admin.settings.modelSkills.uploaded"));
+  } catch (error) {
+    appStore.showError(extractApiErrorMessage(error, t("admin.settings.modelSkills.saveError")));
+  } finally {
+    modelSkillSaving.value = false;
+  }
+}
+
+async function removeModelSkill(skill: ModelSkill): Promise<void> {
+  if (!window.confirm(t("admin.settings.modelSkills.deleteConfirm", { name: skill.name }))) return;
+  try {
+    await deleteModelSkill(skill.id);
+    modelSkills.value = modelSkills.value.filter((item) => item.id !== skill.id);
+    appStore.showSuccess(t("admin.settings.modelSkills.deleted"));
+  } catch (error) {
+    appStore.showError(extractApiErrorMessage(error, t("admin.settings.modelSkills.saveError")));
+  }
+}
+
 async function loadSettings() {
   loading.value = true;
   loadFailed.value = false;
@@ -13038,6 +13178,7 @@ async function handleDeleteProvider() {
 
 onMounted(() => {
   loadSettings();
+  loadModelSkills();
   loadSubscriptionGroups();
   loadAdminApiKey();
   loadUpstreamBillingProbeSettings();

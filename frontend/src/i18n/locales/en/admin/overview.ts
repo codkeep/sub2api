@@ -1171,6 +1171,12 @@ export default {
           duplicate: 'This entry already exists'
         }
       },
+      modelSkills: {
+        title: 'Default model Skills',
+        hint: 'Selected Skills are associated with this group. Create or upload Skills first in System Settings.',
+        loading: 'Loading Skills...',
+        empty: 'No Skills available. Create or upload one in System Settings first.'
+      },
       codexModelsManifest: {
         title: 'Pinned Accounts for Model Lists',
         hint: 'When enabled, ordinary model lists and Codex Model Manifest are discovered from the pinned accounts first, then merged and filtered using account mappings and the group model list. Rate-limited or overloaded pinned accounts are still used.',

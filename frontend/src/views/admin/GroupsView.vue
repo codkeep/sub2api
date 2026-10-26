@@ -896,6 +896,20 @@
           </div>
         </div>
 
+        <div class="border-t pt-4">
+          <label class="input-label">{{ t("admin.groups.modelSkills.title") }}</label>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.hint") }}</p>
+          <div v-if="modelSkillsLoading" class="mt-2 text-xs text-gray-500">{{ t("admin.groups.modelSkills.loading") }}</div>
+          <div v-else-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</div>
+          <div v-else class="mt-2 max-h-36 space-y-2 overflow-y-auto rounded-lg border border-gray-200 p-2 dark:border-dark-600">
+            <label v-for="skill in modelSkills" :key="skill.id" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-dark-700">
+              <input v-model="createForm.default_skill_ids" type="checkbox" :value="skill.id" class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-gray-200">{{ skill.name }}</span>
+              <span v-if="skill.filename" class="text-xs text-gray-400">{{ skill.filename }}</span>
+            </label>
+          </div>
+        </div>
+
         <!-- 图片生成计费配置 -->
         <div
           v-if="supportsImagePricingPlatform(createForm.platform)"
@@ -2546,6 +2560,20 @@
                 {{ t(editAllowlistCustomErrorKey) }}
               </p>
             </div>
+          </div>
+        </div>
+
+        <div class="border-t pt-4">
+          <label class="input-label">{{ t("admin.groups.modelSkills.title") }}</label>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.hint") }}</p>
+          <div v-if="modelSkillsLoading" class="mt-2 text-xs text-gray-500">{{ t("admin.groups.modelSkills.loading") }}</div>
+          <div v-else-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</div>
+          <div v-else class="mt-2 max-h-36 space-y-2 overflow-y-auto rounded-lg border border-gray-200 p-2 dark:border-dark-600">
+            <label v-for="skill in modelSkills" :key="skill.id" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-dark-700">
+              <input v-model="editForm.default_skill_ids" type="checkbox" :value="skill.id" class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-gray-200">{{ skill.name }}</span>
+              <span v-if="skill.filename" class="text-xs text-gray-400">{{ skill.filename }}</span>
+            </label>
           </div>
         </div>
 
@@ -4303,6 +4331,7 @@ import { useAppStore } from "@/stores/app";
 import { useAuthStore } from "@/stores/auth";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { adminAPI } from "@/api/admin";
+import { listModelSkills, type ModelSkill } from "@/api/admin/settings";
 import type {
   AdminGroup,
   CodexModelsManifestConfig,
@@ -4915,6 +4944,18 @@ const compositeRouteForm = reactive<CompositeRouteFormState>({
   enabled: true,
   notes: "",
 });
+const modelSkills = ref<ModelSkill[]>([]);
+const modelSkillsLoading = ref(false);
+const loadModelSkills = async () => {
+  modelSkillsLoading.value = true;
+  try {
+    modelSkills.value = await listModelSkills();
+  } catch (error) {
+    console.error("Failed to load model skills", error);
+  } finally {
+    modelSkillsLoading.value = false;
+  }
+};
 const createMessagesDispatchDefaults = createDefaultMessagesDispatchFormState();
 const editMessagesDispatchDefaults = createDefaultMessagesDispatchFormState();
 const createModelAllowlistState = reactive(createInitialModelAllowlistState());
@@ -4994,6 +5035,7 @@ const createForm = reactive({
   force_openai_fast: false,
   free_openai_fast: false,
   model_pricing: [] as PricingFormEntry[],
+  default_skill_ids: [] as string[],
   // 图片生成计费配置
   allow_image_generation: false,
   allow_batch_image_generation: false,
@@ -5362,6 +5404,7 @@ const editForm = reactive({
   force_openai_fast: false,
   free_openai_fast: false,
   model_pricing: [] as PricingFormEntry[],
+  default_skill_ids: [] as string[],
   // 图片生成计费配置
   allow_image_generation: false,
   allow_batch_image_generation: false,
@@ -6110,6 +6153,7 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.force_openai_fast = group.force_openai_fast ?? false;
   editForm.free_openai_fast = group.free_openai_fast ?? false;
   editForm.model_pricing = groupPricingFromAPI(group.model_pricing);
+  editForm.default_skill_ids = [...(group.default_skill_ids ?? [])];
   editForm.allow_image_generation = group.allow_image_generation ?? false;
   editForm.allow_batch_image_generation =
     group.allow_batch_image_generation ?? false;
@@ -6244,6 +6288,7 @@ const closeEditModal = () => {
   editForm.force_openai_fast = false;
   editForm.free_openai_fast = false;
   editForm.model_pricing = [];
+  editForm.default_skill_ids = [];
   editForm.web_search_price_per_call = null;
   editForm.search_price_per_1k = null;
   editForm.audio_realtime_price_per_min = null;
@@ -6920,6 +6965,7 @@ const saveSortOrder = async () => {
 
 onMounted(() => {
   loadGroups();
+  void loadModelSkills();
   if (!authStore.isSimpleMode) {
     void loadLiveCapability();
     loadModelAllowlistCandidates("create", 0, createForm.platform);

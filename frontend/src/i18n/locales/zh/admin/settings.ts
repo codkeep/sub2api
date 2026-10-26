@@ -703,6 +703,26 @@ export default {
         hideCcsImportButton: '隐藏 CCS 导入按钮',
         hideCcsImportButtonHint: '启用后将在 API Keys 页面隐藏"导入 CCS"按钮'
       },
+      modelSkills: {
+        title: '模型 Skills',
+        description: '创建或上传可复用的 SKILL.md 正文，并在分组中选择默认 Skills。',
+        namePlaceholder: 'Skill 名称',
+        contentPlaceholder: '填写 Skill 正文内容（支持 Markdown）',
+        create: '新建 Skill',
+        update: '保存修改',
+        upload: '上传文件',
+        loading: '正在加载 Skills...',
+        empty: '暂无 Skills，请新建或上传一个文件。',
+        manual: '手动创建',
+        required: '请填写 Skill 名称和正文内容',
+        sizeError: 'Skill 文件不能超过 512KB',
+        saved: 'Skill 已保存',
+        uploaded: 'Skill 文件已上传',
+        deleted: 'Skill 已删除',
+        deleteConfirm: '确定删除 Skill「{name}」吗？已在分组中选择它的配置会自动失效。',
+        loadError: '读取 Skills 失败',
+        saveError: '保存 Skill 失败'
+      },
       purchase: {
         title: '充值/订阅页面',
         description: '在侧边栏展示“充值/订阅”入口，并在页面内通过 iframe 打开指定链接',
