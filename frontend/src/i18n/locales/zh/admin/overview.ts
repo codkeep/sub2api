@@ -1172,7 +1172,8 @@ export default {
         title: '默认模型 Skills',
         hint: '选择后，该分组的模型请求会使用这些 Skills 配置。Skills 请先在系统设置中创建或上传。',
         loading: '正在加载 Skills...',
-        empty: '暂无可用 Skills，请先到系统设置创建或上传。'
+        empty: '暂无可用 Skills，请先到系统设置创建或上传。',
+        selectPlaceholder: '选择要加入的默认 Skill'
       },
       codexModelsManifest: {
         title: '固定账号获取模型列表',

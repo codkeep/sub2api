@@ -1175,7 +1175,8 @@ export default {
         title: 'Default model Skills',
         hint: 'Selected Skills are associated with this group. Create or upload Skills first in System Settings.',
         loading: 'Loading Skills...',
-        empty: 'No Skills available. Create or upload one in System Settings first.'
+        empty: 'No Skills available. Create or upload one in System Settings first.',
+        selectPlaceholder: 'Select a default Skill to add'
       },
       codexModelsManifest: {
         title: 'Pinned Accounts for Model Lists',

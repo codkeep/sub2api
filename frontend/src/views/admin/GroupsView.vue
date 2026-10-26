@@ -901,12 +901,30 @@
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.hint") }}</p>
           <div v-if="modelSkillsLoading" class="mt-2 text-xs text-gray-500">{{ t("admin.groups.modelSkills.loading") }}</div>
           <div v-else-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</div>
-          <div v-else class="mt-2 max-h-36 space-y-2 overflow-y-auto rounded-lg border border-gray-200 p-2 dark:border-dark-600">
-            <label v-for="skill in modelSkills" :key="skill.id" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-dark-700">
-              <input v-model="createForm.default_skill_ids" type="checkbox" :value="skill.id" class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-              <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-gray-200">{{ skill.name }}</span>
-              <span v-if="skill.filename" class="text-xs text-gray-400">{{ skill.filename }}</span>
-            </label>
+          <div v-else class="mt-2">
+            <div v-if="createForm.default_skill_ids.length > 0" class="mb-2 flex flex-wrap gap-1.5">
+              <span v-for="skillId in createForm.default_skill_ids" :key="skillId" class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                {{ modelSkills.find((skill) => skill.id === skillId)?.name || skillId }}
+                <button type="button" class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200" @click="createForm.default_skill_ids = createForm.default_skill_ids.filter((id) => id !== skillId)">
+                  <Icon name="x" size="xs" />
+                </button>
+              </span>
+            </div>
+            <select
+              class="input"
+              @change="
+                (e) => {
+                  const val = (e.target as HTMLSelectElement).value;
+                  if (val && !createForm.default_skill_ids.includes(val)) createForm.default_skill_ids.push(val);
+                  (e.target as HTMLSelectElement).value = '';
+                }
+              "
+            >
+              <option value="">{{ t("admin.groups.modelSkills.selectPlaceholder") }}</option>
+              <option v-for="skill in modelSkills" :key="skill.id" :value="skill.id" :disabled="createForm.default_skill_ids.includes(skill.id)">
+                {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
+              </option>
+            </select>
           </div>
         </div>
 
@@ -2568,12 +2586,30 @@
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.hint") }}</p>
           <div v-if="modelSkillsLoading" class="mt-2 text-xs text-gray-500">{{ t("admin.groups.modelSkills.loading") }}</div>
           <div v-else-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</div>
-          <div v-else class="mt-2 max-h-36 space-y-2 overflow-y-auto rounded-lg border border-gray-200 p-2 dark:border-dark-600">
-            <label v-for="skill in modelSkills" :key="skill.id" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-dark-700">
-              <input v-model="editForm.default_skill_ids" type="checkbox" :value="skill.id" class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-              <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-gray-200">{{ skill.name }}</span>
-              <span v-if="skill.filename" class="text-xs text-gray-400">{{ skill.filename }}</span>
-            </label>
+          <div v-else class="mt-2">
+            <div v-if="editForm.default_skill_ids.length > 0" class="mb-2 flex flex-wrap gap-1.5">
+              <span v-for="skillId in editForm.default_skill_ids" :key="skillId" class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                {{ modelSkills.find((skill) => skill.id === skillId)?.name || skillId }}
+                <button type="button" class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200" @click="editForm.default_skill_ids = editForm.default_skill_ids.filter((id) => id !== skillId)">
+                  <Icon name="x" size="xs" />
+                </button>
+              </span>
+            </div>
+            <select
+              class="input"
+              @change="
+                (e) => {
+                  const val = (e.target as HTMLSelectElement).value;
+                  if (val && !editForm.default_skill_ids.includes(val)) editForm.default_skill_ids.push(val);
+                  (e.target as HTMLSelectElement).value = '';
+                }
+              "
+            >
+              <option value="">{{ t("admin.groups.modelSkills.selectPlaceholder") }}</option>
+              <option v-for="skill in modelSkills" :key="skill.id" :value="skill.id" :disabled="editForm.default_skill_ids.includes(skill.id)">
+                {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
+              </option>
+            </select>
           </div>
         </div>
 
