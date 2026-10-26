@@ -169,6 +169,13 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
 		return
 	}
+	if h.settingService != nil && apiKey.Group != nil {
+		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformAnthropic, parsedReq.Body.Bytes()); skillErr != nil {
+			reqLog.Warn("gateway.default_skills_injection_failed", zap.Error(skillErr))
+		} else {
+			parsedReq.ReplaceBody(enrichedBody)
+		}
+	}
 	body = parsedReq.Body.Bytes()
 	reqModel := parsedReq.Model
 	reqStream := parsedReq.Stream
@@ -2181,6 +2188,13 @@ func (h *GatewayHandler) CountTokens(c *gin.Context) {
 		logRequestBodyParseFailure(reqLog, body, err)
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
 		return
+	}
+	if h.settingService != nil && apiKey.Group != nil {
+		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformAnthropic, parsedReq.Body.Bytes()); skillErr != nil {
+			reqLog.Warn("gateway.count_tokens_default_skills_injection_failed", zap.Error(skillErr))
+		} else {
+			parsedReq.ReplaceBody(enrichedBody)
+		}
 	}
 	body = parsedReq.Body.Bytes()
 	// count_tokens 走 messages 严格校验时，复用已解析请求，避免二次反序列化。
