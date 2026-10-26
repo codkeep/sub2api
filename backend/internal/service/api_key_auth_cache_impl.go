@@ -14,7 +14,7 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-const apiKeyAuthSnapshotVersion = 26 // v26: group default model skills
+const apiKeyAuthSnapshotVersion = 27 // v27: reload group default Skills from their relation table
 
 type apiKeyAuthCacheConfig struct {
 	l1Size        int
