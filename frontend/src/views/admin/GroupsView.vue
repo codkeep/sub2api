@@ -900,7 +900,6 @@
           <label class="input-label">{{ t("admin.groups.modelSkills.title") }}</label>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.hint") }}</p>
           <div v-if="modelSkillsLoading" class="mt-2 text-xs text-gray-500">{{ t("admin.groups.modelSkills.loading") }}</div>
-          <div v-else-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</div>
           <div v-else class="mt-2">
             <div v-if="createForm.default_skill_ids.length > 0" class="mb-2 flex flex-wrap gap-1.5">
               <span v-for="skillId in createForm.default_skill_ids" :key="skillId" class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
@@ -925,6 +924,7 @@
                 {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
               </option>
             </select>
+            <p v-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</p>
           </div>
         </div>
 
@@ -2585,7 +2585,6 @@
           <label class="input-label">{{ t("admin.groups.modelSkills.title") }}</label>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.hint") }}</p>
           <div v-if="modelSkillsLoading" class="mt-2 text-xs text-gray-500">{{ t("admin.groups.modelSkills.loading") }}</div>
-          <div v-else-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</div>
           <div v-else class="mt-2">
             <div v-if="editForm.default_skill_ids.length > 0" class="mb-2 flex flex-wrap gap-1.5">
               <span v-for="skillId in editForm.default_skill_ids" :key="skillId" class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
@@ -2610,6 +2609,7 @@
                 {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
               </option>
             </select>
+            <p v-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</p>
           </div>
         </div>
 
