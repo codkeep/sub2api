@@ -34,6 +34,7 @@
             <thead class="sticky top-0 z-10">
               <tr>
                 <th>{{ t('modelPricing.model') }}</th>
+                <th>{{ t('modelPricing.group') }}</th>
                 <th>{{ t('availableChannels.columns.name') }}</th>
                 <th>{{ t('availableChannels.pricing.billingMode') }}</th>
                 <th>{{ t('modelPricing.basePrice') }}</th>
@@ -50,6 +51,10 @@
                       <span v-if="row.model.includes('*')" class="text-xs text-gray-400">{{ t('modelPricing.pattern') }}</span>
                     </div>
                   </td>
+                  <td class="max-w-48 break-words align-top">
+                    <div class="font-medium text-gray-900 dark:text-gray-100">{{ row.group }}</div>
+                    <div v-if="row.pricingUnit" class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ row.pricingUnit }}</div>
+                  </td>
                   <td class="max-w-48 break-words align-top">{{ row.channel }}</td>
                   <td class="whitespace-nowrap align-top"><span class="rounded-md bg-gray-100 px-2 py-1 text-xs dark:bg-dark-700">{{ modeLabel(row.pricing.billing_mode) }}</span></td>
                   <td class="min-w-80 align-top"><ModelPricingRates :pricing="row.pricing" /></td>
@@ -61,7 +66,7 @@
                   </td>
                 </tr>
                 <tr v-if="expanded.has(row.key)" :id="`pricing-${row.key}`">
-                  <td colspan="5" class="!bg-gray-50/70 dark:!bg-dark-900/40">
+                  <td colspan="6" class="!bg-gray-50/70 dark:!bg-dark-900/40">
                     <div class="space-y-5">
                       <section v-if="row.pricing.intervals.length" class="space-y-3">
                         <h3 class="text-xs font-semibold">{{ t('availableChannels.pricing.intervals') }}</h3>
@@ -136,10 +141,17 @@ const platformOptions = computed(() => [
   { value: '', label: t('modelPricing.allPlatforms') },
   ...[...new Set(channels.value.flatMap(ch => ch.model_pricing.map(p => p.platform)))].sort().map(value => ({ value, label: value }))
 ])
-const rows = computed(() => channels.value.flatMap((ch, ci) => ch.model_pricing.flatMap((pricing, pi) => pricing.models.map((model, mi) => ({ key: `${ci}-${pi}-${mi}`, channel: ch.name, model, pricing })))))
+const rows = computed(() => channels.value.flatMap((ch, ci) => ch.model_pricing.flatMap((pricing, pi) => pricing.models.map((model, mi) => ({
+  key: `${ch.group_id}-${ci}-${pi}-${mi}`,
+  channel: ch.name,
+  group: ch.group_name,
+  pricingUnit: ch.pricing_unit,
+  model,
+  pricing,
+})))))
 const filteredRows = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return rows.value.filter(row => (!platform.value || row.pricing.platform === platform.value) && (!mode.value || row.pricing.billing_mode === mode.value) && (!q || `${row.model} ${row.channel} ${row.pricing.platform}`.toLowerCase().includes(q)))
+  return rows.value.filter(row => (!platform.value || row.pricing.platform === platform.value) && (!mode.value || row.pricing.billing_mode === mode.value) && (!q || `${row.model} ${row.channel} ${row.group} ${row.pricing.platform}`.toLowerCase().includes(q)))
 })
 const pagedRows = computed(() => filteredRows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 watch([search, platform, mode, pageSize], () => { page.value = 1 })

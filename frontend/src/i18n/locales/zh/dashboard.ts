@@ -1,14 +1,15 @@
 export default {
   modelPricing: {
     title: '模型计费',
-    description: '查看各渠道配置的模型价格与计费规则',
-    hint: '以下为已启用渠道的基础定价，金额单位为美元（USD）。实际扣费以所用分组的定价、倍率和单位设置为准，查看价格不代表已获得模型使用权限。',
-    search: '搜索模型或渠道名称…',
+    description: '查看已订阅分组关联渠道中的模型价格与计费规则',
+    hint: '以下仅展示你已订阅分组所关联渠道中配置的模型和价格；价格来源于渠道定价，实际扣费仍以分组倍率和单位设置为准。',
+    search: '搜索模型、分组或渠道名称…',
     allPlatforms: '全部平台',
     allModes: '全部计费模式',
     empty: '暂无已配置的模型定价',
     noResults: '没有符合条件的模型',
     model: '模型',
+    group: '订阅分组',
     basePrice: '基础价格（USD）',
     defaultPrice: '默认价格',
     details: '计费详情',

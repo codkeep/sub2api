@@ -73,6 +73,9 @@ export interface UserModelPricing extends UserSupportedModelPricing {
 
 export interface UserChannelPricing {
   name: string
+  group_id: number
+  group_name: string
+  pricing_unit?: string
   model_pricing: UserModelPricing[]
 }
 

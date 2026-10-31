@@ -1,14 +1,15 @@
 export default {
   modelPricing: {
     title: 'Model Pricing',
-    description: 'Browse configured model prices and billing rules by channel',
-    hint: 'Base prices for active channels are shown in USD. Actual charges depend on your group’s pricing, multipliers and display unit. Viewing prices does not grant model access.',
-    search: 'Search models or channels…',
+    description: 'Browse model prices for channels linked to your subscribed groups',
+    hint: 'Only models and prices configured on channels linked to your active subscriptions are shown. Actual charges still follow your group multiplier and billing unit.',
+    search: 'Search models, groups or channels…',
     allPlatforms: 'All platforms',
     allModes: 'All billing modes',
     empty: 'No model pricing configured',
     noResults: 'No matching models',
     model: 'Model',
+    group: 'Subscription group',
     basePrice: 'Base price (USD)',
     defaultPrice: 'Default price',
     details: 'Billing details',

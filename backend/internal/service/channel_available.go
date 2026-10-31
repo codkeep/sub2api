@@ -41,9 +41,10 @@ type AvailableChannel struct {
 	SupportedModels    []SupportedModel
 }
 
-// ConfiguredChannelPricing 仅包含已启用渠道的基础价目，不按用户分组过滤。
+// ConfiguredChannelPricing 仅包含已启用渠道的基础价目，并保留渠道关联的分组。
 type ConfiguredChannelPricing struct {
 	Name         string
+	GroupIDs     []int64
 	ModelPricing []ChannelModelPricing
 }
 
@@ -58,7 +59,11 @@ func (s *ChannelService) ListConfiguredPricing(ctx context.Context) ([]Configure
 		if !ch.IsActive() || len(ch.ModelPricing) == 0 {
 			continue
 		}
-		out = append(out, ConfiguredChannelPricing{Name: ch.Name, ModelPricing: ch.ModelPricing})
+		out = append(out, ConfiguredChannelPricing{
+			Name:         ch.Name,
+			GroupIDs:     append([]int64(nil), ch.GroupIDs...),
+			ModelPricing: ch.ModelPricing,
+		})
 	}
 	sort.SliceStable(out, func(i, j int) bool {
 		return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name)

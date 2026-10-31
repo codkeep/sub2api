@@ -20,14 +20,33 @@ type userModelPricing struct {
 
 type userChannelPricing struct {
 	Name         string             `json:"name"`
+	GroupID      int64              `json:"group_id"`
+	GroupName    string             `json:"group_name"`
+	PricingUnit  string             `json:"pricing_unit"`
 	ModelPricing []userModelPricing `json:"model_pricing"`
 }
 
-// ListPricing 允许所有登录账号查看基础价目，不依赖可用渠道开关、分组授权或订阅。
+// ListPricing 只返回当前用户有效订阅分组关联渠道中已配置的模型定价。
 // GET /api/v1/channels/pricing
 func (h *AvailableChannelHandler) ListPricing(c *gin.Context) {
-	if _, ok := middleware.GetAuthSubjectFromContext(c); !ok {
+	subject, ok := middleware.GetAuthSubjectFromContext(c)
+	if !ok {
 		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+	groups, err := h.apiKeyService.GetAvailableGroups(c.Request.Context(), subject.UserID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	subscriptionGroups := make(map[int64]service.Group)
+	for i := range groups {
+		if groups[i].IsSubscriptionType() {
+			subscriptionGroups[groups[i].ID] = groups[i]
+		}
+	}
+	if len(subscriptionGroups) == 0 {
+		response.Success(c, []userChannelPricing{})
 		return
 	}
 	channels, err := h.channelService.ListConfiguredPricing(c.Request.Context())
@@ -52,8 +71,21 @@ func (h *AvailableChannelHandler) ListPricing(c *gin.Context) {
 				TimePricing:               p.TimePricing,
 			})
 		}
-		if len(pricing) > 0 {
-			out = append(out, userChannelPricing{Name: ch.Name, ModelPricing: pricing})
+		if len(pricing) == 0 {
+			continue
+		}
+		for _, groupID := range ch.GroupIDs {
+			group, ok := subscriptionGroups[groupID]
+			if !ok {
+				continue
+			}
+			out = append(out, userChannelPricing{
+				Name:         ch.Name,
+				GroupID:      group.ID,
+				GroupName:    group.Name,
+				PricingUnit:  group.PricingUnit,
+				ModelPricing: pricing,
+			})
 		}
 	}
 	response.Success(c, out)
