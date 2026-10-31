@@ -262,7 +262,7 @@
                     </span>
                     <span v-else>{{ t('payment.createOrder') }} {{ formatSelectedPaymentAmount(subTotalAmount) }}</span>
                   </button>
-                  <button class="btn btn-secondary w-full" @click="selectedPlan = null">{{ t('common.cancel') }}</button>
+                  <button class="btn btn-secondary w-full" @click="returnToPlanSelection">{{ t('common.cancel') }}</button>
                 </div>
               </div>
             </template>
@@ -568,13 +568,26 @@ function buildWechatOAuthAuthorizeUrl(
   }
 }
 
-function onPaymentDone() {
+async function returnToPlanSelection() {
+  selectedPlan.value = null
+  renewGroupId.value = null
+  // Renewal targeting only applies until the user leaves checkout.
+  // Clear the URL too, so refreshing does not restore the group filter.
+  if (route.query.group !== undefined) {
+    const query = { ...route.query }
+    delete query.group
+    query.tab = activeTab.value
+    await router.replace({ path: route.path, query, hash: route.hash })
+  }
+}
+
+async function onPaymentDone() {
   const wasSubscription = paymentState.value.orderType === 'subscription'
   resetPayment()
-  selectedPlan.value = null
   if (wasSubscription) {
     subscriptionStore.fetchActiveSubscriptions(true).catch(() => {})
   }
+  await returnToPlanSelection()
 }
 
 async function onPaymentSuccess() {
