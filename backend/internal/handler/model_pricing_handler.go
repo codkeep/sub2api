@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
-	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -26,29 +25,9 @@ type userChannelPricing struct {
 	ModelPricing []userModelPricing `json:"model_pricing"`
 }
 
-// ListPricing 只返回当前用户有效订阅分组关联渠道中已配置的模型定价。
+// ListPricing 返回全部启用渠道关联分组中的模型定价，供所有登录用户查看。
 // GET /api/v1/channels/pricing
 func (h *AvailableChannelHandler) ListPricing(c *gin.Context) {
-	subject, ok := middleware.GetAuthSubjectFromContext(c)
-	if !ok {
-		response.Unauthorized(c, "User not authenticated")
-		return
-	}
-	groups, err := h.apiKeyService.GetAvailableGroups(c.Request.Context(), subject.UserID)
-	if err != nil {
-		response.ErrorFrom(c, err)
-		return
-	}
-	subscriptionGroups := make(map[int64]service.Group)
-	for i := range groups {
-		if groups[i].IsSubscriptionType() {
-			subscriptionGroups[groups[i].ID] = groups[i]
-		}
-	}
-	if len(subscriptionGroups) == 0 {
-		response.Success(c, []userChannelPricing{})
-		return
-	}
 	channels, err := h.channelService.ListConfiguredPricing(c.Request.Context())
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -74,15 +53,11 @@ func (h *AvailableChannelHandler) ListPricing(c *gin.Context) {
 		if len(pricing) == 0 {
 			continue
 		}
-		for _, groupID := range ch.GroupIDs {
-			group, ok := subscriptionGroups[groupID]
-			if !ok {
-				continue
-			}
+		for _, group := range ch.Groups {
 			out = append(out, userChannelPricing{
 				Name:         ch.Name,
 				GroupID:      group.ID,
-				GroupName:    group.Name,
+				GroupName:    group.I18n.LocalizeName(c.GetHeader("Accept-Language"), group.Name),
 				PricingUnit:  group.PricingUnit,
 				ModelPricing: pricing,
 			})

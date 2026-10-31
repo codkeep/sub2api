@@ -41,9 +41,10 @@ type AvailableChannel struct {
 	SupportedModels    []SupportedModel
 }
 
-// ConfiguredChannelPricing 仅包含已启用渠道的基础价目，并保留渠道关联的分组。
+// ConfiguredChannelPricing 仅包含已启用渠道的基础价目，并保留渠道关联的全部启用分组。
 type ConfiguredChannelPricing struct {
 	Name         string
+	Groups       []AvailableGroupRef
 	GroupIDs     []int64
 	ModelPricing []ChannelModelPricing
 }
@@ -54,13 +55,45 @@ func (s *ChannelService) ListConfiguredPricing(ctx context.Context) ([]Configure
 	if err != nil {
 		return nil, fmt.Errorf("list channel pricing: %w", err)
 	}
+	groups, err := s.groupRepo.ListActive(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list active groups for channel pricing: %w", err)
+	}
+	groupByID := make(map[int64]AvailableGroupRef, len(groups))
+	for i := range groups {
+		group := groups[i]
+		groupByID[group.ID] = AvailableGroupRef{
+			ID:                 group.ID,
+			Name:               group.Name,
+			I18n:               group.I18n,
+			Platform:           group.Platform,
+			PricingUnit:        group.PricingUnit,
+			SubscriptionType:   group.SubscriptionType,
+			RateMultiplier:     group.RateMultiplier,
+			PeakRateEnabled:    group.PeakRateEnabled,
+			PeakStart:          group.PeakStart,
+			PeakEnd:            group.PeakEnd,
+			PeakRateMultiplier: group.PeakRateMultiplier,
+			IsExclusive:        group.IsExclusive,
+		}
+	}
 	out := make([]ConfiguredChannelPricing, 0, len(channels))
 	for _, ch := range channels {
 		if !ch.IsActive() || len(ch.ModelPricing) == 0 {
 			continue
 		}
+		channelGroups := make([]AvailableGroupRef, 0, len(ch.GroupIDs))
+		for _, groupID := range ch.GroupIDs {
+			if group, ok := groupByID[groupID]; ok {
+				channelGroups = append(channelGroups, group)
+			}
+		}
+		if len(channelGroups) == 0 {
+			continue
+		}
 		out = append(out, ConfiguredChannelPricing{
 			Name:         ch.Name,
+			Groups:       channelGroups,
 			GroupIDs:     append([]int64(nil), ch.GroupIDs...),
 			ModelPricing: ch.ModelPricing,
 		})

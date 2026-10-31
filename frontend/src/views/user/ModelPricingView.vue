@@ -5,9 +5,25 @@
         <div class="space-y-4">
           <div class="flex items-start gap-3 rounded-xl border border-primary-100 bg-primary-50/60 px-4 py-3 text-sm text-primary-800 dark:border-primary-800/40 dark:bg-primary-900/10 dark:text-primary-200">
             <Icon name="infoCircle" size="md" class="mt-0.5 shrink-0" />
-            <p>{{ t('modelPricing.hint') }}</p>
+            <p>{{ t(selectedGroupId === null ? 'modelPricing.hint' : 'modelPricing.detailHint') }}</p>
           </div>
-          <div class="flex flex-wrap items-center gap-3">
+          <div v-if="selectedGroupId === null" class="flex flex-wrap items-center gap-3">
+            <div class="relative min-w-48 flex-1 sm:max-w-sm">
+              <Icon name="search" size="md" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input v-model="groupSearch" class="input pl-10" :aria-label="t('modelPricing.groupSearch')" :placeholder="t('modelPricing.groupSearch')" />
+            </div>
+            <button type="button" class="btn btn-secondary ml-auto" :disabled="loading" :aria-label="t('common.refresh')" @click="loadPricing">
+              <Icon name="refresh" size="md" :class="{ 'animate-spin': loading }" />
+            </button>
+          </div>
+          <div v-else class="flex flex-wrap items-center gap-3">
+            <button type="button" class="btn btn-secondary" @click="backToGroups">
+              <Icon name="arrowLeft" size="sm" class="mr-1" />{{ t('modelPricing.backToGroups') }}
+            </button>
+            <div class="flex min-w-0 items-center gap-2 text-sm">
+              <span class="truncate font-semibold text-gray-900 dark:text-white">{{ selectedGroup?.name }}</span>
+              <span v-if="selectedGroup?.pricingUnit" class="shrink-0 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{{ selectedGroup.pricingUnit }}</span>
+            </div>
             <div class="relative min-w-48 flex-1 sm:max-w-sm">
               <Icon name="search" size="md" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input v-model="search" class="input pl-10" :aria-label="t('modelPricing.search')" :placeholder="t('modelPricing.search')" />
@@ -26,6 +42,44 @@
           <p>{{ error }}</p>
           <button type="button" class="btn btn-secondary" @click="loadPricing">{{ t('common.refresh') }}</button>
         </div>
+        <div v-else-if="selectedGroupId === null && !filteredGroups.length" class="p-12 text-center text-sm text-gray-500">
+          {{ t(groupSummaries.length ? 'modelPricing.noGroupResults' : 'modelPricing.empty') }}
+        </div>
+        <div v-else-if="selectedGroupId === null" class="grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-3">
+          <button
+            v-for="group in filteredGroups"
+            :key="group.id"
+            type="button"
+            class="group rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700"
+            @click="openGroup(group.id)"
+          >
+            <div class="flex items-start gap-3">
+              <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">
+                <Icon name="sparkles" size="md" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-2">
+                  <h2 class="truncate text-base font-semibold text-gray-900 dark:text-white">{{ group.name }}</h2>
+                  <Icon name="chevronRight" size="sm" class="mt-0.5 shrink-0 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-primary-500" />
+                </div>
+                <p v-if="group.pricingUnit" class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('modelPricing.pricingUnit') }}：{{ group.pricingUnit }}</p>
+              </div>
+            </div>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <div class="rounded-xl bg-gray-50 px-3 py-2.5 dark:bg-dark-700/60">
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelPricing.channelCount') }}</div>
+                <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ group.channelCount }}</div>
+              </div>
+              <div class="rounded-xl bg-gray-50 px-3 py-2.5 dark:bg-dark-700/60">
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelPricing.modelCount') }}</div>
+                <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ group.modelCount }}</div>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-1.5">
+              <span v-for="channel in group.channels" :key="channel" class="max-w-full truncate rounded-full border border-gray-200 px-2 py-0.5 text-[11px] text-gray-500 dark:border-dark-600 dark:text-gray-400">{{ channel }}</span>
+            </div>
+          </button>
+        </div>
         <div v-else-if="!filteredRows.length" class="p-12 text-center text-sm text-gray-500">
           {{ t(rows.length ? 'modelPricing.noResults' : 'modelPricing.empty') }}
         </div>
@@ -34,7 +88,6 @@
             <thead class="sticky top-0 z-10">
               <tr>
                 <th>{{ t('modelPricing.model') }}</th>
-                <th>{{ t('modelPricing.group') }}</th>
                 <th>{{ t('availableChannels.columns.name') }}</th>
                 <th>{{ t('availableChannels.pricing.billingMode') }}</th>
                 <th>{{ t('modelPricing.basePrice') }}</th>
@@ -51,10 +104,6 @@
                       <span v-if="row.model.includes('*')" class="text-xs text-gray-400">{{ t('modelPricing.pattern') }}</span>
                     </div>
                   </td>
-                  <td class="max-w-48 break-words align-top">
-                    <div class="font-medium text-gray-900 dark:text-gray-100">{{ row.group }}</div>
-                    <div v-if="row.pricingUnit" class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ row.pricingUnit }}</div>
-                  </td>
                   <td class="max-w-48 break-words align-top">{{ row.channel }}</td>
                   <td class="whitespace-nowrap align-top"><span class="rounded-md bg-gray-100 px-2 py-1 text-xs dark:bg-dark-700">{{ modeLabel(row.pricing.billing_mode) }}</span></td>
                   <td class="min-w-80 align-top"><ModelPricingRates :pricing="row.pricing" /></td>
@@ -66,7 +115,7 @@
                   </td>
                 </tr>
                 <tr v-if="expanded.has(row.key)" :id="`pricing-${row.key}`">
-                  <td colspan="6" class="!bg-gray-50/70 dark:!bg-dark-900/40">
+                  <td colspan="5" class="!bg-gray-50/70 dark:!bg-dark-900/40">
                     <div class="space-y-5">
                       <section v-if="row.pricing.intervals.length" class="space-y-3">
                         <h3 class="text-xs font-semibold">{{ t('availableChannels.pricing.intervals') }}</h3>
@@ -127,6 +176,8 @@ const { t } = useI18n()
 const channels = ref<UserChannelPricing[]>([])
 const loading = ref(true)
 const error = ref('')
+const groupSearch = ref('')
+const selectedGroupId = ref<number | null>(null)
 const search = ref('')
 const platform = ref('')
 const mode = ref('')
@@ -137,24 +188,89 @@ const modes = ['token', 'per_request', 'image', 'video']
 const modeKeys: Record<string, string> = { token: 'billingModeToken', per_request: 'billingModePerRequest', image: 'billingModeImage', video: 'billingModeVideo' }
 const modeLabel = (value: string) => t(`availableChannels.pricing.${modeKeys[value]}`)
 const modeOptions = computed(() => [{ value: '', label: t('modelPricing.allModes') }, ...modes.map(value => ({ value, label: modeLabel(value) }))])
-const platformOptions = computed(() => [
-  { value: '', label: t('modelPricing.allPlatforms') },
-  ...[...new Set(channels.value.flatMap(ch => ch.model_pricing.map(p => p.platform)))].sort().map(value => ({ value, label: value }))
-])
+
+type PricingGroupSummary = {
+  id: number
+  name: string
+  pricingUnit?: string
+  channelCount: number
+  modelCount: number
+  channels: string[]
+}
+
+const groupSummaries = computed<PricingGroupSummary[]>(() => {
+  const groups = new Map<number, { name: string; pricingUnit?: string; channels: Set<string>; models: Set<string> }>()
+  for (const channel of channels.value) {
+    const current = groups.get(channel.group_id) ?? {
+      name: channel.group_name,
+      pricingUnit: channel.pricing_unit,
+      channels: new Set<string>(),
+      models: new Set<string>()
+    }
+    current.name = channel.group_name || current.name
+    current.pricingUnit = channel.pricing_unit || current.pricingUnit
+    current.channels.add(channel.name)
+    for (const pricing of channel.model_pricing) {
+      for (const model of pricing.models) current.models.add(model)
+    }
+    groups.set(channel.group_id, current)
+  }
+  return [...groups.entries()]
+    .map(([id, group]) => ({
+      id,
+      name: group.name,
+      pricingUnit: group.pricingUnit,
+      channelCount: group.channels.size,
+      modelCount: group.models.size,
+      channels: [...group.channels].sort((a, b) => a.localeCompare(b))
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+})
+const filteredGroups = computed(() => {
+  const q = groupSearch.value.trim().toLowerCase()
+  if (!q) return groupSummaries.value
+  return groupSummaries.value.filter(group => `${group.name} ${group.pricingUnit ?? ''} ${group.channels.join(' ')}`.toLowerCase().includes(q))
+})
+const selectedGroup = computed(() => groupSummaries.value.find(group => group.id === selectedGroupId.value))
 const rows = computed(() => channels.value.flatMap((ch, ci) => ch.model_pricing.flatMap((pricing, pi) => pricing.models.map((model, mi) => ({
   key: `${ch.group_id}-${ci}-${pi}-${mi}`,
+  groupId: ch.group_id,
   channel: ch.name,
   group: ch.group_name,
   pricingUnit: ch.pricing_unit,
   model,
   pricing,
 })))))
+const groupRows = computed(() => selectedGroupId.value === null ? [] : rows.value.filter(row => row.groupId === selectedGroupId.value))
+const platformOptions = computed(() => [
+  { value: '', label: t('modelPricing.allPlatforms') },
+  ...[...new Set(groupRows.value.map(row => row.pricing.platform))].sort().map(value => ({ value, label: value }))
+])
 const filteredRows = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return rows.value.filter(row => (!platform.value || row.pricing.platform === platform.value) && (!mode.value || row.pricing.billing_mode === mode.value) && (!q || `${row.model} ${row.channel} ${row.group} ${row.pricing.platform}`.toLowerCase().includes(q)))
+  return groupRows.value.filter(row => (!platform.value || row.pricing.platform === platform.value) && (!mode.value || row.pricing.billing_mode === mode.value) && (!q || `${row.model} ${row.channel} ${row.group} ${row.pricing.platform}`.toLowerCase().includes(q)))
 })
 const pagedRows = computed(() => filteredRows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
-watch([search, platform, mode, pageSize], () => { page.value = 1 })
+watch([groupSearch, search, platform, mode, pageSize], () => { page.value = 1 })
+
+function openGroup(groupId: number) {
+  selectedGroupId.value = groupId
+  groupSearch.value = ''
+  search.value = ''
+  platform.value = ''
+  mode.value = ''
+  page.value = 1
+  expanded.value.clear()
+}
+
+function backToGroups() {
+  selectedGroupId.value = null
+  search.value = ''
+  platform.value = ''
+  mode.value = ''
+  page.value = 1
+  expanded.value.clear()
+}
 
 function toggleDetails(key: string) {
   if (expanded.value.has(key)) expanded.value.delete(key)
@@ -189,6 +305,9 @@ async function loadPricing() {
   error.value = ''
   try {
     channels.value = await getModelPricing()
+    if (selectedGroupId.value !== null && !groupSummaries.value.some(group => group.id === selectedGroupId.value)) {
+      selectedGroupId.value = null
+    }
     page.value = 1
     expanded.value.clear()
   } catch (err) {
