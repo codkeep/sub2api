@@ -55,28 +55,6 @@ func (s *ChannelService) ListConfiguredPricing(ctx context.Context) ([]Configure
 	if err != nil {
 		return nil, fmt.Errorf("list channel pricing: %w", err)
 	}
-	groups, err := s.groupRepo.ListActive(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list active groups for channel pricing: %w", err)
-	}
-	groupByID := make(map[int64]AvailableGroupRef, len(groups))
-	for i := range groups {
-		group := groups[i]
-		groupByID[group.ID] = AvailableGroupRef{
-			ID:                 group.ID,
-			Name:               group.Name,
-			I18n:               group.I18n,
-			Platform:           group.Platform,
-			PricingUnit:        group.PricingUnit,
-			SubscriptionType:   group.SubscriptionType,
-			RateMultiplier:     group.RateMultiplier,
-			PeakRateEnabled:    group.PeakRateEnabled,
-			PeakStart:          group.PeakStart,
-			PeakEnd:            group.PeakEnd,
-			PeakRateMultiplier: group.PeakRateMultiplier,
-			IsExclusive:        group.IsExclusive,
-		}
-	}
 	out := make([]ConfiguredChannelPricing, 0, len(channels))
 	for _, ch := range channels {
 		if !ch.IsActive() || len(ch.ModelPricing) == 0 {
@@ -84,9 +62,28 @@ func (s *ChannelService) ListConfiguredPricing(ctx context.Context) ([]Configure
 		}
 		channelGroups := make([]AvailableGroupRef, 0, len(ch.GroupIDs))
 		for _, groupID := range ch.GroupIDs {
-			if group, ok := groupByID[groupID]; ok {
-				channelGroups = append(channelGroups, group)
+			// The pricing catalog follows the channel's explicit group bindings.
+			// Do not use ListActive here: an existing binding must remain visible
+			// in the public pricing catalog even while its group is temporarily
+			// disabled, otherwise the catalog silently loses that group's prices.
+			group, err := s.groupRepo.GetByIDLite(ctx, groupID)
+			if err != nil {
+				continue
 			}
+			channelGroups = append(channelGroups, AvailableGroupRef{
+				ID:                 group.ID,
+				Name:               group.Name,
+				I18n:               group.I18n,
+				Platform:           group.Platform,
+				PricingUnit:        group.PricingUnit,
+				SubscriptionType:   group.SubscriptionType,
+				RateMultiplier:     group.RateMultiplier,
+				PeakRateEnabled:    group.PeakRateEnabled,
+				PeakStart:          group.PeakStart,
+				PeakEnd:            group.PeakEnd,
+				PeakRateMultiplier: group.PeakRateMultiplier,
+				IsExclusive:        group.IsExclusive,
+			})
 		}
 		if len(channelGroups) == 0 {
 			continue
