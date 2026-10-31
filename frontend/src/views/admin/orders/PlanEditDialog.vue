@@ -138,7 +138,7 @@ const groupOptions = computed(() =>
     .filter(g => g.subscription_type === 'subscription')
     .map(g => ({
       value: g.id,
-      label: `${g.name} — ${g.platform} (${g.rate_multiplier}x)`,
+      label: `${g.name} — ${g.platform} (${g.rate_multiplier}x) · #${g.id}`,
       platform: g.platform,
     })),
 )

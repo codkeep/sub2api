@@ -21,6 +21,11 @@
           >
             {{ plan.name }}
           </h3>
+          <div v-if="plan.group_name || plan.group_id" class="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400">
+            <span>{{ t('payment.planCard.group') }}:</span>
+            <span class="font-medium text-gray-700 dark:text-slate-300">{{ plan.group_name || t('payment.groupFallback', { id: plan.group_id }) }}</span>
+            <span class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-400 dark:bg-dark-700 dark:text-dark-400">#{{ plan.group_id }}</span>
+          </div>
           <p v-if="plan.description" class="mt-4 break-words text-sm leading-relaxed text-gray-500 dark:text-slate-400">
             {{ plan.description }}
           </p>
@@ -135,7 +140,11 @@ const { t } = useI18n()
 
 const platform = computed(() => props.plan.group_platform || '')
 const isRenewal = computed(() =>
-  props.activeSubscriptions?.some(s => s.group_id === props.plan.group_id && s.status === 'active') ?? false
+  props.activeSubscriptions?.some((s) => {
+    // The group is the subscription identity; plan IDs are only product variants.
+    // Normalize numeric values because older API responses may serialize IDs as strings.
+    return Number(s.group_id) === Number(props.plan.group_id) && String(s.status).toLowerCase() === 'active'
+  }) ?? false
 )
 
 // Derived color classes from central config

@@ -435,7 +435,7 @@ export default {
       viewQuotaDescription: '每日、每周、每月额度由套餐设定，可在「我的订阅」查看用量及重置时间。',
       renewPlan: '管理与续订',
       renewPlanDescription: '已有订阅可点击「续费」选择对应套餐，也可在「我的订阅」查看有效期。',
-      currentPlan: '已订阅',
+      currentPlan: '已订阅分组',
       discountSavings: '立省 {percent}%',
       originalPrice: '原价',
     },
@@ -549,6 +549,7 @@ export default {
     selectPlan: '选择套餐',
     planFeatures: '功能特性',
     planCard: {
+      group: '所属分组',
       rate: '倍率',
       peakRate: '高峰倍率',
       dailyLimit: '日限额',

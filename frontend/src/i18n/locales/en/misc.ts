@@ -411,7 +411,7 @@ export default {
       viewQuotaDescription: 'Daily, weekly and monthly limits depend on the plan. Check usage and reset times in My Subscriptions.',
       renewPlan: 'Manage and renew',
       renewPlanDescription: 'Select Renew on an existing subscription to choose a plan, or check its expiry in My Subscriptions.',
-      currentPlan: 'Subscribed',
+      currentPlan: 'Subscribed group',
       discountSavings: 'Save {percent}%',
       originalPrice: 'Was',
     },
@@ -525,6 +525,7 @@ export default {
     selectPlan: 'Select Plan',
     planFeatures: 'Features',
     planCard: {
+      group: 'Group',
       rate: 'Rate',
       peakRate: 'Peak Rate',
       dailyLimit: 'Daily',

@@ -26,6 +26,7 @@
             :rate-multiplier="getGroup(value)!.rate_multiplier"
           />
           <span v-else class="text-sm text-gray-400">-</span>
+          <span v-if="value" class="ml-1 font-mono text-[10px] text-gray-400">#{{ value }}</span>
         </template>
         <template #cell-quota="{ row }">
           <div v-if="hasPlanQuota(row)" class="space-y-1 text-xs">
