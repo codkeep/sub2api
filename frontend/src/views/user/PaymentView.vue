@@ -27,27 +27,15 @@
           </div>
         </BillingHero>
         <div v-if="tabs.length > 1 && paymentPhase === 'select' && !selectedPlan" class="billing-tabs-shell">
-          <div class="billing-tabs-header">
-            <div>
-              <span class="billing-tabs-eyebrow">{{ t('payment.billingModeSelector.eyebrow') }}</span>
-              <h2>{{ t('payment.billingModeSelector.title') }}</h2>
-            </div>
-            <p>{{ t('payment.billingModeSelector.hint') }}</p>
-          </div>
           <div class="billing-tabs" role="tablist" :aria-label="t('payment.billingModeSelector.title')">
             <div v-for="tab in tabs" :key="tab.key" class="billing-tab-item" :class="{ 'is-active': activeTab === tab.key }" role="presentation">
               <button type="button"
                 role="tab"
                 :aria-selected="activeTab === tab.key"
-                :aria-pressed="activeTab === tab.key"
                 class="billing-tab-button focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
                 @click="activeTab = tab.key; billingHelp = null">
                 <span class="billing-tab-icon"><Icon :name="billingTabIcon(tab.key)" size="md" /></span>
-                <span class="billing-tab-copy">
-                  <small class="billing-tab-mode">{{ billingTabMode(tab.key) }}</small>
-                  <strong>{{ tab.label }}</strong>
-                  <small>{{ billingTabHint(tab.key) }}</small>
-                </span>
+                <span class="billing-tab-label">{{ tab.label }}</span>
               </button>
               <button type="button"
                 class="billing-tab-help focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
@@ -61,7 +49,7 @@
                 @keydown.esc.stop="billingHelp = null">
                 <Icon name="questionCircle" size="sm" />
               </button>
-              <div v-if="billingHelp === tab.key" :id="`billing-help-${tab.key}`" role="tooltip" class="billing-tab-tooltip" :class="{ 'billing-tab-tooltip--end': tab.key === 'subscription' }">
+              <div v-if="billingHelp === tab.key" :id="`billing-help-${tab.key}`" role="tooltip" class="billing-tab-tooltip">
                 <p class="text-sm font-semibold">{{ t(`payment.billingHelp.${tab.key}.title`) }}</p>
                 <p class="mt-1.5 text-xs leading-6 text-[var(--billing-muted)]">{{ t(`payment.billingHelp.${tab.key}.summary`) }}</p>
                 <dl class="mt-4 space-y-3 border-t border-[var(--billing-border)] pt-4 text-xs leading-6">
@@ -73,6 +61,7 @@
               </div>
             </div>
           </div>
+          <p class="billing-tabs-description">{{ billingTabHint(activeTab) }}</p>
         </div>
         <!-- Payment in progress (shared by recharge and subscription) -->
         <template v-if="paymentPhase === 'paying'">
@@ -425,9 +414,6 @@ function billingTabHint(key: 'recharge' | 'subscription'): string {
   return t(`payment.billingHelp.${key}.tabHint`)
 }
 
-function billingTabMode(key: 'recharge' | 'subscription'): string {
-  return t(`payment.billingHelp.${key}.mode`)
-}
 const amount = ref<number | null>(null)
 const selectedMethod = ref('')
 const selectedPlan = ref<SubscriptionPlan | null>(null)
