@@ -41,66 +41,6 @@ type AvailableChannel struct {
 	SupportedModels    []SupportedModel
 }
 
-// ConfiguredChannelPricing 仅包含已启用渠道的基础价目，并保留渠道关联的全部启用分组。
-type ConfiguredChannelPricing struct {
-	Name         string
-	Groups       []AvailableGroupRef
-	GroupIDs     []int64
-	ModelPricing []ChannelModelPricing
-}
-
-// ListConfiguredPricing 读取渠道定价原始配置，不补充全局默认价或展开模型映射。
-func (s *ChannelService) ListConfiguredPricing(ctx context.Context) ([]ConfiguredChannelPricing, error) {
-	channels, err := s.repo.ListAll(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list channel pricing: %w", err)
-	}
-	out := make([]ConfiguredChannelPricing, 0, len(channels))
-	for _, ch := range channels {
-		if !ch.IsActive() || len(ch.ModelPricing) == 0 {
-			continue
-		}
-		channelGroups := make([]AvailableGroupRef, 0, len(ch.GroupIDs))
-		for _, groupID := range ch.GroupIDs {
-			// The pricing catalog follows the channel's explicit group bindings.
-			// Do not use ListActive here: an existing binding must remain visible
-			// in the public pricing catalog even while its group is temporarily
-			// disabled, otherwise the catalog silently loses that group's prices.
-			group, err := s.groupRepo.GetByIDLite(ctx, groupID)
-			if err != nil {
-				continue
-			}
-			channelGroups = append(channelGroups, AvailableGroupRef{
-				ID:                 group.ID,
-				Name:               group.Name,
-				I18n:               group.I18n,
-				Platform:           group.Platform,
-				PricingUnit:        group.PricingUnit,
-				SubscriptionType:   group.SubscriptionType,
-				RateMultiplier:     group.RateMultiplier,
-				PeakRateEnabled:    group.PeakRateEnabled,
-				PeakStart:          group.PeakStart,
-				PeakEnd:            group.PeakEnd,
-				PeakRateMultiplier: group.PeakRateMultiplier,
-				IsExclusive:        group.IsExclusive,
-			})
-		}
-		if len(channelGroups) == 0 {
-			continue
-		}
-		out = append(out, ConfiguredChannelPricing{
-			Name:         ch.Name,
-			Groups:       channelGroups,
-			GroupIDs:     append([]int64(nil), ch.GroupIDs...),
-			ModelPricing: ch.ModelPricing,
-		})
-	}
-	sort.SliceStable(out, func(i, j int) bool {
-		return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name)
-	})
-	return out, nil
-}
-
 // ListAvailable 返回所有渠道的可用视图：每个渠道附带关联分组信息与支持模型列表。
 //
 // 支持模型通过 (*Channel).SupportedModels() 计算（mapping ∪ pricing 并联）。

@@ -277,18 +277,6 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/model-pricing',
-    name: 'UserModelPricing',
-    component: () => import('@/views/user/ModelPricingView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: false,
-      title: 'Model Pricing',
-      titleKey: 'modelPricing.title',
-      descriptionKey: 'modelPricing.description'
-    }
-  },
-  {
     path: '/settings/mcp',
     name: 'MCP',
     component: () => import('@/views/user/MCPView.vue'),
