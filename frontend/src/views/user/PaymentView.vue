@@ -48,7 +48,6 @@
                   <strong>{{ tab.label }}</strong>
                   <small>{{ billingTabHint(tab.key) }}</small>
                 </span>
-                <span v-if="activeTab === tab.key" class="billing-tab-selected" aria-hidden="true"><Icon name="check" size="xs" /></span>
               </button>
               <button type="button"
                 class="billing-tab-help focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
