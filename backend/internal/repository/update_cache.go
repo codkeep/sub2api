@@ -8,7 +8,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const updateCacheKey = "update:latest"
+// Keep fork release metadata separate from cached upstream releases.
+const updateCacheKey = "update:latest:codkeep/sub2api"
 
 type updateCache struct {
 	rdb *redis.Client
