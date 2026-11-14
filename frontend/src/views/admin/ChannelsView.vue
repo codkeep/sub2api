@@ -228,6 +228,16 @@
               </p>
             </div>
 
+            <div>
+              <label class="input-label">{{ t('admin.channels.form.reasoningEffortSource') }}</label>
+              <Select
+                :model-value="form.reasoning_effort_source"
+                :options="reasoningEffortSourceOptions"
+                @update:model-value="updateReasoningEffortSource"
+              />
+              <p class="input-hint">{{ t('admin.channels.form.reasoningEffortSourceHint') }}</p>
+            </div>
+
             <!-- Platform Management -->
             <div class="space-y-3">
               <label class="input-label mb-0">{{ t('admin.channels.form.platformConfig') }}</label>
@@ -637,6 +647,7 @@ import type { Channel, ChannelModelPricing, CreateChannelRequest, UpdateChannelR
 import type { PricingFormEntry } from '@/components/admin/channel/types'
 import { apiIntervalsToForm, apiTimePricingToForm, createDefaultTimePricingForm, findModelConflict, formIntervalsToAPI, formReasoningEffortMultipliersToAPI, formTimePricingToAPI, isValidPositiveMultiplier, mTokToPerToken, perTokenToMTok, validateIntervals, validateReasoningEffortMultipliers, validateTimePricing } from '@/components/admin/channel/types'
 import type { AdminGroup, GroupPlatform } from '@/types'
+import type { ReasoningEffortSource } from '@/constants/channel'
 import type { Column } from '@/components/common/types'
 import { platformTextClass, platformBadgeLightClass, platformLabel as catalogPlatformLabel } from '@/utils/platformColors'
 import { listPlatformIds, supportsPricingModelSync } from '@/constants/platformCatalog'
@@ -735,6 +746,11 @@ const billingModelSourceOptions = computed(() => [
   { value: 'response_model', label: t('admin.channels.form.billingModelSourceResponse', 'Bill by upstream response model') }
 ])
 
+const reasoningEffortSourceOptions = computed(() => [
+  { value: 'requested', label: t('admin.channels.form.reasoningEffortSourceRequested') },
+  { value: 'upstream', label: t('admin.channels.form.reasoningEffortSourceUpstream') }
+])
+
 // ── State ──
 const channels = ref<Channel[]>([])
 const loading = ref(false)
@@ -772,9 +788,16 @@ const form = reactive({
   status: 'active',
   restrict_models: false,
   billing_model_source: 'channel_mapped' as string,
+  reasoning_effort_source: 'upstream' as ReasoningEffortSource,
   platforms: [] as PlatformSection[],
   apply_pricing_to_account_stats: false,
 })
+
+function updateReasoningEffortSource(value: unknown) {
+  if (value === 'requested' || value === 'upstream') {
+    form.reasoning_effort_source = value
+  }
+}
 
 let abortController: AbortController | null = null
 
@@ -1378,6 +1401,7 @@ function resetForm() {
   form.status = 'active'
   form.restrict_models = false
   form.billing_model_source = 'channel_mapped'
+  form.reasoning_effort_source = 'upstream'
   form.platforms = []
   form.apply_pricing_to_account_stats = false
   activeTab.value = 'basic'
@@ -1400,6 +1424,7 @@ async function openEditDialog(channel: Channel) {
   form.status = channel.status
   form.restrict_models = channel.restrict_models || false
   form.billing_model_source = channel.billing_model_source || 'channel_mapped'
+  form.reasoning_effort_source = channel.reasoning_effort_source || 'upstream'
   form.apply_pricing_to_account_stats = channel.apply_pricing_to_account_stats || false
   // Must load groups first so apiToForm can map groupID → platform
   await Promise.all([loadGroups(), loadAllChannelsForConflict()])
@@ -1633,6 +1658,7 @@ async function handleSubmit() {
         model_pricing,
         model_mapping: Object.keys(model_mapping).length > 0 ? model_mapping : {},
         billing_model_source: form.billing_model_source,
+        reasoning_effort_source: form.reasoning_effort_source,
         restrict_models: form.restrict_models,
         features_config,
         apply_pricing_to_account_stats: form.apply_pricing_to_account_stats,
@@ -1648,6 +1674,7 @@ async function handleSubmit() {
         model_pricing,
         model_mapping: Object.keys(model_mapping).length > 0 ? model_mapping : {},
         billing_model_source: form.billing_model_source,
+        reasoning_effort_source: form.reasoning_effort_source,
         restrict_models: form.restrict_models,
         features_config,
         apply_pricing_to_account_stats: form.apply_pricing_to_account_stats,

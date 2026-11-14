@@ -109,6 +109,9 @@ func bindRequestedReasoningEffort(c *gin.Context, body []byte, model string) {
 	if c == nil || c.Request == nil {
 		return
 	}
+	if service.RequestedReasoningEffortFromContext(c.Request.Context()) != nil {
+		return
+	}
 	effort := service.CanonicalRequestedReasoningEffort(body, model)
 	if effort == nil {
 		return

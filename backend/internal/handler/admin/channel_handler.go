@@ -35,6 +35,7 @@ type createChannelRequest struct {
 	ModelPricing               []channelModelPricingRequest     `json:"model_pricing"`
 	ModelMapping               map[string]map[string]string     `json:"model_mapping"`
 	BillingModelSource         string                           `json:"billing_model_source" binding:"omitempty,oneof=requested upstream channel_mapped response_model"`
+	ReasoningEffortSource      string                           `json:"reasoning_effort_source" binding:"omitempty,oneof=requested upstream"`
 	RestrictModels             bool                             `json:"restrict_models"`
 	Features                   string                           `json:"features"`
 	FeaturesConfig             map[string]any                   `json:"features_config"`
@@ -50,6 +51,7 @@ type updateChannelRequest struct {
 	ModelPricing               *[]channelModelPricingRequest     `json:"model_pricing"`
 	ModelMapping               map[string]map[string]string      `json:"model_mapping"`
 	BillingModelSource         string                            `json:"billing_model_source" binding:"omitempty,oneof=requested upstream channel_mapped response_model"`
+	ReasoningEffortSource      string                            `json:"reasoning_effort_source" binding:"omitempty,oneof=requested upstream"`
 	RestrictModels             *bool                             `json:"restrict_models"`
 	Features                   *string                           `json:"features"`
 	FeaturesConfig             map[string]any                    `json:"features_config"`
@@ -120,6 +122,7 @@ type channelResponse struct {
 	Description                string                            `json:"description"`
 	Status                     string                            `json:"status"`
 	BillingModelSource         string                            `json:"billing_model_source"`
+	ReasoningEffortSource      string                            `json:"reasoning_effort_source"`
 	RestrictModels             bool                              `json:"restrict_models"`
 	Features                   string                            `json:"features"`
 	FeaturesConfig             map[string]any                    `json:"features_config"`
@@ -210,6 +213,7 @@ func channelToResponse(ch *service.Channel) *channelResponse {
 		UpdatedAt:      ch.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 	}
 	resp.BillingModelSource = ch.BillingModelSource
+	resp.ReasoningEffortSource = ch.ReasoningEffortSource
 	if resp.GroupIDs == nil {
 		resp.GroupIDs = []int64{}
 	}
@@ -506,6 +510,7 @@ func (h *ChannelHandler) Create(c *gin.Context) {
 		ModelPricing:               pricing,
 		ModelMapping:               req.ModelMapping,
 		BillingModelSource:         req.BillingModelSource,
+		ReasoningEffortSource:      req.ReasoningEffortSource,
 		RestrictModels:             req.RestrictModels,
 		Features:                   req.Features,
 		FeaturesConfig:             req.FeaturesConfig,
@@ -542,6 +547,7 @@ func (h *ChannelHandler) Update(c *gin.Context) {
 		GroupIDs:                   req.GroupIDs,
 		ModelMapping:               req.ModelMapping,
 		BillingModelSource:         req.BillingModelSource,
+		ReasoningEffortSource:      req.ReasoningEffortSource,
 		RestrictModels:             req.RestrictModels,
 		Features:                   req.Features,
 		FeaturesConfig:             req.FeaturesConfig,

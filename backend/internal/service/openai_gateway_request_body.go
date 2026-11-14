@@ -1901,6 +1901,9 @@ func explicitRequestedReasoningEffortFromBody(body []byte) string {
 // later persist "xhigh".
 func CanonicalRequestedReasoningEffort(body []byte, modelCandidates ...string) *string {
 	if raw := explicitRequestedReasoningEffortFromBody(body); raw != "" {
+		if strings.EqualFold(strings.TrimSpace(raw), "none") {
+			return optionalTrimmedStringPtr("none")
+		}
 		canonical := NormalizeMaxReasoningEffort(raw)
 		if canonical == "" {
 			return nil

@@ -857,6 +857,7 @@ func (s *ChannelService) Create(ctx context.Context, input *CreateChannelInput) 
 		Description:                input.Description,
 		Status:                     StatusActive,
 		BillingModelSource:         input.BillingModelSource,
+		ReasoningEffortSource:      input.ReasoningEffortSource,
 		RestrictModels:             input.RestrictModels,
 		GroupIDs:                   input.GroupIDs,
 		ModelPricing:               input.ModelPricing,
@@ -867,6 +868,9 @@ func (s *ChannelService) Create(ctx context.Context, input *CreateChannelInput) 
 		AccountStatsPricingRules:   input.AccountStatsPricingRules,
 	}
 	channel.normalizeBillingModelSource()
+	if err := validateReasoningEffortSource(channel.ReasoningEffortSource); err != nil {
+		return nil, err
+	}
 
 	if err := validateChannelConfig(channel.ModelPricing, channel.ModelMapping); err != nil {
 		return nil, err
@@ -972,6 +976,12 @@ func (s *ChannelService) applyUpdateInput(ctx context.Context, channel *Channel,
 	}
 	if input.BillingModelSource != "" {
 		channel.BillingModelSource = input.BillingModelSource
+	}
+	if input.ReasoningEffortSource != "" {
+		if err := validateReasoningEffortSource(input.ReasoningEffortSource); err != nil {
+			return err
+		}
+		channel.ReasoningEffortSource = input.ReasoningEffortSource
 	}
 	if input.FeaturesConfig != nil {
 		channel.FeaturesConfig = mergeWebSearchEmulationDimensions(channel.FeaturesConfig, input.FeaturesConfig)
@@ -1223,6 +1233,13 @@ func detectConflicts(entries []modelEntry, platform, errCode, label string) erro
 
 // --- Input types ---
 
+func validateReasoningEffortSource(source string) error {
+	if source != ReasoningEffortSourceRequested && source != ReasoningEffortSourceUpstream {
+		return infraerrors.BadRequest("INVALID_REASONING_EFFORT_SOURCE", "思考等级计费基准必须为请求等级或最终转发等级")
+	}
+	return nil
+}
+
 // CreateChannelInput 创建渠道输入
 type CreateChannelInput struct {
 	Name                       string
@@ -1231,6 +1248,7 @@ type CreateChannelInput struct {
 	ModelPricing               []ChannelModelPricing
 	ModelMapping               map[string]map[string]string // platform → {src→dst}
 	BillingModelSource         string
+	ReasoningEffortSource      string
 	RestrictModels             bool
 	Features                   string
 	FeaturesConfig             map[string]any
@@ -1247,6 +1265,7 @@ type UpdateChannelInput struct {
 	ModelPricing               *[]ChannelModelPricing
 	ModelMapping               map[string]map[string]string // platform → {src→dst}
 	BillingModelSource         string
+	ReasoningEffortSource      string
 	RestrictModels             *bool
 	Features                   *string
 	FeaturesConfig             map[string]any

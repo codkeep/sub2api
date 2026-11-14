@@ -28,3 +28,6 @@ export type BillingModelSource =
   | typeof BILLING_MODEL_SOURCE_UPSTREAM
   | typeof BILLING_MODEL_SOURCE_CHANNEL_MAPPED
   | typeof BILLING_MODEL_SOURCE_RESPONSE
+
+/** Reasoning effort used to select customer billing multipliers. */
+export type ReasoningEffortSource = 'requested' | 'upstream'

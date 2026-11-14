@@ -692,7 +692,7 @@ export default {
       tierHint: 'The whole request is billed at the tier matching its total context (input + cache write + cache read)',
       tierHintMarginal: 'Only the portion above the threshold is billed at this tier; output is unaffected',
       reasoningMultiplierBadge: '{effort} ×{multiplier}',
-      reasoningMultiplierHint: 'When the forwarded reasoning effort is {effort}, billing and quota usage for the request are multiplied by {multiplier}. Unconfigured levels use 1×',
+      reasoningMultiplierHint: 'When the effort selected by the channel’s billing basis (requested or final forwarded) is {effort}, request cost and quota usage are multiplied by {multiplier}. Without a channel, use the final forwarded effort. Unconfigured levels use 1×',
       marginalBadge: 'excess-only tiers',
       timePricingRowHint: 'Requests made within this period ({timezone} time) are billed at the prices in this row',
       timePricingRowHintWeekdays:

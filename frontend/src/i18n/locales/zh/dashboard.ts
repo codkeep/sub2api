@@ -697,7 +697,7 @@ export default {
       tierHint: '按单次请求的总上下文（输入 + 缓存写入 + 缓存读取）所在档位对整单计价',
       tierHintMarginal: '仅超过阈值的部分按该档计价，输出不加价',
       reasoningMultiplierBadge: '{effort} ×{multiplier}',
-      reasoningMultiplierHint: '最终转发的思考等级为 {effort} 时，整次请求的计费与额度消耗乘以 {multiplier}；未配置的等级按 1 倍计费',
+      reasoningMultiplierHint: '按渠道所选的计费基准（请求等级或最终转发等级），思考等级为 {effort} 时，整次请求的计费与额度消耗乘以 {multiplier}；无渠道时使用最终转发等级，未配置的等级按 1 倍计费',
       marginalBadge: '超出部分计价',
       timePricingRowHint: '按 {timezone} 时间，在该时段内发起的请求按本行价格计费',
       timePricingRowHintWeekdays:

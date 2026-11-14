@@ -1041,7 +1041,7 @@ func (s *GatewayService) calculateRecordUsageCost(
 				Ctx: ctx, Model: billingModel, GroupID: &gid, Group: apiKey.Group,
 				UsageUnits: result.AudioUsage.DurationOrUnits, SizeTier: result.AudioUsage.Mode,
 				RateMultiplier: multiplier, Resolver: s.resolver, Resolved: resolved,
-				ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+				ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 			})
 			if err == nil {
 				return cost
@@ -1183,7 +1183,7 @@ func (s *GatewayService) calculateImageCost(
 			Ctx: ctx, Model: billingModel, GroupID: &gid, Group: apiKey.Group,
 			RequestCount: result.ImageCount, SizeTier: sizeTier,
 			RateMultiplier: multiplier, Resolver: s.resolver, Resolved: resolved,
-			ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+			ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 		})
 		if err == nil {
 			return cost
@@ -1212,7 +1212,7 @@ func (s *GatewayService) calculateImageCost(
 				Tokens:          tokens,
 				RequestCount:    result.ImageCount,
 				SizeTier:        sizeTier,
-				ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+				ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 				RateMultiplier:  multiplier,
 				Resolver:        s.resolver,
 				Resolved:        resolved,
@@ -1233,7 +1233,7 @@ func (s *GatewayService) calculateImageCost(
 				Tokens:          tokens,
 				RequestCount:    result.ImageCount,
 				SizeTier:        sizeTier,
-				ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+				ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 				RateMultiplier:  multiplier,
 				Resolver:        s.resolver,
 				Resolved:        resolved,
@@ -1284,7 +1284,7 @@ func (s *GatewayService) calculateTokenCost(
 		RateMultiplier:  multiplier,
 		PricingAt:       pricingAt,
 		ServiceTier:     optionalStringValue(result.ServiceTier),
-		ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+		ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 		Resolver:        s.resolver,
 		Resolved:        resolved,
 	})

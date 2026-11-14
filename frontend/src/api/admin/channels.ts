@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from '../client'
-import type { BillingMode, ChannelStatus, BillingModelSource } from '@/constants/channel'
+import type { BillingMode, ChannelStatus, BillingModelSource, ReasoningEffortSource } from '@/constants/channel'
 
 export type { BillingMode } from '@/constants/channel'
 
@@ -74,6 +74,7 @@ export interface Channel {
   description: string
   status: ChannelStatus
   billing_model_source: BillingModelSource
+  reasoning_effort_source?: ReasoningEffortSource
   restrict_models: boolean
   features_config?: Record<string, unknown>
   group_ids: number[]
@@ -92,6 +93,7 @@ export interface CreateChannelRequest {
   model_pricing?: ChannelModelPricing[]
   model_mapping?: Record<string, Record<string, string>>
   billing_model_source?: string
+  reasoning_effort_source?: ReasoningEffortSource
   restrict_models?: boolean
   features_config?: Record<string, unknown>
   apply_pricing_to_account_stats?: boolean
@@ -106,6 +108,7 @@ export interface UpdateChannelRequest {
   model_pricing?: ChannelModelPricing[]
   model_mapping?: Record<string, Record<string, string>>
   billing_model_source?: string
+  reasoning_effort_source?: ReasoningEffortSource
   restrict_models?: boolean
   features_config?: Record<string, unknown>
   apply_pricing_to_account_stats?: boolean

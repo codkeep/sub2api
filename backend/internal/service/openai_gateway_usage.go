@@ -616,7 +616,7 @@ func (s *OpenAIGatewayService) calculateOpenAIRecordUsageCost(
 				Ctx: ctx, Model: billingModel, GroupID: &gid, Group: apiKey.Group,
 				UsageUnits: result.AudioUsage.DurationOrUnits, SizeTier: result.AudioUsage.Mode,
 				RateMultiplier: webSearchMultiplier, Resolver: s.resolver, Resolved: resolved,
-				ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+				ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 			})
 		}
 		cfg := groupAudioPriceConfigFromAPIKey(apiKey)
@@ -651,7 +651,7 @@ func (s *OpenAIGatewayService) calculateOpenAIRecordUsageCost(
 				pricingAt,
 				tokens,
 				serviceTier,
-				optionalStringValue(result.ReasoningEffort),
+				s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 				longContextBillingGate,
 				modelLongContextExempt,
 			)
@@ -785,7 +785,7 @@ func (s *OpenAIGatewayService) calculateOpenAIImageCost(
 			Ctx: ctx, Model: billingModel, GroupID: &gid, Group: apiKey.Group,
 			RequestCount: result.ImageCount, SizeTier: sizeTier,
 			RateMultiplier: multiplier, Resolver: s.resolver, Resolved: resolved,
-			ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+			ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 		})
 		if err == nil {
 			return cost
@@ -812,7 +812,7 @@ func (s *OpenAIGatewayService) calculateOpenAIImageCost(
 			Group:           apiKey.Group,
 			RequestCount:    result.ImageCount,
 			SizeTier:        sizeTier,
-			ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+			ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 			RateMultiplier:  multiplier,
 			Resolver:        s.resolver,
 			Resolved:        resolved,
@@ -846,7 +846,7 @@ func (s *OpenAIGatewayService) calculateOpenAIVideoCost(
 			Ctx: ctx, Model: billingModel, GroupID: &gid, Group: apiKey.Group,
 			UsageUnits: float64(videoCount * durationSeconds), SizeTier: resolution,
 			RateMultiplier: multiplier, Resolver: s.resolver, Resolved: resolved,
-			ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+			ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 		})
 		if err == nil {
 			return cost
@@ -879,7 +879,7 @@ func (s *OpenAIGatewayService) calculateOpenAIVideoCost(
 			RequestCount:    videoCount,
 			UsageUnits:      units,
 			SizeTier:        resolution,
-			ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+			ReasoningEffort: s.resolver.reasoningEffortForBilling(ctx, apiKey, result.RequestedReasoningEffort, result.ReasoningEffort),
 			RateMultiplier:  multiplier,
 			Resolver:        s.resolver,
 			Resolved:        resolved,

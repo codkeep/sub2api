@@ -46,18 +46,24 @@ const (
 	BillingModelSourceResponse = "response_model"
 )
 
+const (
+	ReasoningEffortSourceRequested = "requested"
+	ReasoningEffortSourceUpstream  = "upstream"
+)
+
 // Channel 渠道实体
 type Channel struct {
-	ID                 int64
-	Name               string
-	Description        string
-	Status             string
-	BillingModelSource string         // "requested", "upstream", "channel_mapped", or "response_model"
-	RestrictModels     bool           // 是否限制模型（仅允许定价列表中的模型）
-	Features           string         // 渠道特性描述（JSON 数组），用于支付页面展示
-	FeaturesConfig     map[string]any // 渠道功能配置（如 web search emulation）
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
+	ID                    int64
+	Name                  string
+	Description           string
+	Status                string
+	BillingModelSource    string         // "requested", "upstream", "channel_mapped", or "response_model"
+	ReasoningEffortSource string         // 思考等级倍率基准："requested" / "upstream"
+	RestrictModels        bool           // 是否限制模型（仅允许定价列表中的模型）
+	Features              string         // 渠道特性描述（JSON 数组），用于支付页面展示
+	FeaturesConfig        map[string]any // 渠道功能配置（如 web search emulation）
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
 
 	// 关联的分组 ID 列表
 	GroupIDs []int64
@@ -153,7 +159,7 @@ func (c *Channel) IsActive() bool {
 	return c.Status == StatusActive
 }
 
-// normalizeBillingModelSource 若 BillingModelSource 为空则回填默认值 ChannelMapped。
+// normalizeBillingModelSource 回填模型与思考等级计费基准的默认值。
 // 作为 *Channel 的实体方法集中管理默认值，service 层只需在 Channel 进入内存
 // （缓存装填、repo 读出）时调用一次，下游读路径就无需重复兜底。
 func (c *Channel) normalizeBillingModelSource() {
@@ -162,6 +168,9 @@ func (c *Channel) normalizeBillingModelSource() {
 	}
 	if c.BillingModelSource == "" {
 		c.BillingModelSource = BillingModelSourceChannelMapped
+	}
+	if c.ReasoningEffortSource == "" {
+		c.ReasoningEffortSource = ReasoningEffortSourceUpstream
 	}
 }
 
