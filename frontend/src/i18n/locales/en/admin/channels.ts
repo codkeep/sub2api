@@ -150,6 +150,7 @@ export default {
         pricePlaceholder: 'Default',
         fastMultiplier: 'Fast Multiplier',
         flexMultiplier: 'Flex Multiplier',
+        ultrafastMultiplier: 'Ultrafast Multiplier',
         reasoningEffortMultipliers: 'Custom Reasoning Effort Multipliers (optional)',
         reasoningEffortMultipliersHint: 'Apply the multiplier using the channel’s reasoning effort billing basis to request cost and quota usage. Without a channel, use the final forwarded effort. Custom account statistics rules always use the final forwarded effort. Unconfigured levels use 1×. These multiply with other billing multipliers.',
         reasoningEffortMultiplierLabel: '{effort} reasoning effort multiplier',

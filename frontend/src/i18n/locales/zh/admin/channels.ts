@@ -150,6 +150,7 @@ export default {
         pricePlaceholder: '默认',
         fastMultiplier: 'Fast 倍率',
         flexMultiplier: 'Flex 倍率',
+        ultrafastMultiplier: 'Ultra Fast 倍率',
         reasoningEffortMultipliers: '自定义思考等级倍率（可选）',
         reasoningEffortMultipliersHint: '按渠道所选的思考等级计费基准，对请求费用与额度消耗应用对应倍率；无渠道时使用最终转发等级。账号统计自定义规则始终使用最终转发等级。未配置的等级按 1 倍计费，可与其他计费倍率叠加。',
         reasoningEffortMultiplierLabel: '{effort} 思考等级倍率',
