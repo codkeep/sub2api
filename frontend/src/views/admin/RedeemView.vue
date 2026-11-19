@@ -396,6 +396,18 @@
                 class="input"
               />
             </div>
+            <div>
+              <label class="input-label">{{ t('admin.redeem.perUserLimit') }}</label>
+              <input
+                v-model.number="generateForm.per_user_limit"
+                type="number"
+                min="1"
+                max="1000"
+                required
+                class="input"
+              />
+              <p class="input-hint">{{ t('admin.redeem.perUserLimitHint') }}</p>
+            </div>
             <div class="flex justify-end gap-3 pt-2">
               <button type="button" @click="showGenerateDialog = false" class="btn btn-secondary">
                 {{ t('common.cancel') }}
@@ -839,6 +851,7 @@ const generateForm = reactive({
   type: 'balance' as RedeemCodeType,
   value: 10,
   count: 1,
+  per_user_limit: 1,
   group_id: null as number | null,
   validity_days: 30,
   expiry_option: 'never' as RedeemCodeExpiryOption,
@@ -1046,7 +1059,8 @@ const handleGenerateCodes = async () => {
       generateForm.value,
       generateForm.type === 'subscription' ? generateForm.group_id : undefined,
       generateForm.type === 'subscription' ? generateForm.validity_days : undefined,
-      expiresInDays
+      expiresInDays,
+      generateForm.per_user_limit
     )
     showGenerateDialog.value = false
     generatedCodes.value = result

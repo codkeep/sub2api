@@ -578,6 +578,7 @@ type GenerateRedeemCodesInput struct {
 	GroupID      *int64 // 订阅类型专用：关联的分组ID
 	ValidityDays int    // 订阅类型专用：有效天数
 	ExpiresAt    *time.Time
+	PerUserLimit int // 同一用户在本批次最多可兑换的数量
 }
 
 type ProxyBatchDeleteResult struct {

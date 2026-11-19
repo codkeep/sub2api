@@ -1984,6 +1984,8 @@ export interface RedeemCode {
   notes?: string
   group_id?: number | null // 订阅类型专用
   validity_days?: number // 订阅类型专用
+  batch_id?: string | null
+  per_user_limit?: number
   user?: User
   group?: Group // 关联的分组
 }
@@ -1996,6 +1998,7 @@ export interface GenerateRedeemCodesRequest {
   validity_days?: number // 订阅类型专用
   expires_at?: string | null
   expires_in_days?: number
+  per_user_limit?: number
 }
 
 export interface BatchUpdateRedeemCodeFields {

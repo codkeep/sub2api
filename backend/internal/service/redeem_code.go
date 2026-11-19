@@ -18,6 +18,9 @@ type RedeemCode struct {
 	CreatedAt time.Time
 	ExpiresAt *time.Time
 
+	BatchID      *string
+	PerUserLimit int
+
 	GroupID      *int64
 	ValidityDays int
 

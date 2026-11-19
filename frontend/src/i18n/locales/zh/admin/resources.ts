@@ -300,6 +300,8 @@ export default {
       amount: '金额 ($)',
       value: '面值',
       count: '数量',
+      perUserLimit: '每个用户最多可兑换数量',
+      perUserLimitHint: '同一用户在本批兑换码中最多成功兑换的不同兑换码数量。',
       generate: '生成',
       copyAll: '全部复制',
       download: '下载',

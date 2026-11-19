@@ -16,12 +16,13 @@ import (
 )
 
 var (
-	ErrRedeemCodeNotFound  = infraerrors.NotFound("REDEEM_CODE_NOT_FOUND", "redeem code not found")
-	ErrRedeemCodeUsed      = infraerrors.Conflict("REDEEM_CODE_USED", "redeem code already used")
-	ErrRedeemCodeExpired   = infraerrors.Conflict("REDEEM_CODE_EXPIRED", "redeem code expired")
-	ErrInsufficientBalance = infraerrors.BadRequest("INSUFFICIENT_BALANCE", "insufficient balance")
-	ErrRedeemRateLimited   = infraerrors.TooManyRequests("REDEEM_RATE_LIMITED", "too many failed attempts, please try again later")
-	ErrRedeemCodeLocked    = infraerrors.Conflict("REDEEM_CODE_LOCKED", "redeem code is being processed, please try again")
+	ErrRedeemCodeNotFound          = infraerrors.NotFound("REDEEM_CODE_NOT_FOUND", "redeem code not found")
+	ErrRedeemCodeUsed              = infraerrors.Conflict("REDEEM_CODE_USED", "redeem code already used")
+	ErrRedeemCodeExpired           = infraerrors.Conflict("REDEEM_CODE_EXPIRED", "redeem code expired")
+	ErrInsufficientBalance         = infraerrors.BadRequest("INSUFFICIENT_BALANCE", "insufficient balance")
+	ErrRedeemRateLimited           = infraerrors.TooManyRequests("REDEEM_RATE_LIMITED", "too many failed attempts, please try again later")
+	ErrRedeemCodeLocked            = infraerrors.Conflict("REDEEM_CODE_LOCKED", "redeem code is being processed, please try again")
+	ErrRedeemBatchUserLimitReached = infraerrors.Conflict("REDEEM_BATCH_USER_LIMIT_REACHED", "redeem code batch usage limit reached")
 )
 
 const (
@@ -52,6 +53,10 @@ type RedeemCache interface {
 
 	AcquireRedeemLock(ctx context.Context, code string, ttl time.Duration) (bool, error)
 	ReleaseRedeemLock(ctx context.Context, code string) error
+}
+
+type redeemBatchLimitChecker interface {
+	CheckBatchUserLimit(ctx context.Context, batchID string, userID int64, limit int) error
 }
 
 type RedeemCodeRepository interface {
@@ -476,6 +481,20 @@ func (s *RedeemService) redeem(ctx context.Context, userID int64, code string, r
 
 	// 将事务放入 context，使 repository 方法能够使用同一事务
 	txCtx := dbent.NewTxContext(ctx, tx)
+
+	// 批次限制检查必须和当前兑换码核销放在同一事务中。仓储层会锁定该批次的兑换码行，
+	// 避免同一用户并发兑换多个兑换码时绕过上限。
+	if redeemCode.BatchID != nil && *redeemCode.BatchID != "" {
+		limit := redeemCode.PerUserLimit
+		if limit <= 0 {
+			limit = 1
+		}
+		if checker, ok := s.redeemRepo.(redeemBatchLimitChecker); ok {
+			if err := checker.CheckBatchUserLimit(txCtx, *redeemCode.BatchID, userID, limit); err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	// 【关键】先标记兑换码为已使用，确保并发安全
 	// 利用数据库乐观锁（WHERE status = 'unused'）保证原子性

@@ -1803,6 +1803,16 @@ func init() {
 	redeemcodeDescValidityDays := redeemcodeFields[10].Descriptor()
 	// redeemcode.DefaultValidityDays holds the default value on creation for the validity_days field.
 	redeemcode.DefaultValidityDays = redeemcodeDescValidityDays.Default.(int)
+	// redeemcodeDescBatchID is the schema descriptor for batch_id field.
+	redeemcodeDescBatchID := redeemcodeFields[11].Descriptor()
+	// redeemcode.BatchIDValidator is a validator for the "batch_id" field. It is called by the builders before save.
+	redeemcode.BatchIDValidator = redeemcodeDescBatchID.Validators[0].(func(string) error)
+	// redeemcodeDescPerUserLimit is the schema descriptor for per_user_limit field.
+	redeemcodeDescPerUserLimit := redeemcodeFields[12].Descriptor()
+	// redeemcode.DefaultPerUserLimit holds the default value on creation for the per_user_limit field.
+	redeemcode.DefaultPerUserLimit = redeemcodeDescPerUserLimit.Default.(int)
+	// redeemcode.PerUserLimitValidator is a validator for the "per_user_limit" field. It is called by the builders before save.
+	redeemcode.PerUserLimitValidator = redeemcodeDescPerUserLimit.Validators[0].(func(int) error)
 	securitysecretMixin := schema.SecuritySecret{}.Mixin()
 	securitysecretMixinFields0 := securitysecretMixin[0].Fields()
 	_ = securitysecretMixinFields0

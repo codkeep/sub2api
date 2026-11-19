@@ -1253,6 +1253,12 @@ func (s *adminServiceImpl) GetRedeemCode(ctx context.Context, id int64) (*Redeem
 }
 
 func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *GenerateRedeemCodesInput) ([]RedeemCode, error) {
+	if input.PerUserLimit <= 0 {
+		input.PerUserLimit = 1
+	}
+	if input.PerUserLimit > 1000 {
+		return nil, errors.New("per_user_limit cannot be greater than 1000")
+	}
 	if input.ExpiresAt != nil && !input.ExpiresAt.After(time.Now()) {
 		return nil, ErrRedeemCodeExpired
 	}
@@ -1272,6 +1278,11 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 		}
 	}
 
+	batchIDValue, err := GenerateRedeemCode()
+	if err != nil {
+		return nil, err
+	}
+
 	codes := make([]RedeemCode, 0, input.Count)
 	for i := 0; i < input.Count; i++ {
 		codeValue, err := GenerateRedeemCode()
@@ -1279,11 +1290,13 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 			return nil, err
 		}
 		code := RedeemCode{
-			Code:      codeValue,
-			Type:      input.Type,
-			Value:     input.Value,
-			Status:    StatusUnused,
-			ExpiresAt: input.ExpiresAt,
+			Code:         codeValue,
+			Type:         input.Type,
+			Value:        input.Value,
+			Status:       StatusUnused,
+			ExpiresAt:    input.ExpiresAt,
+			BatchID:      &batchIDValue,
+			PerUserLimit: input.PerUserLimit,
 		}
 		// 订阅类型专用字段
 		if input.Type == RedeemTypeSubscription {

@@ -23,6 +23,11 @@ func NewRedeemCodeRepository(client *dbent.Client) service.RedeemCodeRepository 
 }
 
 func (r *redeemCodeRepository) Create(ctx context.Context, code *service.RedeemCode) error {
+	perUserLimit := code.PerUserLimit
+	if perUserLimit <= 0 {
+		perUserLimit = 1
+	}
+
 	created, err := r.client.RedeemCode.Create().
 		SetCode(code.Code).
 		SetType(code.Type).
@@ -30,6 +35,8 @@ func (r *redeemCodeRepository) Create(ctx context.Context, code *service.RedeemC
 		SetStatus(code.Status).
 		SetNotes(code.Notes).
 		SetValidityDays(code.ValidityDays).
+		SetNillableBatchID(code.BatchID).
+		SetPerUserLimit(perUserLimit).
 		SetNillableExpiresAt(code.ExpiresAt).
 		SetNillableUsedBy(code.UsedBy).
 		SetNillableUsedAt(code.UsedAt).
@@ -50,6 +57,10 @@ func (r *redeemCodeRepository) CreateBatch(ctx context.Context, codes []service.
 	builders := make([]*dbent.RedeemCodeCreate, 0, len(codes))
 	for i := range codes {
 		c := &codes[i]
+		perUserLimit := c.PerUserLimit
+		if perUserLimit <= 0 {
+			perUserLimit = 1
+		}
 		b := r.client.RedeemCode.Create().
 			SetCode(c.Code).
 			SetType(c.Type).
@@ -57,6 +68,8 @@ func (r *redeemCodeRepository) CreateBatch(ctx context.Context, codes []service.
 			SetStatus(c.Status).
 			SetNotes(c.Notes).
 			SetValidityDays(c.ValidityDays).
+			SetNillableBatchID(c.BatchID).
+			SetPerUserLimit(perUserLimit).
 			SetNillableExpiresAt(c.ExpiresAt).
 			SetNillableUsedBy(c.UsedBy).
 			SetNillableUsedAt(c.UsedAt).
@@ -196,13 +209,20 @@ func redeemCodeListOrder(params pagination.PaginationParams) []func(*entsql.Sele
 }
 
 func (r *redeemCodeRepository) Update(ctx context.Context, code *service.RedeemCode) error {
+	perUserLimit := code.PerUserLimit
+	if perUserLimit <= 0 {
+		perUserLimit = 1
+	}
+
 	up := r.client.RedeemCode.UpdateOneID(code.ID).
 		SetCode(code.Code).
 		SetType(code.Type).
 		SetValue(code.Value).
 		SetStatus(code.Status).
 		SetNotes(code.Notes).
-		SetValidityDays(code.ValidityDays)
+		SetValidityDays(code.ValidityDays).
+		SetNillableBatchID(code.BatchID).
+		SetPerUserLimit(perUserLimit)
 
 	if code.UsedBy != nil {
 		up.SetUsedBy(*code.UsedBy)
@@ -321,6 +341,33 @@ func (r *redeemCodeRepository) batchUpdate(ctx context.Context, client *dbent.Cl
 	return int64(affected), nil
 }
 
+func (r *redeemCodeRepository) CheckBatchUserLimit(ctx context.Context, batchID string, userID int64, limit int) error {
+	if batchID == "" || limit <= 0 {
+		return nil
+	}
+
+	client := clientFromContext(ctx, r.client)
+	codes, err := client.RedeemCode.Query().
+		Where(redeemcode.BatchIDEQ(batchID)).
+		Order(dbent.Asc(redeemcode.FieldID)).
+		ForUpdate().
+		All(ctx)
+	if err != nil {
+		return err
+	}
+
+	usedCount := 0
+	for _, code := range codes {
+		if code.Status == service.StatusUsed && code.UsedBy != nil && *code.UsedBy == userID {
+			usedCount++
+		}
+	}
+	if usedCount >= limit {
+		return service.ErrRedeemBatchUserLimitReached
+	}
+	return nil
+}
+
 func (r *redeemCodeRepository) Use(ctx context.Context, id, userID int64) error {
 	now := time.Now()
 	client := clientFromContext(ctx, r.client)
@@ -425,6 +472,8 @@ func redeemCodeEntityToService(m *dbent.RedeemCode) *service.RedeemCode {
 		ExpiresAt:    m.ExpiresAt,
 		GroupID:      m.GroupID,
 		ValidityDays: m.ValidityDays,
+		BatchID:      m.BatchID,
+		PerUserLimit: m.PerUserLimit,
 	}
 	if m.Edges.User != nil {
 		out.User = userEntityToService(m.Edges.User)

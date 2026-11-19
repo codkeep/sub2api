@@ -170,6 +170,34 @@ func (_c *RedeemCodeCreate) SetNillableValidityDays(v *int) *RedeemCodeCreate {
 	return _c
 }
 
+// SetBatchID sets the "batch_id" field.
+func (_c *RedeemCodeCreate) SetBatchID(v string) *RedeemCodeCreate {
+	_c.mutation.SetBatchID(v)
+	return _c
+}
+
+// SetNillableBatchID sets the "batch_id" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillableBatchID(v *string) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetBatchID(*v)
+	}
+	return _c
+}
+
+// SetPerUserLimit sets the "per_user_limit" field.
+func (_c *RedeemCodeCreate) SetPerUserLimit(v int) *RedeemCodeCreate {
+	_c.mutation.SetPerUserLimit(v)
+	return _c
+}
+
+// SetNillablePerUserLimit sets the "per_user_limit" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillablePerUserLimit(v *int) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetPerUserLimit(*v)
+	}
+	return _c
+}
+
 // SetUserID sets the "user" edge to the User entity by ID.
 func (_c *RedeemCodeCreate) SetUserID(id int64) *RedeemCodeCreate {
 	_c.mutation.SetUserID(id)
@@ -249,6 +277,10 @@ func (_c *RedeemCodeCreate) defaults() {
 		v := redeemcode.DefaultValidityDays
 		_c.mutation.SetValidityDays(v)
 	}
+	if _, ok := _c.mutation.PerUserLimit(); !ok {
+		v := redeemcode.DefaultPerUserLimit
+		_c.mutation.SetPerUserLimit(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -285,6 +317,19 @@ func (_c *RedeemCodeCreate) check() error {
 	}
 	if _, ok := _c.mutation.ValidityDays(); !ok {
 		return &ValidationError{Name: "validity_days", err: errors.New(`ent: missing required field "RedeemCode.validity_days"`)}
+	}
+	if v, ok := _c.mutation.BatchID(); ok {
+		if err := redeemcode.BatchIDValidator(v); err != nil {
+			return &ValidationError{Name: "batch_id", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.batch_id": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.PerUserLimit(); !ok {
+		return &ValidationError{Name: "per_user_limit", err: errors.New(`ent: missing required field "RedeemCode.per_user_limit"`)}
+	}
+	if v, ok := _c.mutation.PerUserLimit(); ok {
+		if err := redeemcode.PerUserLimitValidator(v); err != nil {
+			return &ValidationError{Name: "per_user_limit", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.per_user_limit": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -348,6 +393,14 @@ func (_c *RedeemCodeCreate) createSpec() (*RedeemCode, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ValidityDays(); ok {
 		_spec.SetField(redeemcode.FieldValidityDays, field.TypeInt, value)
 		_node.ValidityDays = value
+	}
+	if value, ok := _c.mutation.BatchID(); ok {
+		_spec.SetField(redeemcode.FieldBatchID, field.TypeString, value)
+		_node.BatchID = &value
+	}
+	if value, ok := _c.mutation.PerUserLimit(); ok {
+		_spec.SetField(redeemcode.FieldPerUserLimit, field.TypeInt, value)
+		_node.PerUserLimit = value
 	}
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -597,6 +650,42 @@ func (u *RedeemCodeUpsert) AddValidityDays(v int) *RedeemCodeUpsert {
 	return u
 }
 
+// SetBatchID sets the "batch_id" field.
+func (u *RedeemCodeUpsert) SetBatchID(v string) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldBatchID, v)
+	return u
+}
+
+// UpdateBatchID sets the "batch_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdateBatchID() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldBatchID)
+	return u
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (u *RedeemCodeUpsert) ClearBatchID() *RedeemCodeUpsert {
+	u.SetNull(redeemcode.FieldBatchID)
+	return u
+}
+
+// SetPerUserLimit sets the "per_user_limit" field.
+func (u *RedeemCodeUpsert) SetPerUserLimit(v int) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldPerUserLimit, v)
+	return u
+}
+
+// UpdatePerUserLimit sets the "per_user_limit" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdatePerUserLimit() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldPerUserLimit)
+	return u
+}
+
+// AddPerUserLimit adds v to the "per_user_limit" field.
+func (u *RedeemCodeUpsert) AddPerUserLimit(v int) *RedeemCodeUpsert {
+	u.Add(redeemcode.FieldPerUserLimit, v)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -828,6 +917,48 @@ func (u *RedeemCodeUpsertOne) AddValidityDays(v int) *RedeemCodeUpsertOne {
 func (u *RedeemCodeUpsertOne) UpdateValidityDays() *RedeemCodeUpsertOne {
 	return u.Update(func(s *RedeemCodeUpsert) {
 		s.UpdateValidityDays()
+	})
+}
+
+// SetBatchID sets the "batch_id" field.
+func (u *RedeemCodeUpsertOne) SetBatchID(v string) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetBatchID(v)
+	})
+}
+
+// UpdateBatchID sets the "batch_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdateBatchID() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateBatchID()
+	})
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (u *RedeemCodeUpsertOne) ClearBatchID() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearBatchID()
+	})
+}
+
+// SetPerUserLimit sets the "per_user_limit" field.
+func (u *RedeemCodeUpsertOne) SetPerUserLimit(v int) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetPerUserLimit(v)
+	})
+}
+
+// AddPerUserLimit adds v to the "per_user_limit" field.
+func (u *RedeemCodeUpsertOne) AddPerUserLimit(v int) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddPerUserLimit(v)
+	})
+}
+
+// UpdatePerUserLimit sets the "per_user_limit" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdatePerUserLimit() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdatePerUserLimit()
 	})
 }
 
@@ -1228,6 +1359,48 @@ func (u *RedeemCodeUpsertBulk) AddValidityDays(v int) *RedeemCodeUpsertBulk {
 func (u *RedeemCodeUpsertBulk) UpdateValidityDays() *RedeemCodeUpsertBulk {
 	return u.Update(func(s *RedeemCodeUpsert) {
 		s.UpdateValidityDays()
+	})
+}
+
+// SetBatchID sets the "batch_id" field.
+func (u *RedeemCodeUpsertBulk) SetBatchID(v string) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetBatchID(v)
+	})
+}
+
+// UpdateBatchID sets the "batch_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdateBatchID() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateBatchID()
+	})
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (u *RedeemCodeUpsertBulk) ClearBatchID() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearBatchID()
+	})
+}
+
+// SetPerUserLimit sets the "per_user_limit" field.
+func (u *RedeemCodeUpsertBulk) SetPerUserLimit(v int) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetPerUserLimit(v)
+	})
+}
+
+// AddPerUserLimit adds v to the "per_user_limit" field.
+func (u *RedeemCodeUpsertBulk) AddPerUserLimit(v int) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddPerUserLimit(v)
+	})
+}
+
+// UpdatePerUserLimit sets the "per_user_limit" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdatePerUserLimit() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdatePerUserLimit()
 	})
 }
 

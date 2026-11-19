@@ -296,6 +296,8 @@ export default {
       amount: 'Amount ($)',
       value: 'Value',
       count: 'Count',
+      perUserLimit: 'Max redemptions per user',
+      perUserLimitHint: 'Maximum number of different codes from this batch that one user can redeem.',
       generating: 'Generating...',
       generate: 'Generate',
       copyAll: 'Copy All',
