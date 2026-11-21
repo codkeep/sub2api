@@ -4989,7 +4989,6 @@ const compositeRouteForm = reactive<CompositeRouteFormState>({
 function groupSkillsForm(group?: AdminGroup): GroupSkillsForm {
   const rules = Object.entries(group?.model_skill_ids ?? {}).map(([model, skillIds]) => ({
     models: [model],
-    modelInput: "",
     skillIds: [...skillIds],
   }));
   return {
@@ -6598,10 +6597,13 @@ const handleUpdateGroup = async () => {
           i18n: editForm.i18n,
         }
       : payload;
-    await adminAPI.groups.update(editingGroup.value.id, requestData);
+    const updatedGroup = await adminAPI.groups.update(editingGroup.value.id, requestData);
+    groups.value = groups.value.map((group) =>
+      group.id === updatedGroup.id ? updatedGroup : group,
+    );
     appStore.showSuccess(t("admin.groups.groupUpdated"));
     closeEditModal();
-    loadGroups();
+    await loadGroups();
   } catch (error: any) {
     appStore.showError(
       extractApiErrorMessage(error, t("admin.groups.failedToUpdate")),
