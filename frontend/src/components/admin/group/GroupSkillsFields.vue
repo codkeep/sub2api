@@ -16,57 +16,75 @@
     <div
       v-for="(rule, index) in visibleRules"
       :key="isSpecified ? index : 'all'"
-      :class="isSpecified ? 'space-y-2 rounded-lg border p-3 dark:border-gray-700' : 'space-y-2'"
+      :class="isSpecified
+        ? 'rounded-lg border border-gray-200 bg-gray-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/40'
+        : 'space-y-2'"
     >
-      <div v-if="isSpecified" class="flex items-end gap-2">
-        <label class="min-w-0 flex-1">
+      <div
+        :class="isSpecified
+          ? 'grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.8fr)_minmax(260px,1fr)_auto]'
+          : 'space-y-2'"
+      >
+        <label v-if="isSpecified" class="block min-w-0">
           <span class="input-label">{{ t('admin.groups.modelSkills.modelName') }}</span>
           <input
             :value="rule.model"
             type="text"
-            class="input"
+            class="input w-full"
             :placeholder="t('admin.groups.modelSkills.modelPlaceholder')"
             @input="updateName(index, $event)"
           />
+          <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+            {{ t('admin.groups.modelSkills.modelExactMatch') }}
+          </span>
         </label>
+
+        <div class="min-w-0">
+          <span v-if="isSpecified" class="input-label">{{ t('admin.groups.modelSkills.skillsForModel') }}</span>
+          <div v-if="rule.skillIds.length" class="mb-2 flex min-h-8 flex-wrap items-center gap-1.5">
+            <span
+              v-for="skillId in rule.skillIds"
+              :key="skillId"
+              class="inline-flex max-w-full items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
+            >
+              <span class="truncate">{{ skillName(skillId) }}</span>
+              <button
+                type="button"
+                class="shrink-0 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200"
+                :aria-label="t('admin.groups.modelSkills.removeSkill', { name: skillName(skillId) })"
+                @click="setSkills(index, rule.skillIds.filter((id) => id !== skillId))"
+              >
+                <Icon name="x" size="xs" />
+              </button>
+            </span>
+          </div>
+          <div v-else-if="isSpecified" class="mb-2 min-h-8 text-xs leading-8 text-gray-400 dark:text-gray-500">
+            {{ t('admin.groups.modelSkills.noSkillsSelected') }}
+          </div>
+          <select
+            class="input w-full"
+            :aria-label="t('admin.groups.modelSkills.selectPlaceholder')"
+            :disabled="loading || !skills.length"
+            @change="addSkill(index, rule.skillIds, $event)"
+          >
+            <option value="">{{ t('admin.groups.modelSkills.selectPlaceholder') }}</option>
+            <option v-for="skill in skills" :key="skill.id" :value="skill.id" :disabled="rule.skillIds.includes(skill.id)">
+              {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
+            </option>
+          </select>
+        </div>
+
         <button
+          v-if="isSpecified"
           type="button"
-          class="btn btn-secondary"
+          class="mt-6 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-red-200 text-red-500 transition hover:bg-red-50 hover:text-red-600 dark:border-red-900/60 dark:hover:bg-red-950/30"
           :aria-label="t('admin.groups.modelSkills.removeModel')"
           :title="t('admin.groups.modelSkills.removeModel')"
           @click="removeModel(index)"
         >
-          <Icon name="x" size="sm" />
+          <Icon name="trash" size="sm" />
         </button>
       </div>
-      <div v-if="rule.skillIds.length" class="flex flex-wrap gap-1.5">
-        <span
-          v-for="skillId in rule.skillIds"
-          :key="skillId"
-          class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
-        >
-          {{ skillName(skillId) }}
-          <button
-            type="button"
-            class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200"
-            :aria-label="t('admin.groups.modelSkills.removeSkill', { name: skillName(skillId) })"
-            @click="setSkills(index, rule.skillIds.filter((id) => id !== skillId))"
-          >
-            <Icon name="x" size="xs" />
-          </button>
-        </span>
-      </div>
-      <select
-        class="input"
-        :aria-label="t('admin.groups.modelSkills.selectPlaceholder')"
-        :disabled="loading || !skills.length"
-        @change="addSkill(index, rule.skillIds, $event)"
-      >
-        <option value="">{{ t('admin.groups.modelSkills.selectPlaceholder') }}</option>
-        <option v-for="skill in skills" :key="skill.id" :value="skill.id" :disabled="rule.skillIds.includes(skill.id)">
-          {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
-        </option>
-      </select>
     </div>
     <p v-if="loading || !skills.length" class="text-xs text-gray-500 dark:text-gray-400">
       {{ t(loading ? 'admin.groups.modelSkills.loading' : 'admin.groups.modelSkills.empty') }}
