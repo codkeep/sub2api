@@ -4992,9 +4992,22 @@ function groupSkillsForm(group?: AdminGroup): GroupSkillsForm {
   if (defaultSkillIds.length > 0) {
     rules.push({ models: ["*"], skillIds: defaultSkillIds });
   }
+
+  // The API stores model mappings as model -> Skill IDs, so the original
+  // multi-model row cannot be persisted directly. Merge models with the same
+  // Skill selection when rebuilding the editor to keep the form compact.
+  const groupedRules = new Map<string, GroupSkillsForm['rules'][number]>();
   for (const [model, skillIds] of Object.entries(group?.model_skill_ids ?? {})) {
-    rules.push({ models: [model], skillIds: [...skillIds] });
+    const copiedSkillIds = [...skillIds];
+    const key = JSON.stringify(copiedSkillIds);
+    const existing = groupedRules.get(key);
+    if (existing) {
+      existing.models.push(model);
+    } else {
+      groupedRules.set(key, { models: [model], skillIds: copiedSkillIds });
+    }
   }
+  rules.push(...groupedRules.values());
   return { rules };
 }
 
