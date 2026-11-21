@@ -25,6 +25,7 @@
             </label>
             <ModelTagInput
               :models="rule.models"
+              platform="openai"
               :placeholder="t('admin.groups.modelSkills.modelPlaceholder')"
               class="mt-1"
               @update:models="updateModels(index, $event)"
@@ -58,17 +59,15 @@
             <div v-else class="mb-2 mt-1 min-h-8 text-xs leading-8 text-gray-400 dark:text-gray-500">
               {{ t('admin.groups.modelSkills.noSkillsSelected') }}
             </div>
-            <select
-              class="input w-full"
+            <Select
+              :model-value="null"
+              :options="skillOptions(rule.skillIds)"
+              :placeholder="t('admin.groups.modelSkills.selectPlaceholder')"
               :aria-label="t('admin.groups.modelSkills.selectPlaceholder')"
               :disabled="loading || !skills.length"
-              @change="addSkill(index, rule.skillIds, $event)"
-            >
-              <option value="">{{ t('admin.groups.modelSkills.selectPlaceholder') }}</option>
-              <option v-for="skill in skills" :key="skill.id" :value="skill.id" :disabled="rule.skillIds.includes(skill.id)">
-                {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
-              </option>
-            </select>
+              class="mt-1 w-full"
+              @update:model-value="addSkill(index, rule.skillIds, $event)"
+            />
           </div>
 
           <button
@@ -106,6 +105,7 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ModelSkill } from '@/api/admin/settings'
 import Icon from '@/components/icons/Icon.vue'
+import Select from '@/components/common/Select.vue'
 import ModelTagInput from '@/components/admin/channel/ModelTagInput.vue'
 
 const props = defineProps<{ skills: ModelSkill[]; loading: boolean }>()
@@ -150,11 +150,18 @@ function setSkills(index: number, skillIds: string[]) {
   updateRule(index, { skillIds })
 }
 
-function addSkill(index: number, skillIds: string[], event: Event) {
-  const select = event.target as HTMLSelectElement
-  if (select.value && !skillIds.includes(select.value)) {
-    setSkills(index, [...skillIds, select.value])
+function skillOptions(skillIds: string[]) {
+  return props.skills.map(skill => ({
+    value: skill.id,
+    label: `${skill.name}${skill.filename ? ` · ${skill.filename}` : ''}`,
+    disabled: skillIds.includes(skill.id),
+  }))
+}
+
+function addSkill(index: number, skillIds: string[], value: string | number | boolean | null) {
+  const skillId = typeof value === 'string' ? value : ''
+  if (skillId && !skillIds.includes(skillId)) {
+    setSkills(index, [...skillIds, skillId])
   }
-  select.value = ''
 }
 </script>
