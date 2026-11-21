@@ -1127,6 +1127,11 @@ export interface ModelSkill {
   updated_at: string
 }
 
+export interface ModelSkillRuleConfig {
+  default_skill_ids: string[]
+  model_skill_ids: Record<string, string[]>
+}
+
 export async function listModelSkills(): Promise<ModelSkill[]> {
   const { data } = await apiClient.get<ModelSkill[]>('/admin/settings/model-skills')
   return data
@@ -1154,6 +1159,16 @@ export async function updateModelSkill(id: string, input: { name: string; filena
 
 export async function deleteModelSkill(id: string): Promise<void> {
   await apiClient.delete(`/admin/settings/model-skills/${id}`)
+}
+
+export async function getGlobalModelSkillRules(): Promise<ModelSkillRuleConfig> {
+  const { data } = await apiClient.get<ModelSkillRuleConfig>('/admin/settings/global-model-skills')
+  return data
+}
+
+export async function updateGlobalModelSkillRules(input: ModelSkillRuleConfig): Promise<ModelSkillRuleConfig> {
+  const { data } = await apiClient.put<ModelSkillRuleConfig>('/admin/settings/global-model-skills', input)
+  return data
 }
 
 /**

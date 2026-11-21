@@ -6832,6 +6832,29 @@
             </div>
           </div>
 
+          <!-- Global Model Skills -->
+          <div class="card">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t("admin.settings.globalModelSkills.title") }}</h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t("admin.settings.globalModelSkills.description") }}</p>
+            </div>
+            <div class="space-y-4 p-6">
+              <GroupSkillsFields
+                v-model="globalModelSkillForm"
+                :skills="modelSkills"
+                :loading="modelSkillsLoading"
+                :title="t('admin.settings.globalModelSkills.editorTitle')"
+                :hint="t('admin.settings.globalModelSkills.editorHint')"
+                :add-button-text="t('admin.settings.globalModelSkills.add')"
+              />
+              <div class="flex justify-end border-t border-gray-100 pt-4 dark:border-dark-700">
+                <button type="button" class="btn btn-primary" :disabled="globalModelSkillLoading || globalModelSkillSaving" @click="saveGlobalModelSkillRules">
+                  {{ globalModelSkillSaving ? t('admin.settings.globalModelSkills.saving') : t('admin.settings.globalModelSkills.save') }}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <BaseDialog :show="modelSkillModalOpen" :title="modelSkillEditing ? t('admin.settings.modelSkills.editTitle') : t('admin.settings.modelSkills.createTitle')" width="wide" @close="closeModelSkillModal">
             <div class="space-y-4">
               <div>
@@ -9128,6 +9151,8 @@ import {
   uploadModelSkill,
   updateModelSkill,
   deleteModelSkill,
+  getGlobalModelSkillRules,
+  updateGlobalModelSkillRules,
 } from "@/api/admin/settings";
 import type {
   AuthSourceDefaultsState,
@@ -9142,6 +9167,7 @@ import type {
   WebSearchProviderConfig,
   WebSearchTestResult,
   ModelSkill,
+  ModelSkillRuleConfig,
 } from "@/api/admin/settings";
 import type {
   AdminGroup,
@@ -9152,6 +9178,8 @@ import type {
 import type { ProviderInstance } from "@/types/payment";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import ErrorPassthroughRulesModal from "@/components/admin/ErrorPassthroughRulesModal.vue";
+import GroupSkillsFields from "@/components/admin/group/GroupSkillsFields.vue";
+import type { GroupSkillsForm } from "@/components/admin/group/GroupSkillsFields.vue";
 import Icon from "@/components/icons/Icon.vue";
 import Select, { type SelectOption } from "@/components/common/Select.vue";
 import {
@@ -9249,6 +9277,9 @@ const siteLogoUploading = ref(false);
 const siteLogoUploadError = ref("");
 const modelSkills = ref<ModelSkill[]>([]);
 const modelSkillsLoading = ref(false);
+const globalModelSkillForm = ref<GroupSkillsForm>({ rules: [] });
+const globalModelSkillLoading = ref(false);
+const globalModelSkillSaving = ref(false);
 const modelSkillSaving = ref(false);
 const modelSkillDraft = reactive({ id: "", name: "", content: "", filename: "" });
 const modelSkillEditing = ref(false);
@@ -11224,6 +11255,99 @@ async function handleSiteLogoUpload(event: Event): Promise<void> {
     );
   } finally {
     siteLogoUploading.value = false;
+  }
+}
+
+function globalModelSkillFormFromConfig(config?: ModelSkillRuleConfig): GroupSkillsForm {
+  const rules: GroupSkillsForm['rules'] = [];
+  const defaultSkillIds = [...(config?.default_skill_ids ?? [])];
+  if (defaultSkillIds.length > 0) {
+    rules.push({ models: ['*'], skillIds: defaultSkillIds });
+  }
+
+  const groupedRules = new Map<string, GroupSkillsForm['rules'][number]>();
+  for (const [model, skillIds] of Object.entries(config?.model_skill_ids ?? {})) {
+    const copiedSkillIds = [...skillIds];
+    const key = JSON.stringify(copiedSkillIds);
+    const existing = groupedRules.get(key);
+    if (existing) {
+      existing.models.push(model);
+    } else {
+      groupedRules.set(key, { models: [model], skillIds: copiedSkillIds });
+    }
+  }
+  rules.push(...groupedRules.values());
+  return { rules };
+}
+
+function globalModelSkillRulesToConfig(form: GroupSkillsForm): ModelSkillRuleConfig | null {
+  const defaultSkillIds: string[] = [];
+  const modelSkillIDs = new Map<string, string[]>();
+  let hasWildcard = false;
+
+  for (const rule of form.rules) {
+    if (rule.models.length === 0) {
+      appStore.showError(t('admin.groups.modelSkills.modelRequired'));
+      return null;
+    }
+    if (rule.skillIds.length === 0) {
+      const model = rule.models[0]?.trim() || '*';
+      appStore.showError(t('admin.groups.modelSkills.skillsRequired', { model }));
+      return null;
+    }
+    for (const rawModel of rule.models) {
+      const model = rawModel.trim();
+      if (!model) {
+        appStore.showError(t('admin.groups.modelSkills.modelRequired'));
+        return null;
+      }
+      if (model === '*') {
+        if (hasWildcard) {
+          appStore.showError(t('admin.groups.modelSkills.duplicateModel', { model }));
+          return null;
+        }
+        hasWildcard = true;
+        defaultSkillIds.push(...rule.skillIds);
+        continue;
+      }
+      if (modelSkillIDs.has(model)) {
+        appStore.showError(t('admin.groups.modelSkills.duplicateModel', { model }));
+        return null;
+      }
+      modelSkillIDs.set(model, [...rule.skillIds]);
+    }
+  }
+
+  return {
+    default_skill_ids: [...new Set(defaultSkillIds)],
+    model_skill_ids: Object.fromEntries(modelSkillIDs),
+  };
+}
+
+async function loadGlobalModelSkillRules(): Promise<void> {
+  globalModelSkillLoading.value = true;
+  try {
+    const config = await getGlobalModelSkillRules();
+    globalModelSkillForm.value = globalModelSkillFormFromConfig(config);
+  } catch (error) {
+    appStore.showError(extractApiErrorMessage(error, t('admin.settings.globalModelSkills.loadError')));
+  } finally {
+    globalModelSkillLoading.value = false;
+  }
+}
+
+async function saveGlobalModelSkillRules(): Promise<void> {
+  const config = globalModelSkillRulesToConfig(globalModelSkillForm.value);
+  if (!config) return;
+  globalModelSkillSaving.value = true;
+  try {
+    const saved = await updateGlobalModelSkillRules(config);
+    globalModelSkillForm.value = globalModelSkillFormFromConfig(saved);
+    appStore.showSuccess(t('admin.settings.globalModelSkills.saved'));
+  } catch (error) {
+    appStore.showError(extractApiErrorMessage(error, t('admin.settings.globalModelSkills.saveError')));
+  } finally {
+    globalModelSkillSaving.value = false;
   }
 }
 
@@ -13256,6 +13380,7 @@ async function handleDeleteProvider() {
 onMounted(() => {
   loadSettings();
   loadModelSkills();
+  loadGlobalModelSkillRules();
   loadSubscriptionGroups();
   loadAdminApiKey();
   loadUpstreamBillingProbeSettings();

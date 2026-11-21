@@ -11,7 +11,17 @@ import (
 	"time"
 )
 
-const SettingKeyModelSkills = "model_skills"
+const (
+	SettingKeyModelSkills           = "model_skills"
+	SettingKeyGlobalModelSkillRules = "global_model_skill_rules"
+)
+
+// ModelSkillRuleConfig stores the model-to-Skill rules used by global settings
+// and groups. A model named "*" matches all requested models.
+type ModelSkillRuleConfig struct {
+	DefaultSkillIDs []string            `json:"default_skill_ids"`
+	ModelSkillIDs   map[string][]string `json:"model_skill_ids"`
+}
 
 // ModelSkill 是管理员维护的可复用模型技能说明。正文按 UTF-8 文本保存，
 // 分组只保存 ID，便于修改技能内容后所有引用自动生效。
@@ -59,6 +69,75 @@ func (s *SettingService) saveModelSkills(ctx context.Context, skills []ModelSkil
 		return err
 	}
 	return nil
+}
+
+func normalizeModelSkillIDs(ids []string) []string {
+	seen := make(map[string]struct{}, len(ids))
+	out := make([]string, 0, len(ids))
+	for _, id := range ids {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		if _, exists := seen[id]; exists {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
+func normalizeModelSkillRuleConfig(input ModelSkillRuleConfig) (ModelSkillRuleConfig, error) {
+	modelSkillIDs, err := normalizeGroupModelSkillIDs(input.ModelSkillIDs)
+	if err != nil {
+		return ModelSkillRuleConfig{}, err
+	}
+	return ModelSkillRuleConfig{
+		DefaultSkillIDs: normalizeModelSkillIDs(input.DefaultSkillIDs),
+		ModelSkillIDs:   modelSkillIDs,
+	}, nil
+}
+
+// GetGlobalModelSkillRules returns the rules configured under System Settings.
+func (s *SettingService) GetGlobalModelSkillRules(ctx context.Context) (ModelSkillRuleConfig, error) {
+	if s == nil || s.settingRepo == nil {
+		return ModelSkillRuleConfig{ModelSkillIDs: map[string][]string{}}, nil
+	}
+	raw, err := s.settingRepo.GetValue(ctx, SettingKeyGlobalModelSkillRules)
+	if err != nil {
+		if errors.Is(err, ErrSettingNotFound) {
+			return ModelSkillRuleConfig{ModelSkillIDs: map[string][]string{}}, nil
+		}
+		return ModelSkillRuleConfig{}, err
+	}
+	if strings.TrimSpace(raw) == "" {
+		return ModelSkillRuleConfig{ModelSkillIDs: map[string][]string{}}, nil
+	}
+	var config ModelSkillRuleConfig
+	if err := json.Unmarshal([]byte(raw), &config); err != nil {
+		return ModelSkillRuleConfig{}, fmt.Errorf("decode global model skill rules: %w", err)
+	}
+	return normalizeModelSkillRuleConfig(config)
+}
+
+// UpdateGlobalModelSkillRules replaces the global model-to-Skill rules.
+func (s *SettingService) UpdateGlobalModelSkillRules(ctx context.Context, input ModelSkillRuleConfig) (ModelSkillRuleConfig, error) {
+	config, err := normalizeModelSkillRuleConfig(input)
+	if err != nil {
+		return ModelSkillRuleConfig{}, err
+	}
+	if s == nil || s.settingRepo == nil {
+		return config, nil
+	}
+	data, err := json.Marshal(config)
+	if err != nil {
+		return ModelSkillRuleConfig{}, err
+	}
+	if err := s.settingRepo.Set(ctx, SettingKeyGlobalModelSkillRules, string(data)); err != nil {
+		return ModelSkillRuleConfig{}, err
+	}
+	return config, nil
 }
 
 func newModelSkillID() (string, error) {

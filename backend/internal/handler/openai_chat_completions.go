@@ -75,7 +75,7 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 		return
 	}
 	reqModel := modelResult.String()
-	if apiKey.Group != nil {
+	if h.gatewayService != nil {
 		if enrichedBody, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "chat_completions", reqModel, body); skillErr != nil {
 			reqLog.Warn("openai.chat_completions_default_skills_injection_failed", zap.Error(skillErr))
 		} else {

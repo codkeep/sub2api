@@ -478,7 +478,7 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 		return
 	}
 	reqModel := modelResult.String()
-	if apiKey.Group != nil {
+	if h.gatewayService != nil {
 		if enrichedBody, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", reqModel, body); skillErr != nil {
 			reqLog.Warn("openai.default_skills_injection_failed", zap.Error(skillErr))
 		} else {
@@ -1251,7 +1251,7 @@ func (h *OpenAIGatewayHandler) Messages(c *gin.Context) {
 		return
 	}
 	reqModel := modelResult.String()
-	if apiKey.Group != nil {
+	if h.gatewayService != nil {
 		if enrichedBody, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "anthropic", reqModel, body); skillErr != nil {
 			reqLog.Warn("openai.messages_default_skills_injection_failed", zap.Error(skillErr))
 		} else {
@@ -2617,6 +2617,7 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 		closeOpenAIClientWS(wsConn, coderws.StatusPolicyViolation, "model is required in first response.create payload")
 		return
 	}
+	var skillsInjected atomic.Bool
 	// 分组级模型白名单：首帧校验客户端模型，不通过则关闭连接并标记运维原因。
 	// 必须在合成路由解析和上游模型映射之前执行。
 	// 与 HTTP 准入一致：帧内重复 model 键/大小写变体可能被上游按末值绑定，
@@ -2627,11 +2628,12 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 		closeOpenAIClientWS(wsConn, coderws.StatusPolicyViolation, fmt.Sprintf("Model %q is not available for this group", blocked))
 		return
 	}
-	if apiKey.Group != nil {
+	if h.gatewayService != nil {
 		if enrichedMessage, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", reqModel, firstMessage); skillErr != nil {
 			reqLog.Warn("openai.websocket_default_skills_injection_failed", zap.Error(skillErr))
 		} else {
 			firstMessage = enrichedMessage
+			skillsInjected.Store(true)
 		}
 	}
 	// Keep the client model in the frame for admission, response identity and usage.
@@ -3118,6 +3120,9 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 				return nil
 			},
 			ApplyGroupSkills: func(payload []byte, originalModel string) []byte {
+				if skillsInjected.Load() {
+					return payload
+				}
 				if strings.TrimSpace(originalModel) == "" {
 					originalModel = reqModel
 				}
@@ -3126,6 +3131,7 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 					reqLog.Warn("openai.websocket_default_skills_injection_failed", zap.Error(err))
 					return payload
 				}
+				skillsInjected.Store(true)
 				return enriched
 			},
 			MapRequestModel: func(turn int, originalModel string) (string, error) {

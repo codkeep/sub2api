@@ -774,6 +774,18 @@ export default {
         loadError: '读取 Skills 失败',
         saveError: '保存 Skill 失败'
       },
+      globalModelSkills: {
+        title: '全局模型 Skills',
+        description: '为所有分组和模型配置全局生效的 Skills，按模型规则匹配后注入请求。',
+        editorTitle: '模型匹配规则',
+        editorHint: '使用 * 匹配全部模型，也可以填写具体模型名称。相同 Skill 会合并显示。',
+        add: '添加模型 Skill',
+        save: '保存全局配置',
+        saving: '保存中...',
+        saved: '全局模型 Skills 配置已保存',
+        loadError: '读取全局模型 Skills 配置失败',
+        saveError: '保存全局模型 Skills 配置失败'
+      },
       purchase: {
         title: '充值/订阅页面',
         description: '在侧边栏展示“充值/订阅”入口，并在页面内通过 iframe 打开指定链接',

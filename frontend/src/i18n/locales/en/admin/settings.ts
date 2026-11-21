@@ -779,6 +779,18 @@ export default {
         loadError: 'Failed to load Skills',
         saveError: 'Failed to save Skill'
       },
+      globalModelSkills: {
+        title: 'Global Model Skills',
+        description: 'Configure Skills that apply globally after matching the requested model.',
+        editorTitle: 'Model matching rules',
+        editorHint: 'Use * to match every model or enter specific model names. Models with the same Skills are grouped together.',
+        add: 'Add model Skill',
+        save: 'Save global configuration',
+        saving: 'Saving...',
+        saved: 'Global model Skills configuration saved',
+        loadError: 'Failed to load global model Skills configuration',
+        saveError: 'Failed to save global model Skills configuration'
+      },
       purchase: {
         title: 'Recharge / Subscription Page',
         description: 'Show a "Recharge / Subscription" entry in the sidebar and open the configured URL in an iframe',

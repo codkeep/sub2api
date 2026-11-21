@@ -96,7 +96,7 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 		h.responsesErrorResponse(c, http.StatusBadRequest, "invalid_request_error", invalidStreamFieldTypeMessage)
 		return
 	}
-	if h.settingService != nil && apiKey.Group != nil {
+	if h.settingService != nil {
 		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", reqModel, body); skillErr != nil {
 			reqLog.Warn("gateway.responses_default_skills_injection_failed", zap.Error(skillErr))
 		} else {

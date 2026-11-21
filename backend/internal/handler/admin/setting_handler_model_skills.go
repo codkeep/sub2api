@@ -100,3 +100,34 @@ func (h *SettingHandler) DeleteModelSkill(c *gin.Context) {
 	}
 	response.Success(c, gin.H{"message": "SKILL 已删除"})
 }
+
+type modelSkillRuleConfigRequest struct {
+	DefaultSkillIDs []string            `json:"default_skill_ids"`
+	ModelSkillIDs   map[string][]string `json:"model_skill_ids"`
+}
+
+func (h *SettingHandler) GetGlobalModelSkillRules(c *gin.Context) {
+	rules, err := h.settingService.GetGlobalModelSkillRules(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, rules)
+}
+
+func (h *SettingHandler) UpdateGlobalModelSkillRules(c *gin.Context) {
+	var req modelSkillRuleConfigRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "全局模型 Skills 请求格式无效")
+		return
+	}
+	rules, err := h.settingService.UpdateGlobalModelSkillRules(c.Request.Context(), service.ModelSkillRuleConfig{
+		DefaultSkillIDs: req.DefaultSkillIDs,
+		ModelSkillIDs:   req.ModelSkillIDs,
+	})
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	response.Success(c, rules)
+}

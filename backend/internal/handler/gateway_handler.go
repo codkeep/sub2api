@@ -169,7 +169,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
 		return
 	}
-	if h.settingService != nil && apiKey.Group != nil {
+	if h.settingService != nil {
 		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformAnthropic, parsedReq.Model, parsedReq.Body.Bytes()); skillErr != nil {
 			reqLog.Warn("gateway.default_skills_injection_failed", zap.Error(skillErr))
 		} else {
@@ -2199,7 +2199,7 @@ func (h *GatewayHandler) CountTokens(c *gin.Context) {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
 		return
 	}
-	if h.settingService != nil && apiKey.Group != nil {
+	if h.settingService != nil {
 		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformAnthropic, parsedReq.Model, parsedReq.Body.Bytes()); skillErr != nil {
 			reqLog.Warn("gateway.count_tokens_default_skills_injection_failed", zap.Error(skillErr))
 		} else {

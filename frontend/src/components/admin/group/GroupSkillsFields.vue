@@ -1,14 +1,14 @@
 <template>
   <fieldset class="space-y-3 border-t pt-4">
-    <legend class="sr-only">{{ t('admin.groups.modelSkills.title') }}</legend>
+    <legend class="sr-only">{{ props.title || t('admin.groups.modelSkills.title') }}</legend>
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="min-w-0 flex-1">
-        <p class="input-label">{{ t('admin.groups.modelSkills.title') }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.modelSkills.hint') }}</p>
+        <p class="input-label">{{ props.title || t('admin.groups.modelSkills.title') }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ props.hint || t('admin.groups.modelSkills.hint') }}</p>
       </div>
       <button v-if="!editorOpen" type="button" class="btn btn-secondary shrink-0 whitespace-nowrap" @click="addRule">
         <Icon name="plus" size="sm" class="mr-1" />
-        {{ t('admin.groups.modelSkills.addModelSkill') }}
+        {{ props.addButtonText || t('admin.groups.modelSkills.addModelSkill') }}
       </button>
     </div>
 
@@ -84,7 +84,7 @@
 
       <button type="button" class="btn btn-secondary btn-sm" @click="addRule">
         <Icon name="plus" size="sm" class="mr-1" />
-        {{ t('admin.groups.modelSkills.addModelSkill') }}
+        {{ props.addButtonText || t('admin.groups.modelSkills.addModelSkill') }}
       </button>
     </div>
 
@@ -108,7 +108,7 @@ import Icon from '@/components/icons/Icon.vue'
 import Select from '@/components/common/Select.vue'
 import ModelTagInput from '@/components/admin/channel/ModelTagInput.vue'
 
-const props = defineProps<{ skills: ModelSkill[]; loading: boolean }>()
+const props = defineProps<{ skills: ModelSkill[]; loading: boolean; title?: string; hint?: string; addButtonText?: string }>()
 const form = defineModel<GroupSkillsForm>({ required: true })
 const { t } = useI18n()
 const editorOpen = ref(form.value.rules.length > 0)

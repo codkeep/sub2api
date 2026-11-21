@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -48,20 +49,54 @@ func cloneGroupModelSkillIDs(input map[string][]string) map[string][]string {
 	return out
 }
 
-// ApplyGroupDefaultSkills 将分组为客户端请求模型配置的 Skills 合并进系统级指令。
-// Skills 只保存 ID，正文从系统设置中读取，因此修改 Skill 后所有引用它的分组会自动生效。
+const modelSkillsInjectionMarker = "<!-- sub2api:model-skills:v1 -->"
+
+func resolveModelSkillIDs(defaultSkillIDs []string, modelSkillIDs map[string][]string, requestedModel string) []string {
+	requestedModel = strings.TrimSpace(requestedModel)
+	if ids, ok := modelSkillIDs[requestedModel]; ok {
+		return ids
+	}
+	if ids, ok := modelSkillIDs["*"]; ok {
+		return ids
+	}
+	return defaultSkillIDs
+}
+
+func appendUniqueModelSkillIDs(target []string, ids ...string) []string {
+	seen := make(map[string]struct{}, len(target)+len(ids))
+	for _, id := range target {
+		seen[strings.TrimSpace(id)] = struct{}{}
+	}
+	for _, id := range ids {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		if _, exists := seen[id]; exists {
+			continue
+		}
+		seen[id] = struct{}{}
+		target = append(target, id)
+	}
+	return target
+}
+
+// ApplyGroupDefaultSkills 将全局和分组为客户端请求模型配置的 Skills 合并进系统级指令。
+// Skills 只保存 ID，正文从系统设置中读取，因此修改 Skill 后所有引用它的配置会自动生效。
 // protocol 支持 anthropic、chat_completions、responses 和 gemini 四种入口格式。
 func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Group, protocol, requestedModel string, body []byte) ([]byte, error) {
-	if s == nil || group == nil || len(body) == 0 {
+	if s == nil || len(body) == 0 || bytes.Contains(body, []byte(modelSkillsInjectionMarker)) {
 		return body, nil
 	}
 
-	skillIDs := group.DefaultSkillIDs
-	if len(group.ModelSkillIDs) > 0 {
-		modelSkillIDs, matched := group.ModelSkillIDs[strings.TrimSpace(requestedModel)]
-		if matched {
-			skillIDs = modelSkillIDs
-		}
+	globalRules, err := s.GetGlobalModelSkillRules(ctx)
+	if err != nil {
+		return body, fmt.Errorf("load global model skill rules: %w", err)
+	}
+
+	skillIDs := appendUniqueModelSkillIDs(nil, resolveModelSkillIDs(globalRules.DefaultSkillIDs, globalRules.ModelSkillIDs, requestedModel)...)
+	if group != nil {
+		skillIDs = appendUniqueModelSkillIDs(skillIDs, resolveModelSkillIDs(group.DefaultSkillIDs, group.ModelSkillIDs, requestedModel)...)
 	}
 	if len(skillIDs) == 0 {
 		return body, nil
@@ -83,7 +118,8 @@ func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Gro
 			continue
 		}
 		if prompt.Len() == 0 {
-			prompt.WriteString("以下是当前分组启用的默认 Skills。请将它们作为本次对话的工作规范，并在整个请求中遵循：\n\n")
+			prompt.WriteString(modelSkillsInjectionMarker)
+			prompt.WriteString("\n以下是当前请求启用的默认 Skills。请将它们作为本次对话的工作规范，并在整个请求中遵循：\n\n")
 		}
 		prompt.WriteString("## ")
 		prompt.WriteString(strings.TrimSpace(skill.Name))
