@@ -25,19 +25,38 @@
           ? 'grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.8fr)_minmax(260px,1fr)_auto]'
           : 'space-y-2'"
       >
-        <label v-if="isSpecified" class="block min-w-0">
+        <div v-if="isSpecified" class="block min-w-0">
           <span class="input-label">{{ t('admin.groups.modelSkills.modelName') }}</span>
-          <input
-            :value="rule.model"
-            type="text"
-            class="input w-full"
-            :placeholder="t('admin.groups.modelSkills.modelPlaceholder')"
-            @input="updateName(index, $event)"
-          />
+          <div class="flex min-h-10 flex-wrap items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2 py-1 focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500 dark:border-gray-600 dark:bg-gray-900">
+            <span
+              v-for="model in rule.models"
+              :key="model"
+              class="inline-flex max-w-full items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
+            >
+              <span class="truncate">{{ model }}</span>
+              <button
+                type="button"
+                class="shrink-0 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200"
+                :aria-label="t('admin.groups.modelSkills.removeModelTag', { model })"
+                @click="removeModelTag(index, model)"
+              >
+                <Icon name="x" size="xs" />
+              </button>
+            </span>
+            <input
+              :value="rule.modelInput"
+              type="text"
+              class="min-w-[12rem] flex-1 border-0 bg-transparent px-1 py-1 text-sm outline-none focus:ring-0 dark:text-white"
+              :placeholder="t('admin.groups.modelSkills.modelPlaceholder')"
+              @input="updateModelInput(index, $event)"
+              @keydown.enter.prevent="addModelTag(index)"
+              @keydown.backspace="removeLastModelTag(index)"
+            />
+          </div>
           <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
             {{ t('admin.groups.modelSkills.modelExactMatch') }}
           </span>
-        </label>
+        </div>
 
         <div class="min-w-0">
           <span v-if="isSpecified" class="input-label">{{ t('admin.groups.modelSkills.skillsForModel') }}</span>
@@ -100,7 +119,7 @@
 export interface GroupSkillsForm {
   scope: 'all' | 'specified'
   defaultSkillIds: string[]
-  rules: { model: string; skillIds: string[] }[]
+  rules: { models: string[]; modelInput: string; skillIds: string[] }[]
 }
 </script>
 
@@ -109,12 +128,14 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ModelSkill } from '@/api/admin/settings'
 import Icon from '@/components/icons/Icon.vue'
+import { useAppStore } from '@/stores/app'
 
 const props = defineProps<{ skills: ModelSkill[]; loading: boolean }>()
 const form = defineModel<GroupSkillsForm>({ required: true })
 const { t } = useI18n()
+const appStore = useAppStore()
 const isSpecified = computed(() => form.value.scope === 'specified')
-const visibleRules = computed(() => isSpecified.value ? form.value.rules : [{ model: '', skillIds: form.value.defaultSkillIds }])
+const visibleRules = computed(() => isSpecified.value ? form.value.rules : [{ models: [], modelInput: '', skillIds: form.value.defaultSkillIds }])
 
 function skillName(id: string) {
   return props.skills.find((skill) => skill.id === id)?.name ?? id
@@ -122,12 +143,12 @@ function skillName(id: string) {
 
 function changeScope(event: Event) {
   const scope = (event.target as HTMLSelectElement).value === 'specified' ? 'specified' : 'all'
-  const rules = scope === 'specified' && form.value.rules.length === 0 ? [{ model: '', skillIds: [] }] : form.value.rules
+  const rules = scope === 'specified' && form.value.rules.length === 0 ? [{ models: [], modelInput: '', skillIds: [] }] : form.value.rules
   form.value = { ...form.value, scope, rules }
 }
 
 function addModel() {
-  form.value = { ...form.value, rules: [...form.value.rules, { model: '', skillIds: [] }] }
+  form.value = { ...form.value, rules: [...form.value.rules, { models: [], modelInput: '', skillIds: [] }] }
 }
 
 function removeModel(index: number) {
@@ -139,8 +160,32 @@ function updateRule(index: number, changes: Partial<GroupSkillsForm['rules'][num
   form.value = { ...form.value, rules }
 }
 
-function updateName(index: number, event: Event) {
-  updateRule(index, { model: (event.target as HTMLInputElement).value })
+function updateModelInput(index: number, event: Event) {
+  updateRule(index, { modelInput: (event.target as HTMLInputElement).value })
+}
+
+function addModelTag(index: number) {
+  const rule = form.value.rules[index]
+  if (!rule) return
+  const model = rule.modelInput.trim()
+  if (!model) return
+  if (rule.models.includes(model)) {
+    appStore.showError(t('admin.groups.modelSkills.duplicateModelInRule', { model }))
+    return
+  }
+  updateRule(index, { models: [...rule.models, model], modelInput: '' })
+}
+
+function removeModelTag(index: number, model: string) {
+  const rule = form.value.rules[index]
+  if (!rule) return
+  updateRule(index, { models: rule.models.filter((item) => item !== model) })
+}
+
+function removeLastModelTag(index: number) {
+  const rule = form.value.rules[index]
+  if (!rule || rule.modelInput || !rule.models.length) return
+  updateRule(index, { models: rule.models.slice(0, -1) })
 }
 
 function setSkills(index: number, skillIds: string[]) {

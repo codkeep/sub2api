@@ -4987,7 +4987,11 @@ const compositeRouteForm = reactive<CompositeRouteFormState>({
   notes: "",
 });
 function groupSkillsForm(group?: AdminGroup): GroupSkillsForm {
-  const rules = Object.entries(group?.model_skill_ids ?? {}).map(([model, skillIds]) => ({ model, skillIds: [...skillIds] }));
+  const rules = Object.entries(group?.model_skill_ids ?? {}).map(([model, skillIds]) => ({
+    models: [model],
+    modelInput: "",
+    skillIds: [...skillIds],
+  }));
   return {
     scope: rules.length ? "specified" : "all",
     defaultSkillIds: [...(group?.default_skill_ids ?? [])],
@@ -5006,20 +5010,26 @@ function groupSkillsToAPI(form: GroupSkillsForm) {
       return null;
     }
     for (const rule of form.rules) {
-      const model = rule.model.trim();
-      if (!model) {
+      if (rule.models.length === 0) {
         appStore.showError(t("admin.groups.modelSkills.modelRequired"));
         return null;
       }
-      if (rules.has(model)) {
-        appStore.showError(t("admin.groups.modelSkills.duplicateModel", { model }));
-        return null;
+      for (const rawModel of rule.models) {
+        const model = rawModel.trim();
+        if (!model) {
+          appStore.showError(t("admin.groups.modelSkills.modelRequired"));
+          return null;
+        }
+        if (rules.has(model)) {
+          appStore.showError(t("admin.groups.modelSkills.duplicateModel", { model }));
+          return null;
+        }
+        if (rule.skillIds.length === 0) {
+          appStore.showError(t("admin.groups.modelSkills.skillsRequired", { model }));
+          return null;
+        }
+        rules.set(model, rule.skillIds);
       }
-      if (rule.skillIds.length === 0) {
-        appStore.showError(t("admin.groups.modelSkills.skillsRequired", { model }));
-        return null;
-      }
-      rules.set(model, rule.skillIds);
     }
   }
   return {
