@@ -1172,8 +1172,20 @@ export default {
         }
       },
       modelSkills: {
-        title: '默认模型 Skills',
-        hint: '选择后，该分组的模型请求会使用这些 Skills 配置。Skills 请先在系统设置中创建或上传。',
+        title: 'Skills',
+        hint: '选择 Skills 的生效范围。可在系统设置中创建或上传 Skills。',
+        scope: '生效范围',
+        allModels: '全部模型',
+        specifiedModels: '指定模型',
+        specifiedHint: '按客户端请求的模型名称精确匹配，未配置的模型不会使用此分组的 Skills。',
+        modelName: '模型名称',
+        modelPlaceholder: '输入客户端请求的模型名称',
+        addModel: '添加模型',
+        removeModel: '移除模型',
+        removeSkill: '移除 Skill：{name}',
+        modelRequired: '请添加模型并填写模型名称。',
+        duplicateModel: '不能重复配置模型「{model}」。',
+        skillsRequired: '请为模型「{model}」选择至少一个 Skill。',
         loading: '正在加载 Skills...',
         empty: '暂无可用 Skills，请先到系统设置创建或上传。',
         selectPlaceholder: '选择一个 Skill'

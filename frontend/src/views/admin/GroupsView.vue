@@ -896,37 +896,11 @@
           </div>
         </div>
 
-        <div class="border-t pt-4">
-          <label class="input-label">{{ t("admin.groups.modelSkills.title") }}</label>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.hint") }}</p>
-          <div v-if="modelSkillsLoading" class="mt-2 text-xs text-gray-500">{{ t("admin.groups.modelSkills.loading") }}</div>
-          <div v-else class="mt-2">
-            <div v-if="createForm.default_skill_ids.length > 0" class="mb-2 flex flex-wrap gap-1.5">
-              <span v-for="skillId in createForm.default_skill_ids" :key="skillId" class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
-                {{ modelSkills.find((skill) => skill.id === skillId)?.name || skillId }}
-                <button type="button" class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200" @click="createForm.default_skill_ids = createForm.default_skill_ids.filter((id) => id !== skillId)">
-                  <Icon name="x" size="xs" />
-                </button>
-              </span>
-            </div>
-            <select
-              class="input"
-              @change="
-                (e) => {
-                  const val = (e.target as HTMLSelectElement).value;
-                  if (val && !createForm.default_skill_ids.includes(val)) createForm.default_skill_ids.push(val);
-                  (e.target as HTMLSelectElement).value = '';
-                }
-              "
-            >
-              <option value="">{{ t("admin.groups.modelSkills.selectPlaceholder") }}</option>
-              <option v-for="skill in modelSkills" :key="skill.id" :value="skill.id" :disabled="createForm.default_skill_ids.includes(skill.id)">
-                {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
-              </option>
-            </select>
-            <p v-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</p>
-          </div>
-        </div>
+        <GroupSkillsFields
+          v-model="createGroupSkills"
+          :skills="modelSkills"
+          :loading="modelSkillsLoading"
+        />
 
         <!-- 图片生成计费配置 -->
         <div
@@ -2608,37 +2582,11 @@
           </div>
         </div>
 
-        <div class="border-t pt-4">
-          <label class="input-label">{{ t("admin.groups.modelSkills.title") }}</label>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.hint") }}</p>
-          <div v-if="modelSkillsLoading" class="mt-2 text-xs text-gray-500">{{ t("admin.groups.modelSkills.loading") }}</div>
-          <div v-else class="mt-2">
-            <div v-if="editForm.default_skill_ids.length > 0" class="mb-2 flex flex-wrap gap-1.5">
-              <span v-for="skillId in editForm.default_skill_ids" :key="skillId" class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
-                {{ modelSkills.find((skill) => skill.id === skillId)?.name || skillId }}
-                <button type="button" class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200" @click="editForm.default_skill_ids = editForm.default_skill_ids.filter((id) => id !== skillId)">
-                  <Icon name="x" size="xs" />
-                </button>
-              </span>
-            </div>
-            <select
-              class="input"
-              @change="
-                (e) => {
-                  const val = (e.target as HTMLSelectElement).value;
-                  if (val && !editForm.default_skill_ids.includes(val)) editForm.default_skill_ids.push(val);
-                  (e.target as HTMLSelectElement).value = '';
-                }
-              "
-            >
-              <option value="">{{ t("admin.groups.modelSkills.selectPlaceholder") }}</option>
-              <option v-for="skill in modelSkills" :key="skill.id" :value="skill.id" :disabled="editForm.default_skill_ids.includes(skill.id)">
-                {{ skill.name }}{{ skill.filename ? ` · ${skill.filename}` : '' }}
-              </option>
-            </select>
-            <p v-if="modelSkills.length === 0" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t("admin.groups.modelSkills.empty") }}</p>
-          </div>
-        </div>
+        <GroupSkillsFields
+          v-model="editGroupSkills"
+          :skills="modelSkills"
+          :loading="modelSkillsLoading"
+        />
 
         <!-- 图片生成计费配置 -->
         <div
@@ -4422,6 +4370,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { adminAPI } from "@/api/admin";
 import { listModelSkills, type ModelSkill } from "@/api/admin/settings";
+import GroupSkillsFields, { type GroupSkillsForm } from "@/components/admin/group/GroupSkillsFields.vue";
 import type {
   AdminGroup,
   CodexModelsManifestConfig,
@@ -5037,6 +4986,48 @@ const compositeRouteForm = reactive<CompositeRouteFormState>({
   enabled: true,
   notes: "",
 });
+function groupSkillsForm(group?: AdminGroup): GroupSkillsForm {
+  const rules = Object.entries(group?.model_skill_ids ?? {}).map(([model, skillIds]) => ({ model, skillIds: [...skillIds] }));
+  return {
+    scope: rules.length ? "specified" : "all",
+    defaultSkillIds: [...(group?.default_skill_ids ?? [])],
+    rules,
+  };
+}
+
+const createGroupSkills = ref(groupSkillsForm());
+const editGroupSkills = ref(groupSkillsForm());
+
+function groupSkillsToAPI(form: GroupSkillsForm) {
+  const rules = new Map<string, string[]>();
+  if (form.scope === "specified") {
+    if (form.rules.length === 0) {
+      appStore.showError(t("admin.groups.modelSkills.modelRequired"));
+      return null;
+    }
+    for (const rule of form.rules) {
+      const model = rule.model.trim();
+      if (!model) {
+        appStore.showError(t("admin.groups.modelSkills.modelRequired"));
+        return null;
+      }
+      if (rules.has(model)) {
+        appStore.showError(t("admin.groups.modelSkills.duplicateModel", { model }));
+        return null;
+      }
+      if (rule.skillIds.length === 0) {
+        appStore.showError(t("admin.groups.modelSkills.skillsRequired", { model }));
+        return null;
+      }
+      rules.set(model, rule.skillIds);
+    }
+  }
+  return {
+    default_skill_ids: form.defaultSkillIds,
+    model_skill_ids: Object.fromEntries(rules),
+  };
+}
+
 const modelSkills = ref<ModelSkill[]>([]);
 const modelSkillsLoading = ref(false);
 const loadModelSkills = async () => {
@@ -5129,7 +5120,6 @@ const createForm = reactive({
   force_openai_ultrafast: false,
   free_openai_fast: false,
   model_pricing: [] as PricingFormEntry[],
-  default_skill_ids: [] as string[],
   // 图片生成计费配置
   allow_image_generation: false,
   allow_batch_image_generation: false,
@@ -5500,7 +5490,6 @@ const editForm = reactive({
   force_openai_ultrafast: false,
   free_openai_fast: false,
   model_pricing: [] as PricingFormEntry[],
-  default_skill_ids: [] as string[],
   // 图片生成计费配置
   allow_image_generation: false,
   allow_batch_image_generation: false,
@@ -5987,6 +5976,7 @@ const closeCreateModal = () => {
   createForm.force_openai_ultrafast = false;
   createForm.free_openai_fast = false;
   createForm.model_pricing = [];
+  createGroupSkills.value = groupSkillsForm();
   createForm.web_search_price_per_call = null;
   createForm.search_price_per_1k = null;
   createForm.audio_realtime_price_per_min = null;
@@ -6095,6 +6085,8 @@ const handleCreateGroup = async () => {
     appStore.showError(t("admin.groups.modelAllowlist.emptySelectionError"));
     return;
   }
+  const skills = authStore.isSimpleMode ? {} : groupSkillsToAPI(createGroupSkills.value);
+  if (!skills) return;
   submitting.value = true;
   try {
     const {
@@ -6107,6 +6099,7 @@ const handleCreateGroup = async () => {
     // 构建请求数据，包含模型路由配置
     const requestData = {
       ...createGroupForm,
+      ...skills,
       force_openai_fast: normalizeGroupOpenAIFast(
         createForm.platform,
         createForm.force_openai_fast,
@@ -6269,7 +6262,7 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.force_openai_ultrafast = group.force_openai_ultrafast ?? false;
   editForm.free_openai_fast = group.free_openai_fast ?? false;
   editForm.model_pricing = groupPricingFromAPI(group.model_pricing);
-  editForm.default_skill_ids = [...(group.default_skill_ids ?? [])];
+  editGroupSkills.value = groupSkillsForm(group);
   editForm.allow_image_generation = group.allow_image_generation ?? false;
   editForm.allow_batch_image_generation =
     group.allow_batch_image_generation ?? false;
@@ -6406,7 +6399,7 @@ const closeEditModal = () => {
   editForm.force_openai_ultrafast = false;
   editForm.free_openai_fast = false;
   editForm.model_pricing = [];
-  editForm.default_skill_ids = [];
+  editGroupSkills.value = groupSkillsForm();
   editForm.web_search_price_per_call = null;
   editForm.search_price_per_1k = null;
   editForm.audio_realtime_price_per_min = null;
@@ -6456,11 +6449,14 @@ const handleUpdateGroup = async () => {
     return;
   }
 
+  const skills = authStore.isSimpleMode ? {} : groupSkillsToAPI(editGroupSkills.value);
+  if (!skills) return;
   submitting.value = true;
   try {
     // 转换 fallback_group_id: null -> 0 (后端使用 0 表示清除)
     const payload = {
       ...editForm,
+      ...skills,
       force_openai_fast: normalizeGroupOpenAIFast(
         editForm.platform,
         editForm.force_openai_fast,

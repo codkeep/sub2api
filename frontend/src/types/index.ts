@@ -684,6 +684,7 @@ export interface AdminGroup extends Group {
   messages_dispatch_model_config?: OpenAIMessagesDispatchModelConfig
   model_allowlist?: ModelAllowlist
   default_skill_ids?: string[]
+  model_skill_ids?: Record<string, string[]>
   codex_models_manifest_config?: CodexModelsManifestConfig
 
   // 分组排序
@@ -873,6 +874,7 @@ export interface CreateGroupRequest {
   supported_model_scopes?: string[]
   model_allowlist?: ModelAllowlist
   default_skill_ids?: string[]
+  model_skill_ids?: Record<string, string[]>
   codex_models_manifest_config?: CodexModelsManifestConfig
   allow_messages_dispatch?: boolean
   allow_live?: boolean
@@ -945,6 +947,7 @@ export interface UpdateGroupRequest {
   supported_model_scopes?: string[]
   model_allowlist?: ModelAllowlist
   default_skill_ids?: string[]
+  model_skill_ids?: Record<string, string[]>
   codex_models_manifest_config?: CodexModelsManifestConfig
   allow_messages_dispatch?: boolean
   allow_live?: boolean

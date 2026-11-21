@@ -170,7 +170,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		return
 	}
 	if h.settingService != nil && apiKey.Group != nil {
-		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformAnthropic, parsedReq.Body.Bytes()); skillErr != nil {
+		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformAnthropic, parsedReq.Model, parsedReq.Body.Bytes()); skillErr != nil {
 			reqLog.Warn("gateway.default_skills_injection_failed", zap.Error(skillErr))
 		} else {
 			parsedReq.ReplaceBody(enrichedBody)
@@ -2200,7 +2200,7 @@ func (h *GatewayHandler) CountTokens(c *gin.Context) {
 		return
 	}
 	if h.settingService != nil && apiKey.Group != nil {
-		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformAnthropic, parsedReq.Body.Bytes()); skillErr != nil {
+		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformAnthropic, parsedReq.Model, parsedReq.Body.Bytes()); skillErr != nil {
 			reqLog.Warn("gateway.count_tokens_default_skills_injection_failed", zap.Error(skillErr))
 		} else {
 			parsedReq.ReplaceBody(enrichedBody)

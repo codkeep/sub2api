@@ -594,6 +594,10 @@ func (s *OpenAIGatewayService) ProxyResponsesWebSocketFromClient(
 					return err
 				}
 			}
+			if turn > 1 && hooks != nil && hooks.ApplyGroupSkills != nil {
+				currentBridgePayload.payloadRaw = hooks.ApplyGroupSkills(currentBridgePayload.payloadRaw, currentBridgePayload.originalModel)
+				currentBridgePayload.payloadBytes = len(currentBridgePayload.payloadRaw)
+			}
 			if turnState != "" && c != nil && c.Request != nil {
 				c.Request.Header.Set(openAIWSTurnStateHeader, turnState)
 			}
@@ -1489,6 +1493,10 @@ func (s *OpenAIGatewayService) ProxyResponsesWebSocketFromClient(
 			if err := hooks.BeforeTurn(turn); err != nil {
 				return err
 			}
+		}
+		if turn > 1 && !skipBeforeTurn && hooks != nil && hooks.ApplyGroupSkills != nil {
+			currentPayload = hooks.ApplyGroupSkills(currentPayload, currentOriginalModel)
+			currentPayloadBytes = len(currentPayload)
 		}
 		skipBeforeTurn = false
 		// 剥离本会话已知失效的加密项，阻断同一失效密文随历史反复触发上游拒绝。

@@ -1175,8 +1175,20 @@ export default {
         }
       },
       modelSkills: {
-        title: 'Default model Skills',
-        hint: 'Selected Skills are associated with this group. Create or upload Skills first in System Settings.',
+        title: 'Skills',
+        hint: 'Choose which models use Skills. Create or upload Skills in System Settings.',
+        scope: 'Scope',
+        allModels: 'All models',
+        specifiedModels: 'Specified models',
+        specifiedHint: 'Names must match the client request exactly. Other models will not use any group Skills.',
+        modelName: 'Model name',
+        modelPlaceholder: 'Enter the model name used in client requests',
+        addModel: 'Add model',
+        removeModel: 'Remove model',
+        removeSkill: 'Remove Skill: {name}',
+        modelRequired: 'Add a model and enter its name.',
+        duplicateModel: 'Model "{model}" is already configured.',
+        skillsRequired: 'Select at least one Skill for model "{model}".',
         loading: 'Loading Skills...',
         empty: 'No Skills available. Create or upload one in System Settings first.',
         selectPlaceholder: 'Select a Skill'

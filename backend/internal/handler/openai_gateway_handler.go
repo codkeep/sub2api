@@ -470,13 +470,6 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
 		return
 	}
-	if apiKey.Group != nil {
-		if enrichedBody, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", body); skillErr != nil {
-			reqLog.Warn("openai.default_skills_injection_failed", zap.Error(skillErr))
-		} else {
-			body = enrichedBody
-		}
-	}
 
 	// 使用 gjson 只读提取字段做校验，避免完整 Unmarshal
 	modelResult := gjson.GetBytes(body, "model")
@@ -485,6 +478,13 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 		return
 	}
 	reqModel := modelResult.String()
+	if apiKey.Group != nil {
+		if enrichedBody, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", reqModel, body); skillErr != nil {
+			reqLog.Warn("openai.default_skills_injection_failed", zap.Error(skillErr))
+		} else {
+			body = enrichedBody
+		}
+	}
 	ensureCompositeTargetPlatform(c, apiKey, reqModel)
 	if !openAICompatibleTextTargetAllowed(c, apiKey, reqModel) {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Model is not supported by this OpenAI-compatible endpoint for composite groups")
@@ -1244,13 +1244,6 @@ func (h *OpenAIGatewayHandler) Messages(c *gin.Context) {
 		h.anthropicErrorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
 		return
 	}
-	if apiKey.Group != nil {
-		if enrichedBody, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "anthropic", body); skillErr != nil {
-			reqLog.Warn("openai.messages_default_skills_injection_failed", zap.Error(skillErr))
-		} else {
-			body = enrichedBody
-		}
-	}
 
 	modelResult := gjson.GetBytes(body, "model")
 	if !modelResult.Exists() || modelResult.Type != gjson.String || modelResult.String() == "" {
@@ -1258,6 +1251,13 @@ func (h *OpenAIGatewayHandler) Messages(c *gin.Context) {
 		return
 	}
 	reqModel := modelResult.String()
+	if apiKey.Group != nil {
+		if enrichedBody, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "anthropic", reqModel, body); skillErr != nil {
+			reqLog.Warn("openai.messages_default_skills_injection_failed", zap.Error(skillErr))
+		} else {
+			body = enrichedBody
+		}
+	}
 	ensureCompositeTargetPlatform(c, apiKey, reqModel)
 	if !openAICompatibleTextTargetAllowed(c, apiKey, reqModel) {
 		h.anthropicErrorResponse(c, http.StatusBadRequest, "invalid_request_error", "Model is not supported by this OpenAI-compatible endpoint for composite groups")
@@ -2612,13 +2612,6 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 		closeOpenAIClientWS(wsConn, coderws.StatusPolicyViolation, "invalid JSON payload")
 		return
 	}
-	if apiKey.Group != nil {
-		if enrichedMessage, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", firstMessage); skillErr != nil {
-			reqLog.Warn("openai.websocket_default_skills_injection_failed", zap.Error(skillErr))
-		} else {
-			firstMessage = enrichedMessage
-		}
-	}
 	reqModel := strings.TrimSpace(gjson.GetBytes(firstMessage, "model").String())
 	if reqModel == "" {
 		closeOpenAIClientWS(wsConn, coderws.StatusPolicyViolation, "model is required in first response.create payload")
@@ -2633,6 +2626,13 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 		middleware2.MarkIngressRejected(c, middleware2.IngressRejectModelNotAllowed)
 		closeOpenAIClientWS(wsConn, coderws.StatusPolicyViolation, fmt.Sprintf("Model %q is not available for this group", blocked))
 		return
+	}
+	if apiKey.Group != nil {
+		if enrichedMessage, skillErr := h.gatewayService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", reqModel, firstMessage); skillErr != nil {
+			reqLog.Warn("openai.websocket_default_skills_injection_failed", zap.Error(skillErr))
+		} else {
+			firstMessage = enrichedMessage
+		}
 	}
 	// Keep the client model in the frame for admission, response identity and usage.
 	// Apply the resolved upstream model through MapRequestModel on every turn.
@@ -3116,6 +3116,17 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 					return service.NewOpenAIWSClientCloseError(securityAuditWSCloseStatus(decision), securityAuditWSCloseReason(decision), nil)
 				}
 				return nil
+			},
+			ApplyGroupSkills: func(payload []byte, originalModel string) []byte {
+				if strings.TrimSpace(originalModel) == "" {
+					originalModel = reqModel
+				}
+				enriched, err := h.gatewayService.ApplyGroupDefaultSkills(ctx, apiKey.Group, "responses", originalModel, payload)
+				if err != nil {
+					reqLog.Warn("openai.websocket_default_skills_injection_failed", zap.Error(err))
+					return payload
+				}
+				return enriched
 			},
 			MapRequestModel: func(turn int, originalModel string) (string, error) {
 				model := strings.TrimSpace(originalModel)

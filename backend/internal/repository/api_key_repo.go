@@ -87,7 +87,7 @@ func (r *apiKeyRepository) GetByID(ctx context.Context, id int64) (*service.APIK
 		return nil, err
 	}
 	apiKey := apiKeyEntityToService(m)
-	r.hydrateGroupDefaultSkillIDs(ctx, apiKey)
+	r.hydrateGroupSkills(ctx, apiKey)
 	return apiKey, nil
 }
 
@@ -127,7 +127,7 @@ func (r *apiKeyRepository) GetByKey(ctx context.Context, key string) (*service.A
 		return nil, err
 	}
 	apiKey := apiKeyEntityToService(m)
-	r.hydrateGroupDefaultSkillIDs(ctx, apiKey)
+	r.hydrateGroupSkills(ctx, apiKey)
 	return apiKey, nil
 }
 
@@ -250,42 +250,19 @@ func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*se
 		return nil, err
 	}
 	apiKey := apiKeyEntityToService(m)
-	r.hydrateGroupDefaultSkillIDs(ctx, apiKey)
+	r.hydrateGroupSkills(ctx, apiKey)
 	return apiKey, nil
 }
 
-// hydrateGroupDefaultSkillIDs loads the group-level Skills relation used by
+// hydrateGroupSkills loads the configured Skills used by
 // gateway requests. The API-key auth projection selects only columns from the
-// groups table, while default Skills live in their own table.
-func (r *apiKeyRepository) hydrateGroupDefaultSkillIDs(ctx context.Context, apiKey *service.APIKey) {
+// groups table, while Skills live in their own table.
+func (r *apiKeyRepository) hydrateGroupSkills(ctx context.Context, apiKey *service.APIKey) {
 	if r == nil || r.sql == nil || apiKey == nil || apiKey.Group == nil || apiKey.Group.ID <= 0 {
 		return
 	}
-	rows, err := r.sql.QueryContext(ctx, `SELECT skill_ids FROM group_default_skills WHERE group_id = $1`, apiKey.Group.ID)
-	if err != nil {
-		slog.Warn("repository.api_key.load_default_skills_failed", "group_id", apiKey.Group.ID, "error", err)
-		return
-	}
-	defer func() { _ = rows.Close() }()
-	if !rows.Next() {
-		if err := rows.Err(); err != nil {
-			slog.Warn("repository.api_key.load_default_skills_failed", "group_id", apiKey.Group.ID, "error", err)
-			return
-		}
-		apiKey.Group.DefaultSkillIDs = []string{}
-		return
-	}
-	var raw []byte
-	if err := rows.Scan(&raw); err != nil {
-		slog.Warn("repository.api_key.decode_default_skills_failed", "group_id", apiKey.Group.ID, "error", err)
-		return
-	}
-	if err := json.Unmarshal(raw, &apiKey.Group.DefaultSkillIDs); err != nil {
-		slog.Warn("repository.api_key.parse_default_skills_failed", "group_id", apiKey.Group.ID, "error", err)
-		return
-	}
-	if apiKey.Group.DefaultSkillIDs == nil {
-		apiKey.Group.DefaultSkillIDs = []string{}
+	if err := loadGroupSkills(ctx, r.sql, apiKey.Group); err != nil {
+		slog.Warn("repository.api_key.load_group_skills_failed", "group_id", apiKey.Group.ID, "error", err)
 	}
 }
 

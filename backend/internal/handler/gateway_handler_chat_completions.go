@@ -97,7 +97,7 @@ func (h *GatewayHandler) ChatCompletions(c *gin.Context) {
 		return
 	}
 	if h.settingService != nil && apiKey.Group != nil {
-		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "chat_completions", body); skillErr != nil {
+		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "chat_completions", reqModel, body); skillErr != nil {
 			reqLog.Warn("gateway.chat_completions_default_skills_injection_failed", zap.Error(skillErr))
 		} else {
 			body = enrichedBody

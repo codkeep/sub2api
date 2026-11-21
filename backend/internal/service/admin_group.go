@@ -597,6 +597,10 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		}
 	}
 
+	modelSkillIDs, err := normalizeGroupModelSkillIDs(input.ModelSkillIDs)
+	if err != nil {
+		return nil, err
+	}
 	// 白名单在创建路径同样收口：开启但为空、通配位置非法都会 400。
 	modelAllowlist, err := normalizeGroupModelAllowlist(input.ModelAllowlist)
 	if err != nil {
@@ -664,6 +668,7 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		MessagesDispatchModelConfig:     normalizeOpenAIMessagesDispatchModelConfig(input.MessagesDispatchModelConfig),
 		ModelAllowlist:                  modelAllowlist,
 		DefaultSkillIDs:                 append([]string(nil), input.DefaultSkillIDs...),
+		ModelSkillIDs:                   modelSkillIDs,
 		// 固定账号 manifest 配置：账号绑定发生在分组创建之后，创建路径禁止开启，
 		// 成员关系无从校验（前端创建对话框也不展示）。
 		CodexModelsManifestConfig:   normalizeCodexModelsManifestConfig(platform, input.CodexModelsManifestConfig),
@@ -1090,6 +1095,13 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 			return nil, err
 		}
 		group.ModelAllowlist = modelAllowlist
+	}
+	if input.ModelSkillIDs != nil {
+		modelSkillIDs, err := normalizeGroupModelSkillIDs(input.ModelSkillIDs)
+		if err != nil {
+			return nil, err
+		}
+		group.ModelSkillIDs = modelSkillIDs
 	}
 	if input.DefaultSkillIDs != nil {
 		group.DefaultSkillIDs = append([]string(nil), (*input.DefaultSkillIDs)...)

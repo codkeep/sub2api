@@ -14,7 +14,7 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-const apiKeyAuthSnapshotVersion = 30 // v30: default Skills, image-count billing, privacy gate, RPM override and group force_openai_ultrafast
+const apiKeyAuthSnapshotVersion = 31 // v31: per-model group Skills
 
 type apiKeyAuthCacheConfig struct {
 	l1Size        int
@@ -429,6 +429,7 @@ func (s *APIKeyService) snapshotFromAPIKey(ctx context.Context, apiKey *APIKey) 
 			MessagesDispatchModelConfig:     apiKey.Group.MessagesDispatchModelConfig,
 			ModelAllowlist:                  apiKey.Group.ModelAllowlist,
 			DefaultSkillIDs:                 append([]string(nil), apiKey.Group.DefaultSkillIDs...),
+			ModelSkillIDs:                   cloneGroupModelSkillIDs(apiKey.Group.ModelSkillIDs),
 			CodexModelsManifestConfig:       apiKey.Group.CodexModelsManifestConfig,
 			RPMLimit:                        apiKey.Group.RPMLimit,
 			MaxReasoningEffort:              apiKey.Group.MaxReasoningEffort,
@@ -538,6 +539,7 @@ func (s *APIKeyService) snapshotToAPIKey(key string, snapshot *APIKeyAuthSnapsho
 			MessagesDispatchModelConfig:     snapshot.Group.MessagesDispatchModelConfig,
 			ModelAllowlist:                  snapshot.Group.ModelAllowlist,
 			DefaultSkillIDs:                 append([]string(nil), snapshot.Group.DefaultSkillIDs...),
+			ModelSkillIDs:                   cloneGroupModelSkillIDs(snapshot.Group.ModelSkillIDs),
 			CodexModelsManifestConfig:       snapshot.Group.CodexModelsManifestConfig,
 			RPMLimit:                        snapshot.Group.RPMLimit,
 			MaxReasoningEffort:              snapshot.Group.MaxReasoningEffort,

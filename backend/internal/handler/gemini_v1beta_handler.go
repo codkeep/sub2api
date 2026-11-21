@@ -386,7 +386,7 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 		return
 	}
 	if h.settingService != nil && apiKey.Group != nil {
-		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformGemini, body); skillErr != nil {
+		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, domain.PlatformGemini, urlModel, body); skillErr != nil {
 			reqLog.Warn("gemini.default_skills_injection_failed", zap.Error(skillErr))
 		} else {
 			body = enrichedBody

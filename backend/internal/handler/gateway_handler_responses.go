@@ -97,7 +97,7 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 		return
 	}
 	if h.settingService != nil && apiKey.Group != nil {
-		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", body); skillErr != nil {
+		if enrichedBody, skillErr := h.settingService.ApplyGroupDefaultSkills(c.Request.Context(), apiKey.Group, "responses", reqModel, body); skillErr != nil {
 			reqLog.Warn("gateway.responses_default_skills_injection_failed", zap.Error(skillErr))
 		} else {
 			body = enrichedBody

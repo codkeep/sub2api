@@ -5,13 +5,62 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 )
 
-// ApplyGroupDefaultSkills 将分组配置的默认 Skills 合并进下游请求的系统级指令。
+func normalizeGroupModelSkillIDs(input map[string][]string) (map[string][]string, error) {
+	out := make(map[string][]string, len(input))
+	for model, ids := range input {
+		model = strings.TrimSpace(model)
+		if model == "" {
+			return nil, infraerrors.BadRequest("GROUP_SKILLS_MODEL_REQUIRED", "group Skills require a model name")
+		}
+		if _, exists := out[model]; exists {
+			return nil, infraerrors.BadRequest("GROUP_SKILLS_MODEL_DUPLICATE", fmt.Sprintf("duplicate group Skills model %q", model))
+		}
+		seen := make(map[string]struct{}, len(ids))
+		clean := make([]string, 0, len(ids))
+		for _, id := range ids {
+			id = strings.TrimSpace(id)
+			if _, exists := seen[id]; id == "" || exists {
+				continue
+			}
+			seen[id] = struct{}{}
+			clean = append(clean, id)
+		}
+		if len(clean) == 0 {
+			return nil, infraerrors.BadRequest("GROUP_SKILLS_SELECTION_REQUIRED", fmt.Sprintf("select at least one Skill for model %q", model))
+		}
+		out[model] = clean
+	}
+	return out, nil
+}
+
+func cloneGroupModelSkillIDs(input map[string][]string) map[string][]string {
+	if len(input) == 0 {
+		return nil
+	}
+	out := make(map[string][]string, len(input))
+	for model, ids := range input {
+		out[model] = append([]string(nil), ids...)
+	}
+	return out
+}
+
+// ApplyGroupDefaultSkills 将分组为客户端请求模型配置的 Skills 合并进系统级指令。
 // Skills 只保存 ID，正文从系统设置中读取，因此修改 Skill 后所有引用它的分组会自动生效。
 // protocol 支持 anthropic、chat_completions、responses 和 gemini 四种入口格式。
-func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Group, protocol string, body []byte) ([]byte, error) {
-	if s == nil || group == nil || len(group.DefaultSkillIDs) == 0 || len(body) == 0 {
+func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Group, protocol, requestedModel string, body []byte) ([]byte, error) {
+	if s == nil || group == nil || len(body) == 0 {
+		return body, nil
+	}
+
+	skillIDs := group.DefaultSkillIDs
+	if len(group.ModelSkillIDs) > 0 {
+		skillIDs = group.ModelSkillIDs[strings.TrimSpace(requestedModel)]
+	}
+	if len(skillIDs) == 0 {
 		return body, nil
 	}
 
@@ -25,7 +74,7 @@ func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Gro
 	}
 
 	var prompt strings.Builder
-	for _, id := range group.DefaultSkillIDs {
+	for _, id := range skillIDs {
 		skill, ok := byID[strings.TrimSpace(id)]
 		if !ok || strings.TrimSpace(skill.Content) == "" {
 			continue
@@ -73,20 +122,20 @@ func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Gro
 
 // ApplyGroupDefaultSkills exposes the shared injection point to the gateway
 // services while keeping settings storage details inside SettingService.
-func (s *GatewayService) ApplyGroupDefaultSkills(ctx context.Context, group *Group, protocol string, body []byte) ([]byte, error) {
+func (s *GatewayService) ApplyGroupDefaultSkills(ctx context.Context, group *Group, protocol, requestedModel string, body []byte) ([]byte, error) {
 	if s == nil || s.settingService == nil {
 		return body, nil
 	}
-	return s.settingService.ApplyGroupDefaultSkills(ctx, group, protocol, body)
+	return s.settingService.ApplyGroupDefaultSkills(ctx, group, protocol, requestedModel, body)
 }
 
 // ApplyGroupDefaultSkills exposes the shared injection point to OpenAI-compatible
 // handlers, including the native Responses and /v1/messages dispatch paths.
-func (s *OpenAIGatewayService) ApplyGroupDefaultSkills(ctx context.Context, group *Group, protocol string, body []byte) ([]byte, error) {
+func (s *OpenAIGatewayService) ApplyGroupDefaultSkills(ctx context.Context, group *Group, protocol, requestedModel string, body []byte) ([]byte, error) {
 	if s == nil || s.settingService == nil {
 		return body, nil
 	}
-	return s.settingService.ApplyGroupDefaultSkills(ctx, group, protocol, body)
+	return s.settingService.ApplyGroupDefaultSkills(ctx, group, protocol, requestedModel, body)
 }
 
 func appendSkillText(value any, instruction string) any {

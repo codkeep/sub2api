@@ -80,7 +80,7 @@ func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) er
 	if err := createGroupRecord(ctx, r.client, groupIn); err != nil {
 		return err
 	}
-	if err := upsertDefaultSkillIDs(ctx, r.sql, groupIn.ID, groupIn.DefaultSkillIDs); err != nil {
+	if err := upsertGroupSkills(ctx, r.sql, groupIn); err != nil {
 		return err
 	}
 	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
@@ -229,7 +229,7 @@ func (r *groupRepository) CreateFromSource(ctx context.Context, groupIn *service
 	if err := createGroupRecord(ctx, txClient, groupIn); err != nil {
 		return err
 	}
-	if err := upsertDefaultSkillIDs(ctx, txClient, groupIn.ID, groupIn.DefaultSkillIDs); err != nil {
+	if err := upsertGroupSkills(ctx, txClient, groupIn); err != nil {
 		return err
 	}
 	result, err := txClient.ExecContext(
@@ -460,7 +460,7 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		return translatePersistenceError(err, service.ErrGroupNotFound, service.ErrGroupExists)
 	}
 	groupIn.UpdatedAt = updated.UpdatedAt
-	if err := upsertDefaultSkillIDs(ctx, r.sql, groupIn.ID, groupIn.DefaultSkillIDs); err != nil {
+	if err := upsertGroupSkills(ctx, r.sql, groupIn); err != nil {
 		return err
 	}
 	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
@@ -805,18 +805,18 @@ func (r *groupRepository) ExistsByName(ctx context.Context, name string) (bool, 
 func (r *groupRepository) groupEntityToService(ctx context.Context, entity *dbent.Group) *service.Group {
 	g := groupEntityToService(entity)
 	if g != nil {
-		if err := r.hydrateDefaultSkillIDs(ctx, g); err != nil {
+		if err := loadGroupSkills(ctx, r.sql, g); err != nil {
 			logger.LegacyPrintf("repository.group", "load default skills failed: group=%d err=%v", g.ID, err)
-			g.DefaultSkillIDs = []string{}
 		}
 	}
 	return g
 }
 
-func upsertDefaultSkillIDs(ctx context.Context, exec sqlExecutor, groupID int64, skillIDs []string) error {
-	if exec == nil || groupID <= 0 {
+func upsertGroupSkills(ctx context.Context, exec sqlExecutor, g *service.Group) error {
+	if exec == nil || g.ID <= 0 {
 		return nil
 	}
+	skillIDs := g.DefaultSkillIDs
 	if skillIDs == nil {
 		skillIDs = []string{}
 	}
@@ -824,19 +824,28 @@ func upsertDefaultSkillIDs(ctx context.Context, exec sqlExecutor, groupID int64,
 	if err != nil {
 		return fmt.Errorf("marshal group default skills: %w", err)
 	}
+	modelSkillIDs := g.ModelSkillIDs
+	if modelSkillIDs == nil {
+		modelSkillIDs = map[string][]string{}
+	}
+	modelPayload, err := json.Marshal(modelSkillIDs)
+	if err != nil {
+		return fmt.Errorf("marshal group model skills: %w", err)
+	}
 	_, err = exec.ExecContext(ctx, `
-		INSERT INTO group_default_skills (group_id, skill_ids, updated_at)
-		VALUES ($1, $2::jsonb, NOW())
-		ON CONFLICT (group_id) DO UPDATE SET skill_ids = EXCLUDED.skill_ids, updated_at = NOW()
-	`, groupID, string(payload))
+		INSERT INTO group_default_skills (group_id, skill_ids, model_skill_ids, updated_at)
+		VALUES ($1, $2::jsonb, $3::jsonb, NOW())
+		ON CONFLICT (group_id) DO UPDATE
+		SET skill_ids = EXCLUDED.skill_ids, model_skill_ids = EXCLUDED.model_skill_ids, updated_at = NOW()
+	`, g.ID, string(payload), string(modelPayload))
 	return err
 }
 
-func (r *groupRepository) hydrateDefaultSkillIDs(ctx context.Context, g *service.Group) error {
-	if r.sql == nil || g == nil || g.ID <= 0 {
+func loadGroupSkills(ctx context.Context, exec sqlExecutor, g *service.Group) error {
+	if exec == nil || g == nil || g.ID <= 0 {
 		return nil
 	}
-	rows, err := r.sql.QueryContext(ctx, `SELECT skill_ids FROM group_default_skills WHERE group_id = $1`, g.ID)
+	rows, err := exec.QueryContext(ctx, `SELECT skill_ids, model_skill_ids FROM group_default_skills WHERE group_id = $1`, g.ID)
 	if err != nil {
 		return err
 	}
@@ -845,16 +854,20 @@ func (r *groupRepository) hydrateDefaultSkillIDs(ctx context.Context, g *service
 		g.DefaultSkillIDs = []string{}
 		return rows.Err()
 	}
-	var raw []byte
-	if err := rows.Scan(&raw); err != nil {
+	var raw, rawModels []byte
+	if err := rows.Scan(&raw, &rawModels); err != nil {
 		return err
 	}
-	if err := json.Unmarshal(raw, &g.DefaultSkillIDs); err != nil {
+	skillIDs := []string{}
+	var modelSkillIDs map[string][]string
+	if err := json.Unmarshal(raw, &skillIDs); err != nil {
 		return fmt.Errorf("decode group default skills: %w", err)
 	}
-	if g.DefaultSkillIDs == nil {
-		g.DefaultSkillIDs = []string{}
+	if err := json.Unmarshal(rawModels, &modelSkillIDs); err != nil {
+		return fmt.Errorf("decode group model skills: %w", err)
 	}
+	g.DefaultSkillIDs = skillIDs
+	g.ModelSkillIDs = modelSkillIDs
 	return nil
 }
 
