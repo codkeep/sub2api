@@ -4987,52 +4987,60 @@ const compositeRouteForm = reactive<CompositeRouteFormState>({
   notes: "",
 });
 function groupSkillsForm(group?: AdminGroup): GroupSkillsForm {
-  const rules = Object.entries(group?.model_skill_ids ?? {}).map(([model, skillIds]) => ({
-    models: [model],
-    skillIds: [...skillIds],
-  }));
-  return {
-    scope: rules.length ? "specified" : "all",
-    defaultSkillIds: [...(group?.default_skill_ids ?? [])],
-    rules,
-  };
+  const rules: GroupSkillsForm['rules'] = [];
+  const defaultSkillIds = [...(group?.default_skill_ids ?? [])];
+  if (defaultSkillIds.length > 0) {
+    rules.push({ models: ["*"], skillIds: defaultSkillIds });
+  }
+  for (const [model, skillIds] of Object.entries(group?.model_skill_ids ?? {})) {
+    rules.push({ models: [model], skillIds: [...skillIds] });
+  }
+  return { rules };
 }
 
 const createGroupSkills = ref(groupSkillsForm());
 const editGroupSkills = ref(groupSkillsForm());
 
 function groupSkillsToAPI(form: GroupSkillsForm) {
+  const defaultSkillIds: string[] = [];
   const rules = new Map<string, string[]>();
-  if (form.scope === "specified") {
-    if (form.rules.length === 0) {
+  let hasWildcard = false;
+
+  for (const rule of form.rules) {
+    if (rule.models.length === 0) {
       appStore.showError(t("admin.groups.modelSkills.modelRequired"));
       return null;
     }
-    for (const rule of form.rules) {
-      if (rule.models.length === 0) {
+    if (rule.skillIds.length === 0) {
+      const model = rule.models[0]?.trim() || "*";
+      appStore.showError(t("admin.groups.modelSkills.skillsRequired", { model }));
+      return null;
+    }
+    for (const rawModel of rule.models) {
+      const model = rawModel.trim();
+      if (!model) {
         appStore.showError(t("admin.groups.modelSkills.modelRequired"));
         return null;
       }
-      for (const rawModel of rule.models) {
-        const model = rawModel.trim();
-        if (!model) {
-          appStore.showError(t("admin.groups.modelSkills.modelRequired"));
-          return null;
-        }
-        if (rules.has(model)) {
+      if (model === "*") {
+        if (hasWildcard) {
           appStore.showError(t("admin.groups.modelSkills.duplicateModel", { model }));
           return null;
         }
-        if (rule.skillIds.length === 0) {
-          appStore.showError(t("admin.groups.modelSkills.skillsRequired", { model }));
-          return null;
-        }
-        rules.set(model, rule.skillIds);
+        hasWildcard = true;
+        defaultSkillIds.push(...rule.skillIds);
+        continue;
       }
+      if (rules.has(model)) {
+        appStore.showError(t("admin.groups.modelSkills.duplicateModel", { model }));
+        return null;
+      }
+      rules.set(model, [...rule.skillIds]);
     }
   }
+
   return {
-    default_skill_ids: form.defaultSkillIds,
+    default_skill_ids: defaultSkillIds,
     model_skill_ids: Object.fromEntries(rules),
   };
 }

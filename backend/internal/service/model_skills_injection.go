@@ -58,7 +58,10 @@ func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Gro
 
 	skillIDs := group.DefaultSkillIDs
 	if len(group.ModelSkillIDs) > 0 {
-		skillIDs = group.ModelSkillIDs[strings.TrimSpace(requestedModel)]
+		modelSkillIDs, matched := group.ModelSkillIDs[strings.TrimSpace(requestedModel)]
+		if matched {
+			skillIDs = modelSkillIDs
+		}
 	}
 	if len(skillIDs) == 0 {
 		return body, nil
