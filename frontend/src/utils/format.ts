@@ -53,11 +53,20 @@ export function formatNumber(num: number | null | undefined): string {
 }
 
 /**
- * 格式化货币金额
+ * 格式化账本金额，保留最多 8 位小数，供提现核对。
  * @param amount 金额
  * @param currency 货币代码，默认 USD
  * @returns 格式化后的字符串，如 "$1.25"
  */
+export function formatLedgerCurrency(amount: number, currency: string = 'USD'): string {
+  return new Intl.NumberFormat(getLocale(), {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 8,
+  }).format(amount)
+}
+
 export function formatCurrency(amount: number | null | undefined, currency: string = 'USD'): string {
   if (amount === null || amount === undefined) return '$0.00'
 

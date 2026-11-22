@@ -91,7 +91,7 @@
             </div>
             <button
               class="btn btn-primary"
-              :disabled="transferring || detail.aff_quota <= 0"
+              :disabled="transferring || withdrawalSubmitting || detail.aff_quota <= 0"
               @click="transferQuota"
             >
               <Icon v-if="transferring" name="refresh" size="sm" class="animate-spin" />
@@ -103,6 +103,13 @@
             {{ t('affiliate.transfer.empty') }}
           </p>
         </div>
+
+        <AffiliateWithdrawalsPanel
+          :available-quota="detail.aff_quota"
+          :disabled="transferring"
+          @busy="withdrawalSubmitting = $event"
+          @updated="loadAffiliateDetail(true)"
+        />
 
         <div class="card p-6">
           <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ t('affiliate.invitees.title') }}</h3>
@@ -144,6 +151,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
+import AffiliateWithdrawalsPanel from '@/components/user/AffiliateWithdrawalsPanel.vue'
 import userAPI from '@/api/user'
 import type { UserAffiliateDetail } from '@/types'
 import { useAppStore } from '@/stores/app'
@@ -159,6 +167,7 @@ const { copyToClipboard } = useClipboard()
 
 const loading = ref(true)
 const transferring = ref(false)
+const withdrawalSubmitting = ref(false)
 const detail = ref<UserAffiliateDetail | null>(null)
 
 const inviteLink = computed(() => {
@@ -205,7 +214,7 @@ async function copyInviteLink(): Promise<void> {
 }
 
 async function transferQuota(): Promise<void> {
-  if (!detail.value || detail.value.aff_quota <= 0 || transferring.value) return
+  if (!detail.value || detail.value.aff_quota <= 0 || transferring.value || withdrawalSubmitting.value) return
   transferring.value = true
   try {
     const resp = await userAPI.transferAffiliateQuota()

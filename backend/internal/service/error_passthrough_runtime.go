@@ -1,6 +1,10 @@
 package service
 
-import "github.com/gin-gonic/gin"
+import (
+	"encoding/json"
+
+	"github.com/gin-gonic/gin"
+)
 
 const errorPassthroughServiceContextKey = "error_passthrough_service"
 
@@ -25,6 +29,20 @@ func getBoundErrorPassthroughService(c *gin.Context) *ErrorPassthroughService {
 		return nil
 	}
 	return svc
+}
+
+// ApplyLocalErrorPassthroughRule 将网关本地鉴权、额度等错误接入同一套映射规则。
+// 匹配时同时提供错误码和消息；透传消息时保留调用方原文，不改写协议错误类型。
+func ApplyLocalErrorPassthroughRule(c *gin.Context, platform string, status int, code, message string) (int, string) {
+	if getBoundErrorPassthroughService(c) == nil {
+		return status, message
+	}
+	body, _ := json.Marshal(gin.H{"code": code, "message": message})
+	mappedStatus, _, mappedMessage, _ := applyErrorPassthroughRuleWithMessage(
+		c, platform, status, body, status, code, message,
+		func([]byte) string { return message },
+	)
+	return mappedStatus, mappedMessage
 }
 
 // applyErrorPassthroughRule 按规则改写错误响应；未命中时返回默认响应参数。

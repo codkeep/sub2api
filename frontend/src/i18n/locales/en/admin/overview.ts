@@ -425,6 +425,37 @@ export default {
       invitesDescription: 'View site-wide inviter and invitee relationships',
       rebatesDescription: 'View every affiliate rebate accrual from recharge orders, redeem codes, and admin recharges',
       transfersDescription: 'View affiliate quota transfers into balance and offline withdrawals',
+      withdrawalsDescription: 'Set the withdrawal minimum, review requests and record payment results',
+      withdrawals: {
+        "policyTitle": "Withdrawal Settings",
+        "policyHint": "Amounts are in USD. Set 0 for no minimum. Only available, unfrozen rebates can be withdrawn.",
+        "minimumAmount": "Minimum withdrawal (USD)",
+        "invalidMinimum": "The minimum must be a valid nonnegative amount",
+        "policySaved": "Withdrawal settings saved",
+        "saveFailed": "Failed to save withdrawal settings",
+        "searchPlaceholder": "Email, username, user ID or request ID",
+        "allStatuses": "All statuses",
+        "actions": "Actions",
+        "handler": "Assigned admin",
+        "claim": "Start Processing",
+        "markPaid": "Confirm Payment",
+        "reject": "Reject and Refund",
+        "rejectionReason": "Reason for rejection (required, visible to user)",
+        "adminNote": "Note (optional, visible to user)",
+        "uncertain": "The previous result is unknown. Retry the same action; the server checks the status to prevent duplicate processing.",
+        "reviewSuccess": "Withdrawal request updated",
+        "reviewFailed": "Failed to process withdrawal",
+        "titles": {
+          "processing": "Start Processing Withdrawal",
+          "paid": "Confirm Completed Payment",
+          "rejected": "Reject Withdrawal"
+        },
+        "hints": {
+          "processing": "Verify the payout details and make the payment offline. You will be assigned to complete this request.",
+          "paid": "Confirm the offline payment is complete and enter its reference. This does not deduct rebates again.",
+          "rejected": "Enter a reason. The reserved rebates will be returned to the user automatically."
+        }
+      },
       errors: {
         loadFailed: 'Failed to load affiliate records',
         AFFILIATE_QUOTA_INSUFFICIENT: 'Insufficient available affiliate quota',

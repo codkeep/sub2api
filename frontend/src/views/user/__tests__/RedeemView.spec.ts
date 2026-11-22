@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createI18n } from 'vue-i18n'
+import zh from '@/i18n/locales/zh'
+import en from '@/i18n/locales/en'
 import RedeemView from '../RedeemView.vue'
 
-const { redeem, getHistory, refreshUser, fetchActiveSubscriptions, showError, showWarning, showSuccess } = vi.hoisted(() => ({
+const { redeem, getHistory, refreshUser, fetchActiveSubscriptions, showError, showWarning, showSuccess, translate } = vi.hoisted(() => ({
   redeem: vi.fn(),
   getHistory: vi.fn(),
   refreshUser: vi.fn(),
@@ -10,6 +13,7 @@ const { redeem, getHistory, refreshUser, fetchActiveSubscriptions, showError, sh
   showError: vi.fn(),
   showWarning: vi.fn(),
   showSuccess: vi.fn(),
+  translate: vi.fn<(key: string) => string>(),
 }))
 
 vi.mock('@/api', () => ({
@@ -27,7 +31,7 @@ vi.mock('@/stores/app', () => ({
 }))
 vi.mock('vue-i18n', async () => {
   const actual = await vi.importActual<typeof import('vue-i18n')>('vue-i18n')
-  return { ...actual, useI18n: () => ({ t: (key: string) => key }) }
+  return { ...actual, useI18n: () => ({ t: translate }) }
 })
 
 async function submitCode() {
@@ -44,6 +48,7 @@ async function submitCode() {
 describe('RedeemView refresh after redemption', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    translate.mockImplementation((key: string) => key)
     redeem.mockResolvedValue({ type: 'balance', value: 20, message: 'Code applied' })
     getHistory.mockResolvedValue({ items: [], total: 0 })
     refreshUser.mockResolvedValue({ balance: 30, concurrency: 2 })
@@ -227,7 +232,7 @@ describe('RedeemView refresh after redemption', () => {
     redeem.mockRejectedValue({ response: { data: { detail: 'Invalid code' } } })
     const wrapper = await submitCode()
 
-    expect(showError).toHaveBeenCalledWith('redeem.redeemFailed')
+    expect(showError).toHaveBeenCalledWith('Invalid code')
     expect(wrapper.text()).toContain('Invalid code')
     expect(wrapper.text()).not.toContain('Code applied')
     expect((wrapper.get('input#code').element as HTMLInputElement).value).toBe(' REDEEM-CODE ')
@@ -236,6 +241,43 @@ describe('RedeemView refresh after redemption', () => {
     expect(getHistory).toHaveBeenCalledOnce()
     expect(showSuccess).not.toHaveBeenCalled()
     expect(showWarning).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it.each(['zh', 'en'])('shows localized redemption failure reasons in %s', async (locale) => {
+    const i18n = createI18n({ legacy: false, locale, messages: { zh, en } })
+    translate.mockImplementation((key: string) => i18n.global.t(key))
+    const messages = locale === 'zh' ? zh.redeem.errors : en.redeem.errors
+
+    for (const [reason, message] of Object.entries(messages)) {
+      redeem.mockRejectedValue(reason === 'ERR_NETWORK'
+        ? { status: 0, code: reason, message: 'Original API error' }
+        : { status: 409, code: 409, reason, message: 'Original API error' })
+      const wrapper = await submitCode()
+
+      expect(wrapper.text()).toContain(message)
+      expect(wrapper.text()).not.toContain('Original API error')
+      expect(showError).toHaveBeenLastCalledWith(message)
+      expect((wrapper.get('input#code').element as HTMLInputElement).value).toBe(' REDEEM-CODE ')
+      expect((wrapper.get('input#code').element as HTMLInputElement).disabled).toBe(false)
+      wrapper.unmount()
+    }
+    expect(refreshUser).not.toHaveBeenCalled()
+    expect(showSuccess).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [{ status: 409, reason: 'UNKNOWN_REASON', message: 'Specific API failure' }, 'Specific API failure'],
+    [{ status: 0, message: 'Network error. Please check your connection.' }, 'Network error. Please check your connection.'],
+    [{ response: { data: { message: 'Legacy API failure' } } }, 'Legacy API failure'],
+    [{ status: 500 }, 'redeem.failedToRedeem'],
+  ])('shows the available failure message or fallback for %j', async (error, message) => {
+    redeem.mockRejectedValue(error)
+    const wrapper = await submitCode()
+
+    expect(wrapper.text()).toContain(message)
+    expect(showError).toHaveBeenCalledWith(message)
+    expect(showSuccess).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 })

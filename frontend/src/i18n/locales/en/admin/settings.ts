@@ -1416,7 +1416,7 @@ export default {
     errorPassthrough: {
       mappingTitle: 'Error Message Mapping',
       mappingDescription: 'Map API errors to custom messages by HTTP status, error code keywords and platform.',
-      mappingHint: 'Shares rules with account error passthrough settings. The first enabled rule by priority wins. Use status AND keywords to avoid matching unrelated errors. Saved rules apply to upstream gateway errors and new active monitor checks. Monitor health still reflects the actual response; history is preserved.',
+      mappingHint: 'Shares rules with account error passthrough settings. The first enabled rule by priority wins. Use status AND keywords to avoid matching unrelated errors. Saved rules apply to gateway authentication, subscription limits, upstream errors and new active monitor checks. Monitor health still reflects the actual response; history is preserved.',
       templates: 'Create from template:',
       quotaTemplates: {
         daily: { name: 'Daily limit reached', message: 'Daily limit reached. Please wait until the next reset.' },

@@ -120,6 +120,14 @@ func NewGatewayHandler(
 	}
 }
 
+// BindErrorPassthroughRules 在鉴权前绑定规则，让鉴权及订阅限额的早退响应也能应用映射。
+func (h *GatewayHandler) BindErrorPassthroughRules(c *gin.Context) {
+	if h != nil {
+		service.BindErrorPassthroughService(c, h.errorPassthroughService)
+	}
+	c.Next()
+}
+
 // Messages handles Claude API compatible messages endpoint
 // POST /v1/messages
 func (h *GatewayHandler) Messages(c *gin.Context) {

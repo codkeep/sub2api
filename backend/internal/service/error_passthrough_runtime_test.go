@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -363,6 +364,76 @@ func TestGeminiWriteGeminiMappedError_SetsResponseCommitted(t *testing.T) {
 	err := svc.writeGeminiMappedError(c, account, http.StatusBadRequest, "req-99", body)
 	require.Error(t, err)
 	assert.True(t, IsResponseCommitted(c), "Gemini path must mark response committed")
+}
+
+func TestApplyLocalErrorPassthroughRuleQuotaTemplates(t *testing.T) {
+	for _, tc := range []struct {
+		name, code, keyword, message string
+		status                       int
+	}{
+		{"invalid key", "INVALID_API_KEY", "INVALID_API_KEY", "Invalid API key", 401},
+		{"daily quota", "USAGE_LIMIT_EXCEEDED", "DAILY_LIMIT_EXCEEDED", ErrDailyLimitExceeded.Error(), 429},
+		{"weekly quota", "USAGE_LIMIT_EXCEEDED", "WEEKLY_LIMIT_EXCEEDED", ErrWeeklyLimitExceeded.Error(), 429},
+		{"monthly quota", "USAGE_LIMIT_EXCEEDED", "MONTHLY_LIMIT_EXCEEDED", ErrMonthlyLimitExceeded.Error(), 429},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, _ := gin.CreateTestContext(httptest.NewRecorder())
+			custom := "自定义错误提示"
+			rule := newNonFailoverPassthroughRule(tc.status, tc.keyword, http.StatusForbidden, custom)
+			rule.SkipMonitoring = true
+			rules := &ErrorPassthroughService{}
+			rules.setLocalCache([]*model.ErrorPassthroughRule{rule})
+			BindErrorPassthroughService(c, rules)
+			status, message := ApplyLocalErrorPassthroughRule(c, "", tc.status, tc.code, tc.message)
+			require.Equal(t, http.StatusForbidden, status)
+			require.Equal(t, custom, message)
+			require.True(t, c.GetBool(OpsSkipPassthroughKey))
+		})
+	}
+}
+
+func TestApplyLocalErrorPassthroughRulePreservesOriginalMessage(t *testing.T) {
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	rule := newNonFailoverPassthroughRule(401, "INVALID_API_KEY", 403, "ignored")
+	rule.PassthroughBody = true
+	rules := &ErrorPassthroughService{}
+	rules.setLocalCache([]*model.ErrorPassthroughRule{rule})
+	BindErrorPassthroughService(c, rules)
+	status, message := ApplyLocalErrorPassthroughRule(c, "", 401, "INVALID_API_KEY", "Invalid API key")
+	require.Equal(t, 403, status)
+	require.Equal(t, "Invalid API key", message)
+}
+
+func TestGeminiNativeUpstreamErrorAppliesMapping(t *testing.T) {
+	for _, matched := range []bool{true, false} {
+		t.Run(fmt.Sprintf("matched=%v", matched), func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(recorder)
+			body := []byte(`{"error":{"code":401,"message":"INVALID_API_KEY from upstream","details":["original details"]}}`)
+			if matched {
+				rule := newNonFailoverPassthroughRule(401, "INVALID_API_KEY", 403, "无效的API密钥")
+				rule.SkipMonitoring = true
+				rules := &ErrorPassthroughService{}
+				rules.setLocalCache([]*model.ErrorPassthroughRule{rule})
+				BindErrorPassthroughService(c, rules)
+			}
+			svc := &GeminiMessagesCompatService{}
+			resp := &http.Response{StatusCode: 401, Header: http.Header{"Content-Type": []string{"application/problem+json"}}}
+			err := svc.writeGeminiNativeUpstreamError(c, &Account{ID: 1, Platform: PlatformGemini}, resp, body, "req-mapping", false)
+			require.Error(t, err)
+			require.True(t, IsResponseCommitted(c))
+			if matched {
+				require.Equal(t, 403, recorder.Code)
+				require.Contains(t, recorder.Body.String(), "无效的API密钥")
+				require.NotContains(t, recorder.Body.String(), "from upstream")
+				require.True(t, c.GetBool(OpsSkipPassthroughKey))
+			} else {
+				require.Equal(t, 401, recorder.Code)
+				require.Equal(t, body, recorder.Body.Bytes())
+				require.Equal(t, "application/problem+json", recorder.Header().Get("Content-Type"))
+			}
+		})
+	}
 }
 
 func newNonFailoverPassthroughRule(statusCode int, keyword string, respCode int, customMessage string) *model.ErrorPassthroughRule {

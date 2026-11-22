@@ -67,6 +67,7 @@ describe('AffiliateView', () => {
         stubs: {
           AppLayout: { template: '<main><slot /></main>' },
           Icon: true,
+          AffiliateWithdrawalsPanel: true,
         },
       },
     })

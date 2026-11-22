@@ -425,6 +425,37 @@ export default {
       invitesDescription: '查看全站邀请关系和被邀请用户累计返利',
       rebatesDescription: '查看每一笔返利入账，包括充值订单、兑换码和管理员充值产生的返利',
       transfersDescription: '查看返利额度转入余额与线下提现的流水',
+      withdrawalsDescription: '设置最低提现金额，审核用户提现申请并登记打款结果',
+      withdrawals: {
+        "policyTitle": "提现设置",
+        "policyHint": "金额单位为 USD；设为 0 表示不限制最低金额。申请仅使用已解冻的可用返利。",
+        "minimumAmount": "最低提现金额（USD）",
+        "invalidMinimum": "最低提现金额必须为有效的非负数",
+        "policySaved": "提现设置已保存",
+        "saveFailed": "保存提现设置失败",
+        "searchPlaceholder": "邮箱、用户名、用户 ID、申请 ID",
+        "allStatuses": "全部状态",
+        "actions": "操作",
+        "handler": "处理人",
+        "claim": "接单处理",
+        "markPaid": "确认已打款",
+        "reject": "拒绝并退回额度",
+        "rejectionReason": "拒绝原因（必填，用户可见）",
+        "adminNote": "处理备注（选填，用户可见）",
+        "uncertain": "上次处理结果未知。请重试同一操作，系统会检查状态，避免重复处理。",
+        "reviewSuccess": "提现申请已更新",
+        "reviewFailed": "处理提现失败",
+        "titles": {
+          "processing": "接单处理提现",
+          "paid": "确认已完成打款",
+          "rejected": "拒绝提现申请"
+        },
+        "hints": {
+          "processing": "接单后，请核对收款信息并在线下打款。该申请将由你继续处理。",
+          "paid": "请确认已完成线下打款并填写凭证。确认后不会再次扣除返利额度。",
+          "rejected": "请填写拒绝原因。申请预留的返利额度将自动退回用户。"
+        }
+      },
       errors: {
         loadFailed: '加载邀请返利记录失败',
         AFFILIATE_QUOTA_INSUFFICIENT: '可提取返利额度不足',

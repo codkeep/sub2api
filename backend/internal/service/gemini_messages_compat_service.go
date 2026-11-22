@@ -1819,11 +1819,18 @@ func (s *GeminiMessagesCompatService) writeGeminiCustomCodeSkippedError(c *gin.C
 	return fmt.Errorf("gemini upstream error: %d (not in custom error codes) message=%s", upstreamStatus, upstreamMsg)
 }
 
-// writeGeminiNativeUpstreamError 将不可 failover 的上游错误按原始状态码与响应体透传给客户端，
-// 并记录 ops 错误事件。状态码保真：下游据此区分请求级错误与可重试的链路故障。
+// writeGeminiNativeUpstreamError 优先应用错误映射；未命中时保留上游状态码与响应体。
+// Ops 始终记录上游真实错误，客户端响应按命中规则决定。
 func (s *GeminiMessagesCompatService) writeGeminiNativeUpstreamError(c *gin.Context, account *Account, resp *http.Response, respBody []byte, requestID string, isOAuth bool) error {
 	respBody = unwrapIfNeeded(isOAuth, respBody)
 	upstreamMsg := s.recordGeminiNativeUpstreamError(c, account, resp.StatusCode, respBody, requestID)
+
+	if status, _, message, matched := applyErrorPassthroughRule(
+		c, account.Platform, resp.StatusCode, respBody, resp.StatusCode, "", upstreamMsg,
+	); matched {
+		_ = s.writeGoogleError(c, status, message)
+		return fmt.Errorf("gemini upstream error: %d (passthrough rule matched)", resp.StatusCode)
+	}
 
 	contentType := resp.Header.Get("Content-Type")
 	if contentType == "" {
