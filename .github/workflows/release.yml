@@ -97,7 +97,8 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
         working-directory: frontend
-      - run: pnpm run build
+      - name: Compile frontend release assets
+        run: pnpm exec vue-tsc -b && pnpm exec vite build
         working-directory: frontend
       - uses: actions/upload-artifact@v7
         with:
