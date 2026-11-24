@@ -49,6 +49,7 @@ func RegisterGatewayRoutes(
 	clientRequestID := middleware.ClientRequestID()
 	opsErrorLogger := handler.OpsErrorLoggerMiddleware(opsService)
 	endpointNorm := handler.InboundEndpointMiddleware()
+	channelMonitorProbe := middleware.ChannelMonitorProbe()
 	bindErrorPassthrough := h.Gateway.BindErrorPassthroughRules
 	compositeTarget := compositeTargetPlatformMiddleware(compositeResolver)
 	compositeGeminiTarget := compositeGeminiTargetPlatformMiddleware(compositeResolver)
@@ -204,6 +205,7 @@ func RegisterGatewayRoutes(
 	gateway.Use(endpointNorm)
 	gateway.Use(bindErrorPassthrough)
 	gateway.Use(gin.HandlerFunc(apiKeyAuth))
+	gateway.Use(channelMonitorProbe)
 	gateway.GET("/sub2api/billing", h.Gateway.KeyBillingInfo)
 	gateway.Use(groupModelAllowlist)
 	gateway.Use(rejectConflictingFields)
@@ -364,6 +366,7 @@ func RegisterGatewayRoutes(
 	gemini.Use(endpointNorm)
 	gemini.Use(bindErrorPassthrough)
 	gemini.Use(middleware.APIKeyAuthWithSubscriptionGoogle(apiKeyService, subscriptionService, cfg))
+	gemini.Use(channelMonitorProbe)
 	gemini.Use(groupModelAllowlist)
 	gemini.Use(rejectConflictingFields)
 	gemini.Use(compositeGeminiTarget)
@@ -392,7 +395,7 @@ func RegisterGatewayRoutes(
 	// 根路径别名共用中间件链：白名单准入在 apiKeyAuth 之后、compositeTarget
 	// 之前，避免逐条路由手工维护链导致漏挂。
 	rootRoute := func(method, path string, limit gin.HandlerFunc, handler gin.HandlerFunc) {
-		r.Handle(method, path, limit, clientRequestID, opsErrorLogger, endpointNorm, bindErrorPassthrough, gin.HandlerFunc(apiKeyAuth), groupModelAllowlist, rejectConflictingFields, compositeTarget, requireGroupAnthropic, handler)
+		r.Handle(method, path, limit, clientRequestID, opsErrorLogger, endpointNorm, bindErrorPassthrough, gin.HandlerFunc(apiKeyAuth), channelMonitorProbe, groupModelAllowlist, rejectConflictingFields, compositeTarget, requireGroupAnthropic, handler)
 	}
 	for _, prefix := range []string{"/api/v3", "/v3", "/v1", ""} {
 		rootRoute(http.MethodPost, prefix+"/contents/generations/tasks", bodyLimit, h.OpenAIGateway.SeedanceTasks)
@@ -409,7 +412,7 @@ func RegisterGatewayRoutes(
 	rootRoute(http.MethodGet, "/models/:model", bodyLimit, h.Gateway.Models)
 	rootRoute(http.MethodPost, "/messages/count_tokens", bodyLimit, countTokensHandler)
 	codexDirect := r.Group("/backend-api/codex")
-	codexDirect.Use(groupBodyLimit, clientRequestID, opsErrorLogger, endpointNorm, bindErrorPassthrough, gin.HandlerFunc(apiKeyAuth), groupModelAllowlist, rejectConflictingFields, compositeTarget, requireGroupAnthropic)
+	codexDirect.Use(groupBodyLimit, clientRequestID, opsErrorLogger, endpointNorm, bindErrorPassthrough, gin.HandlerFunc(apiKeyAuth), channelMonitorProbe, groupModelAllowlist, rejectConflictingFields, compositeTarget, requireGroupAnthropic)
 	{
 		codexDirect.POST("/realtime/calls", h.OpenAIGateway.Live)
 		codexDirect.GET("/:call_id", h.OpenAIGateway.LiveSideband)
@@ -523,6 +526,7 @@ func RegisterGatewayRoutes(
 	antigravityV1.Use(bindErrorPassthrough)
 	antigravityV1.Use(middleware.ForcePlatform(service.PlatformAntigravity))
 	antigravityV1.Use(gin.HandlerFunc(apiKeyAuth))
+	antigravityV1.Use(channelMonitorProbe)
 	antigravityV1.Use(groupModelAllowlist)
 	antigravityV1.Use(rejectConflictingFields)
 	antigravityV1.Use(requireGroupAnthropic)
@@ -541,6 +545,7 @@ func RegisterGatewayRoutes(
 	antigravityV1Beta.Use(bindErrorPassthrough)
 	antigravityV1Beta.Use(middleware.ForcePlatform(service.PlatformAntigravity))
 	antigravityV1Beta.Use(middleware.APIKeyAuthWithSubscriptionGoogle(apiKeyService, subscriptionService, cfg))
+	antigravityV1Beta.Use(channelMonitorProbe)
 	antigravityV1Beta.Use(groupModelAllowlist)
 	antigravityV1Beta.Use(rejectConflictingFields)
 	antigravityV1Beta.Use(requireGroupGoogle)

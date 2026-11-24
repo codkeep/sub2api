@@ -544,6 +544,9 @@ func postRawJSON(ctx context.Context, fullURL string, payload []byte, headers ma
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
+	// Apply last: template headers must not accidentally re-enable Skills and
+	// interfere with the challenge, including merge/replace request bodies.
+	req.Header.Set(ChannelMonitorProbeHeader, ChannelMonitorProbeHeaderValue)
 
 	resp, err := monitorHTTPClient.Do(req)
 	if err != nil {

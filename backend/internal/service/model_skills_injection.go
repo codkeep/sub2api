@@ -51,6 +51,10 @@ func cloneGroupModelSkillIDs(input map[string][]string) map[string][]string {
 
 const modelSkillsInjectionMarker = "<!-- sub2api:model-skills:v1 -->"
 
+// encoding/json escapes angle brackets by default. Match the serialized marker
+// too, or a request passing through two protocol handlers receives Skills twice.
+const modelSkillsInjectionJSONMarker = `\u003c!-- sub2api:model-skills:v1 --\u003e`
+
 func resolveModelSkillIDs(defaultSkillIDs []string, modelSkillIDs map[string][]string, requestedModel string) []string {
 	requestedModel = strings.TrimSpace(requestedModel)
 	if ids, ok := modelSkillIDs[requestedModel]; ok {
@@ -85,7 +89,8 @@ func appendUniqueModelSkillIDs(target []string, ids ...string) []string {
 // Skills 只保存 ID，正文从系统设置中读取，因此修改 Skill 后所有引用它的配置会自动生效。
 // protocol 支持 anthropic、chat_completions、responses 和 gemini 四种入口格式。
 func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Group, protocol, requestedModel string, body []byte) ([]byte, error) {
-	if s == nil || len(body) == 0 || bytes.Contains(body, []byte(modelSkillsInjectionMarker)) {
+	if s == nil || IsChannelMonitorProbe(ctx) || len(body) == 0 ||
+		bytes.Contains(body, []byte(modelSkillsInjectionMarker)) || bytes.Contains(body, []byte(modelSkillsInjectionJSONMarker)) {
 		return body, nil
 	}
 
