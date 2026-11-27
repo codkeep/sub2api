@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import PlazaModelPricingTable from '../PlazaModelPricingTable.vue'
 import type { PlazaModel } from '@/api/modelPlaza'
 
@@ -61,7 +62,8 @@ function mountTable(
   }
 ) {
   return mount(PlazaModelPricingTable, {
-    props: { models, rateMultiplier, userRateMultiplier: userRateMultiplier ?? null, ...extraProps }
+    props: { models, rateMultiplier, userRateMultiplier: userRateMultiplier ?? null, ...extraProps },
+    global: { plugins: [createPinia()] }
   })
 }
 

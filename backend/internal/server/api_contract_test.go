@@ -361,6 +361,7 @@ func TestAPIContracts(t *testing.T) {
 						"is_exclusive": false,
 						"status": "active",
 						"subscription_type": "standard",
+						"subscription_usage_display": "",
 						"daily_limit_usd": null,
 						"weekly_limit_usd": null,
 						"monthly_limit_usd": null,
@@ -395,6 +396,7 @@ func TestAPIContracts(t *testing.T) {
 						"max_reasoning_effort": "",
 						"max_reasoning_effort_over_limit": "",
 						"reasoning_effort_mappings": null,
+						"pricing_unit": "",
 						"rpm_limit": 0,
 						"created_at": "2025-01-02T03:04:05Z",
 						"updated_at": "2025-01-02T03:04:05Z"
@@ -488,6 +490,7 @@ func TestAPIContracts(t *testing.T) {
 						"used_at": "2025-01-02T03:04:05Z",
 						"created_at": "2025-01-02T03:04:05Z",
 						"group_id": null,
+						"per_user_limit": 0,
 						"validity_days": 0
 					}
 				]
@@ -1005,6 +1008,8 @@ func TestAPIContracts(t *testing.T) {
 					"channel_monitor_default_interval_seconds": 60,
 					"available_channels_enabled": false,
 					"subscription_enabled": true,
+					"subscription_unit_name": "积分",
+					"subscription_units": [{"id": "points", "name": "积分", "units_per_usd": 1}],
 					"model_plaza_enabled": false,
 					"model_plaza_require_auth": false,
 					"model_plaza_description": "",
@@ -1327,6 +1332,8 @@ func TestAPIContracts(t *testing.T) {
 					"channel_monitor_default_interval_seconds": 60,
 					"available_channels_enabled": false,
 					"subscription_enabled": true,
+					"subscription_unit_name": "积分",
+					"subscription_units": [{"id": "points", "name": "积分", "units_per_usd": 1}],
 					"model_plaza_enabled": false,
 					"model_plaza_require_auth": false,
 					"model_plaza_description": "",
@@ -1500,7 +1507,7 @@ func newContractDeps(t *testing.T) *contractDeps {
 	adminService := service.NewAdminService(nil, userRepo, groupRepo, &accountRepo, proxyRepo, apiKeyRepo, redeemRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	authHandler := handler.NewAuthHandler(cfg, nil, userService, settingService, nil, redeemService, nil, nil)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
-	usageHandler := handler.NewUsageHandler(usageService, apiKeyService, nil, nil)
+	usageHandler := handler.NewUsageHandler(usageService, apiKeyService, nil, nil, nil)
 	adminSettingHandler := adminhandler.NewSettingHandler(settingService, nil, nil, nil, nil, nil, nil)
 	adminAccountHandler := adminhandler.NewAccountHandler(adminService, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
@@ -1908,9 +1915,7 @@ func (s *stubAccountRepo) Update(ctx context.Context, account *service.Account) 
 func (s *stubAccountRepo) UpdateWithAccountBillingSettings(
 	ctx context.Context,
 	account *service.Account,
-	probeEnabled *bool,
-	rateSyncEnabled *bool,
-	rateMultiplier *float64,
+	settings service.AccountBillingSettingsUpdate,
 ) error {
 	return errors.New("not implemented")
 }
