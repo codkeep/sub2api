@@ -163,6 +163,15 @@ type SettingService struct {
 	openAIQuotaAutoPauseSettingsSF    singleflight.Group
 	openAIAPIKeyHealthBreakerCache    atomic.Value // *cachedOpenAIAPIKeyHealthBreakerSettings
 
+	// Model Skills are consulted on every gateway request. Keep the decoded
+	// settings in-process and invalidate them after the dedicated admin writes.
+	modelSkillsCache                atomic.Value // *cachedModelSkills
+	modelSkillsCacheSF              singleflight.Group
+	modelSkillsCacheGeneration      atomic.Uint64
+	globalModelSkillRulesCache      atomic.Value // *cachedModelSkillRules
+	globalModelSkillRulesCacheSF    singleflight.Group
+	globalModelSkillRulesGeneration atomic.Uint64
+
 	channelMonitorRuntimeListenersMu sync.Mutex
 	channelMonitorRuntimeListeners   []func()
 }

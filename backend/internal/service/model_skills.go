@@ -14,6 +14,8 @@ import (
 const (
 	SettingKeyModelSkills           = "model_skills"
 	SettingKeyGlobalModelSkillRules = "global_model_skill_rules"
+	modelSkillsCacheTTL             = 30 * time.Second
+	modelSkillsDBTimeout            = 5 * time.Second
 )
 
 // ModelSkillRuleConfig stores the model-to-Skill rules used by global settings
@@ -34,30 +36,89 @@ type ModelSkill struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type cachedModelSkills struct {
+	skills    []ModelSkill
+	expiresAt int64
+}
+
+type cachedModelSkillRules struct {
+	config    ModelSkillRuleConfig
+	expiresAt int64
+}
+
 const maxModelSkillContentBytes = 512 * 1024
 
 func (s *SettingService) GetModelSkills(ctx context.Context) ([]ModelSkill, error) {
+	skills, err := s.getModelSkillsCached(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return cloneModelSkills(skills), nil
+}
+
+func cloneModelSkills(skills []ModelSkill) []ModelSkill {
+	if len(skills) == 0 {
+		return []ModelSkill{}
+	}
+	return append([]ModelSkill(nil), skills...)
+}
+
+func (s *SettingService) getModelSkillsCached(ctx context.Context) ([]ModelSkill, error) {
 	if s == nil || s.settingRepo == nil {
 		return []ModelSkill{}, nil
 	}
-	raw, err := s.settingRepo.GetValue(ctx, SettingKeyModelSkills)
-	if err != nil {
-		if errors.Is(err, ErrSettingNotFound) {
-			return []ModelSkill{}, nil
+	now := time.Now().UnixNano()
+	if cached, ok := s.modelSkillsCache.Load().(*cachedModelSkills); ok && cached != nil && now < cached.expiresAt {
+		return cached.skills, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	generation := s.modelSkillsCacheGeneration.Load()
+	result, err, _ := s.modelSkillsCacheSF.Do(SettingKeyModelSkills, func() (any, error) {
+		if cached, ok := s.modelSkillsCache.Load().(*cachedModelSkills); ok && cached != nil && time.Now().UnixNano() < cached.expiresAt {
+			return cached.skills, nil
 		}
+		dbCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), modelSkillsDBTimeout)
+		defer cancel()
+		raw, err := s.settingRepo.GetValue(dbCtx, SettingKeyModelSkills)
+		if err != nil {
+			if errors.Is(err, ErrSettingNotFound) {
+				raw = ""
+			} else {
+				return nil, err
+			}
+		}
+		var skills []ModelSkill
+		if strings.TrimSpace(raw) != "" {
+			if err := json.Unmarshal([]byte(raw), &skills); err != nil {
+				return nil, fmt.Errorf("decode model skills: %w", err)
+			}
+		}
+		if skills == nil {
+			skills = []ModelSkill{}
+		}
+		if s.modelSkillsCacheGeneration.Load() == generation {
+			s.modelSkillsCache.Store(&cachedModelSkills{skills: skills, expiresAt: time.Now().Add(modelSkillsCacheTTL).UnixNano()})
+		}
+		return skills, nil
+	})
+	if err != nil {
 		return nil, err
 	}
-	if strings.TrimSpace(raw) == "" {
-		return []ModelSkill{}, nil
+	if skills, ok := result.([]ModelSkill); ok {
+		return skills, nil
 	}
-	var skills []ModelSkill
-	if err := json.Unmarshal([]byte(raw), &skills); err != nil {
-		return nil, fmt.Errorf("decode model skills: %w", err)
+	return []ModelSkill{}, nil
+}
+
+func (s *SettingService) invalidateModelSkillsCache() {
+	if s == nil {
+		return
 	}
-	if skills == nil {
-		skills = []ModelSkill{}
-	}
-	return skills, nil
+	s.modelSkillsCacheGeneration.Add(1)
+	s.modelSkillsCacheSF.Forget(SettingKeyModelSkills)
+	s.modelSkillsCache.Store(&cachedModelSkills{expiresAt: 0})
 }
 
 func (s *SettingService) saveModelSkills(ctx context.Context, skills []ModelSkill) error {
@@ -68,6 +129,7 @@ func (s *SettingService) saveModelSkills(ctx context.Context, skills []ModelSkil
 	if err := s.settingRepo.Set(ctx, SettingKeyModelSkills, string(data)); err != nil {
 		return err
 	}
+	s.invalidateModelSkillsCache()
 	return nil
 }
 
@@ -101,24 +163,86 @@ func normalizeModelSkillRuleConfig(input ModelSkillRuleConfig) (ModelSkillRuleCo
 
 // GetGlobalModelSkillRules returns the rules configured under System Settings.
 func (s *SettingService) GetGlobalModelSkillRules(ctx context.Context) (ModelSkillRuleConfig, error) {
-	if s == nil || s.settingRepo == nil {
-		return ModelSkillRuleConfig{ModelSkillIDs: map[string][]string{}}, nil
-	}
-	raw, err := s.settingRepo.GetValue(ctx, SettingKeyGlobalModelSkillRules)
+	config, err := s.getGlobalModelSkillRulesCached(ctx)
 	if err != nil {
-		if errors.Is(err, ErrSettingNotFound) {
-			return ModelSkillRuleConfig{ModelSkillIDs: map[string][]string{}}, nil
-		}
 		return ModelSkillRuleConfig{}, err
 	}
-	if strings.TrimSpace(raw) == "" {
-		return ModelSkillRuleConfig{ModelSkillIDs: map[string][]string{}}, nil
+	return cloneModelSkillRuleConfig(config), nil
+}
+
+func emptyModelSkillRuleConfig() ModelSkillRuleConfig {
+	return ModelSkillRuleConfig{ModelSkillIDs: map[string][]string{}}
+}
+
+func cloneModelSkillRuleConfig(config ModelSkillRuleConfig) ModelSkillRuleConfig {
+	cloned := ModelSkillRuleConfig{
+		DefaultSkillIDs: append([]string(nil), config.DefaultSkillIDs...),
+		ModelSkillIDs:   make(map[string][]string, len(config.ModelSkillIDs)),
 	}
-	var config ModelSkillRuleConfig
-	if err := json.Unmarshal([]byte(raw), &config); err != nil {
-		return ModelSkillRuleConfig{}, fmt.Errorf("decode global model skill rules: %w", err)
+	for model, ids := range config.ModelSkillIDs {
+		cloned.ModelSkillIDs[model] = append([]string(nil), ids...)
 	}
-	return normalizeModelSkillRuleConfig(config)
+	return cloned
+}
+
+func (s *SettingService) getGlobalModelSkillRulesCached(ctx context.Context) (ModelSkillRuleConfig, error) {
+	if s == nil || s.settingRepo == nil {
+		return emptyModelSkillRuleConfig(), nil
+	}
+	now := time.Now().UnixNano()
+	if cached, ok := s.globalModelSkillRulesCache.Load().(*cachedModelSkillRules); ok && cached != nil && now < cached.expiresAt {
+		return cached.config, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	generation := s.globalModelSkillRulesGeneration.Load()
+	result, err, _ := s.globalModelSkillRulesCacheSF.Do(SettingKeyGlobalModelSkillRules, func() (any, error) {
+		if cached, ok := s.globalModelSkillRulesCache.Load().(*cachedModelSkillRules); ok && cached != nil && time.Now().UnixNano() < cached.expiresAt {
+			return cached.config, nil
+		}
+		dbCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), modelSkillsDBTimeout)
+		defer cancel()
+		raw, err := s.settingRepo.GetValue(dbCtx, SettingKeyGlobalModelSkillRules)
+		if err != nil {
+			if errors.Is(err, ErrSettingNotFound) {
+				raw = ""
+			} else {
+				return nil, err
+			}
+		}
+		config := emptyModelSkillRuleConfig()
+		if strings.TrimSpace(raw) != "" {
+			if err := json.Unmarshal([]byte(raw), &config); err != nil {
+				return nil, fmt.Errorf("decode global model skill rules: %w", err)
+			}
+			normalized, err := normalizeModelSkillRuleConfig(config)
+			if err != nil {
+				return nil, err
+			}
+			config = normalized
+		}
+		if s.globalModelSkillRulesGeneration.Load() == generation {
+			s.globalModelSkillRulesCache.Store(&cachedModelSkillRules{config: config, expiresAt: time.Now().Add(modelSkillsCacheTTL).UnixNano()})
+		}
+		return config, nil
+	})
+	if err != nil {
+		return ModelSkillRuleConfig{}, err
+	}
+	if config, ok := result.(ModelSkillRuleConfig); ok {
+		return config, nil
+	}
+	return emptyModelSkillRuleConfig(), nil
+}
+
+func (s *SettingService) invalidateGlobalModelSkillRulesCache() {
+	if s == nil {
+		return
+	}
+	s.globalModelSkillRulesGeneration.Add(1)
+	s.globalModelSkillRulesCacheSF.Forget(SettingKeyGlobalModelSkillRules)
+	s.globalModelSkillRulesCache.Store(&cachedModelSkillRules{expiresAt: 0})
 }
 
 // UpdateGlobalModelSkillRules replaces the global model-to-Skill rules.
@@ -137,6 +261,7 @@ func (s *SettingService) UpdateGlobalModelSkillRules(ctx context.Context, input 
 	if err := s.settingRepo.Set(ctx, SettingKeyGlobalModelSkillRules, string(data)); err != nil {
 		return ModelSkillRuleConfig{}, err
 	}
+	s.invalidateGlobalModelSkillRulesCache()
 	return config, nil
 }
 

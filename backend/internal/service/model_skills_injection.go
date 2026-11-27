@@ -94,7 +94,7 @@ func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Gro
 		return body, nil
 	}
 
-	globalRules, err := s.GetGlobalModelSkillRules(ctx)
+	globalRules, err := s.getGlobalModelSkillRulesCached(ctx)
 	if err != nil {
 		return body, fmt.Errorf("load global model skill rules: %w", err)
 	}
@@ -107,7 +107,7 @@ func (s *SettingService) ApplyGroupDefaultSkills(ctx context.Context, group *Gro
 		return body, nil
 	}
 
-	skills, err := s.GetModelSkills(ctx)
+	skills, err := s.getModelSkillsCached(ctx)
 	if err != nil {
 		return body, fmt.Errorf("load model skills: %w", err)
 	}
